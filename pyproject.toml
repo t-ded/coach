@@ -1,7 +1,80 @@
 [project]
 name = "coach"
 version = "0.1.0"
-description = "Add your description here"
+description = "Personalised RAG-based application for personalised coaching. Integrated with the Strava API to be always up to date with your latest progress."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[tool.mypy]
+no_implicit_reexport = true
+no_error_summary = true
+local_partial_types = true
+disallow_untyped_defs = true
+strict = true
+no_warn_return_any = true
+disallow_any_generics = false
+mypy_path = ["src"]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "examples",
+]
+line-length = 200
+target-version = "py313"
+
+[tool.ruff.lint]
+preview = true
+ignore = [
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "UP007", # Use `X | Y` for type annotations (triggers on Optional[])
+    "UP045", # Allow Optional[]
+]
+
+select = [
+    'A', # flake8-builtins
+    'B', # flake8-bugbear
+    'BLE', # flake8-blind-except
+    'C4', # flake8-comprehensions
+    'C90', # mccabe
+    'COM', # flake8-commas
+    'DTZ', # flake8-datetimez
+    'E', # pycodestyle / Error
+    'ERA', # eradicate
+    'F', # Pyflakes
+    'I', # isort
+    'N', # pep8-naming
+    'NPY', # NumPy-specific rules
+    'PIE', # flake8-pie
+    'PT', # flake8-pytest-style
+    'PTH', # flake8-use-pathlib
+    'S', # flake8-bandit
+    'SIM', # flake8-simplify
+    'TID', # flake8-tidy-imports
+    'UP', # pyupgrade
+    'W', # pycodestyle / Warning
+    'ANN', # function typing
+    'Q001', # single quotes
+]
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = ["S101"]  # Allow asserts in tests
+"src/auto_featurs/base/tests/test_column_specification.py" = ["SIM300"]  # Allow yoda conditions to test AND/OR/INVERT operators
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "ruff>=0.14.11",
+]
