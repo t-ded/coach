@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Personalised RAG-based application for personalised coaching. Integrated with the Strava API to be always up to date with your latest progress."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "python-dotenv>=1.2.1",
+]
 
 [tool.mypy]
 no_implicit_reexport = true
