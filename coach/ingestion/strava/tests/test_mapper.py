@@ -13,7 +13,7 @@ class TestStravaMapper:
         payload = {
             'id': 123,
             'sport_type': 'Run',
-            'title': 'Morning Run',
+            'name': 'Morning Run',
             'start_date': '2024-01-01T07:00:00Z',
             'elapsed_time': 3_600,
             'moving_time': 3_500,

@@ -2,6 +2,7 @@ from coach.config.logging import configure_logging
 from coach.config.settings import load_strava_settings
 from coach.ingestion.strava.mapper import StravaMapper
 from coach.ingestion.strava.client import StravaClient
+from coach.storage.sqlite import SQLiteActivityRepository
 
 configure_logging()
 
@@ -11,10 +12,7 @@ if __name__ == "__main__":
 
     client = StravaClient()
     mapper = StravaMapper()
+    repo = SQLiteActivityRepository('coach.db')
 
-    for i, activity in enumerate(client.list_activities()):
-        print(activity["id"], activity["type"], activity["start_date"])
-        print(mapper.map_strava_activity(activity))
-        if i >= 4:
-            break
-    pass
+    activities = [mapper.map_strava_activity(raw_activity) for raw_activity in client.list_activities()]
+    repo.save_many(activities)

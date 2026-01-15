@@ -15,7 +15,7 @@ class StravaMapper:
             source=ActivitySource.STRAVA,
             source_activity_id=int(payload['id']),
             sport_type=self._map_sport_type(payload),
-            title=payload.get('title'),
+            name=payload.get('name'),
             start_time_utc=start_time,
             elapsed_time_seconds=int(payload['elapsed_time']),
             moving_time_seconds=payload.get('moving_time'),

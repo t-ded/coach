@@ -34,7 +34,7 @@ class Activity:
 
     # Classification
     sport_type: SportType
-    title: Optional[str]
+    name: Optional[str]
 
     # Time
     start_time_utc: datetime
