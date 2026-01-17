@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
+from datetime import datetime
 from typing import Mapping
 from typing import Optional
 
@@ -36,7 +37,7 @@ class ActivityVolume:
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class TrainingState:
-    generated_at: date
+    generated_at: datetime
     window_start: date
     window_end: date
 

@@ -41,9 +41,9 @@ def build_training_state(
     categorized_volume = {sport_type: ActivityVolume.from_activities(activities) for sport_type, activities in categorized_activities.items()}
 
     return TrainingState(
+        generated_at=generated_at or datetime.now(tz=UTC),
         window_start=window_start,
         window_end=window_end,
-        generated_at=generated_at or datetime.now(tz=UTC).date(),
         volume_by_sport=categorized_volume,
-        last_activity_date=max((activity.start_time_utc.date() for activity in activities_between_dates), default=None)
+        last_activity_date=max((activity.start_time_utc.date() for activity in activities_between_dates), default=None),
     )

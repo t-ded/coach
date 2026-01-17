@@ -1,6 +1,5 @@
 from datetime import date
 
-from coach.domain.models import Activity
 from coach.domain.models import SportType
 from coach.tests.utils_for_tests import SAMPLE_RIDE
 from coach.tests.utils_for_tests import SAMPLE_RUN
