@@ -3,12 +3,14 @@ from typing import Iterable
 from typing import Optional
 
 from coach.domain.models import Activity, ActivitySource, SportType
-from coach.persistence.repository import Repository
+from coach.persistence.database import Database
+from coach.persistence.repository_interface import Repository
+from coach.training_state.training_state import TrainingState
 
 
-class SQLiteActivityRepository(Repository):
-    def __init__(self, db_path: str) -> None:
-        self._conn = sqlite3.connect(db_path)
+class SQLiteActivityRepository(Repository[Activity]):
+    def __init__(self, db: Database) -> None:
+        self._conn = db.connection()
         self._conn.row_factory = sqlite3.Row
         self._ensure_schema()
 
