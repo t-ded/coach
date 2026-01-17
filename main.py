@@ -1,8 +1,16 @@
+from datetime import UTC
+from datetime import date
+from datetime import datetime
+
 from coach.config.logging import configure_logging
 from coach.config.settings import load_strava_settings
 from coach.ingestion.strava.mapper import StravaMapper
 from coach.ingestion.strava.client import StravaClient
+from coach.persistence.database import Database
 from coach.persistence.sqlite import SQLiteActivityRepository
+from coach.persistence.sqlite import SQLiteTrainingStateRepository
+from coach.training_state.builder import build_training_state
+from coach.training_state.training_state import TrainingState
 
 configure_logging()
 
@@ -12,7 +20,17 @@ if __name__ == "__main__":
 
     client = StravaClient()
     mapper = StravaMapper()
-    repo = SQLiteActivityRepository('coach.db')
+    db = Database('coach.db')
 
+    activity_repo = SQLiteActivityRepository(db)
     activities = [mapper.map_strava_activity(raw_activity) for raw_activity in client.list_activities()]
-    repo.save_many(activities)
+    activity_repo.save_many(activities)
+
+    state_repo = SQLiteTrainingStateRepository(db)
+    current_state = build_training_state(
+        activities=activities,
+        window_start=date(2025, 1, 1),
+        window_end=date(2026, 1, 1),
+        generated_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    state_repo.save(current_state)

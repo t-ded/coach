@@ -1,17 +1,20 @@
-import sqlite3
+from datetime import UTC
+from datetime import datetime
+import json
 from typing import Iterable
 from typing import Optional
 
 from coach.domain.models import Activity, ActivitySource, SportType
 from coach.persistence.database import Database
 from coach.persistence.repository_interface import Repository
+from coach.training_state.serialization import deserialize_training_state
+from coach.training_state.serialization import serialize_training_state
 from coach.training_state.training_state import TrainingState
 
 
 class SQLiteActivityRepository(Repository[Activity]):
     def __init__(self, db: Database) -> None:
         self._conn = db.connection()
-        self._conn.row_factory = sqlite3.Row
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
@@ -114,3 +117,57 @@ class SQLiteActivityRepository(Repository[Activity]):
             )
             for row in rows
         ]
+
+
+class SQLiteTrainingStateRepository(Repository[TrainingState]):
+    def __init__(self, db: Database) -> None:
+        self._conn = db.connection()
+        self._ensure_schema()
+
+    def _ensure_schema(self) -> None:
+        self._conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS training_state_snapshots
+            (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                persisted_at TEXT NOT NULL,
+                training_state_json TEXT NOT NULL
+            )
+            '''
+        )
+        self._conn.commit()
+
+    def save(self, state: TrainingState) -> None:
+        self._conn.execute(
+            self._insert_training_state_query,
+            self._training_state_values(state),
+        )
+        self._conn.commit()
+
+    def save_many(self, states: Iterable[TrainingState]) -> None:
+        self._conn.executemany(
+            self._insert_training_state_query,
+            [self._training_state_values(state) for state in states],
+        )
+        self._conn.commit()
+
+    @property
+    def _insert_training_state_query(self) -> str:
+        return '''
+            INSERT INTO training_state_snapshots (
+                persisted_at, training_state_json
+            ) VALUES (
+                ?, ?
+            )
+        '''
+
+    @staticmethod
+    def _training_state_values(state: TrainingState) -> tuple[str, str]:
+        return (
+            datetime.now(tz=UTC).isoformat(),
+            json.dumps(serialize_training_state(state)),
+        )
+
+    def list_all(self) -> list[TrainingState]:
+        rows = self._conn.execute('SELECT * FROM training_state_snapshots ORDER BY generated_at DESC').fetchall()
+        return [deserialize_training_state(state) for state in rows]
