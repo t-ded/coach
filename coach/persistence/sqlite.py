@@ -3,10 +3,10 @@ from typing import Iterable
 from typing import Optional
 
 from coach.domain.models import Activity, ActivitySource, SportType
-from coach.storage.repository import ActivityRepository
+from coach.persistence.repository import Repository
 
 
-class SQLiteActivityRepository(ActivityRepository):
+class SQLiteActivityRepository(Repository):
     def __init__(self, db_path: str) -> None:
         self._conn = sqlite3.connect(db_path)
         self._conn.row_factory = sqlite3.Row
