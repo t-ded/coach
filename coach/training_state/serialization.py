@@ -8,7 +8,7 @@ from coach.training_state.training_state import ActivityVolume
 from coach.training_state.training_state import TrainingState
 
 
-def serialize_activity_volume(volume: ActivityVolume) -> dict[str, object]:
+def serialize_activity_volume(volume: ActivityVolume) -> dict[str, Any]:
     return asdict(volume)
 
 
@@ -20,7 +20,7 @@ def deserialize_activity_volume(serialized: dict[str, Any]) -> ActivityVolume:
     )
 
 
-def serialize_training_state(state: TrainingState) -> dict[str, object]:
+def serialize_training_state(state: TrainingState) -> dict[str, Any]:
     return {
         'generated_at': state.generated_at.isoformat(),
         'window_start': state.window_start.isoformat(),

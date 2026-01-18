@@ -29,7 +29,7 @@ def build_training_state(
     *,
     window_start: date,
     window_end: date,
-    generated_at: Optional[date] = None,
+    generated_at: Optional[datetime] = None,
 ) -> TrainingState:
     """
     Build an aggregated TrainingState over an explicit time window.

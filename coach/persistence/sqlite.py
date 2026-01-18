@@ -131,7 +131,11 @@ class SQLiteTrainingStateRepository(Repository[TrainingState]):
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 persisted_at TEXT NOT NULL,
-                training_state_json TEXT NOT NULL
+                generated_at TEXT NOT NULL,
+                window_start TEXT NOT NULL,
+                window_end TEXT NOT NULL,
+                training_state_json TEXT NOT NULL,
+                UNIQUE (window_start, window_end)
             )
             '''
         )
@@ -154,20 +158,25 @@ class SQLiteTrainingStateRepository(Repository[TrainingState]):
     @property
     def _insert_training_state_query(self) -> str:
         return '''
-            INSERT INTO training_state_snapshots (
-                persisted_at, training_state_json
+            INSERT OR REPLACE INTO training_state_snapshots (
+                persisted_at, generated_at, window_start, window_end, training_state_json
             ) VALUES (
-                ?, ?
+                ?, ?, ?, ?, ?
             )
         '''
 
     @staticmethod
-    def _training_state_values(state: TrainingState) -> tuple[str, str]:
+    def _training_state_values(state: TrainingState) -> tuple[str, str, str, str, str]:
+        serialized_state = serialize_training_state(state)
+
         return (
             datetime.now(tz=UTC).isoformat(),
-            json.dumps(serialize_training_state(state)),
+            serialized_state['generated_at'],
+            serialized_state['window_start'],
+            serialized_state['window_end'],
+            json.dumps(serialized_state),
         )
 
     def list_all(self) -> list[TrainingState]:
-        rows = self._conn.execute('SELECT * FROM training_state_snapshots ORDER BY generated_at DESC').fetchall()
+        rows = self._conn.execute('SELECT * FROM training_state_snapshots ORDER BY persisted_at DESC').fetchall()
         return [deserialize_training_state(state) for state in rows]
