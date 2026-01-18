@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC
+from datetime import datetime
 from typing import Optional
 
 import requests
@@ -26,7 +27,7 @@ class StravaAuth:
         return self._access_token.token  # type: ignore[union-attr]
 
     def _is_expired(self) -> bool:
-        return datetime.now(timezone.utc) >= self._access_token.expires_at  # type: ignore[union-attr]
+        return datetime.now(UTC) >= self._access_token.expires_at  # type: ignore[union-attr]
 
     def _refresh_access_token(self) -> None:
         response = requests.post(
@@ -47,5 +48,5 @@ class StravaAuth:
 
         self._access_token = StravaAccessToken(
             token=payload['access_token'],
-            expires_at=datetime.fromtimestamp(payload['expires_at'], tz=timezone.utc),
+            expires_at=datetime.fromtimestamp(payload['expires_at'], tz=UTC),
         )

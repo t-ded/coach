@@ -1,5 +1,5 @@
-from datetime import datetime
 from datetime import UTC
+from datetime import datetime
 
 
 def parse_utc_datetime(value: str) -> datetime:

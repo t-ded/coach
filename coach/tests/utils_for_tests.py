@@ -5,7 +5,6 @@ from coach.domain.models import Activity
 from coach.domain.models import ActivitySource
 from coach.domain.models import SportType
 
-
 SAMPLE_RUN = Activity(
     activity_id=1,
     source=ActivitySource.STRAVA,

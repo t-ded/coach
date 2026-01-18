@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import Iterable
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import Iterable
 
 
 class Repository[T](ABC):

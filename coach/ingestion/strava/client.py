@@ -1,4 +1,6 @@
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
+
 import requests
 
 from coach.ingestion.strava.auth import StravaAuth

@@ -1,8 +1,8 @@
 from datetime import UTC
 from datetime import datetime
 
-from coach.ingestion.strava.mapper import StravaMapper
 from coach.domain.models import SportType
+from coach.ingestion.strava.mapper import StravaMapper
 
 
 class TestStravaMapper:

@@ -2,13 +2,13 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 
+from coach.domain.models import ActivityVolume
 from coach.domain.models import SportType
+from coach.domain.models import TrainingState
 from coach.persistence.serialization import deserialize_activity_volume
 from coach.persistence.serialization import deserialize_training_state
 from coach.persistence.serialization import serialize_activity_volume
 from coach.persistence.serialization import serialize_training_state
-from coach.domain.models import ActivityVolume
-from coach.domain.models import TrainingState
 
 
 def test_serialize_activity_volume() -> None:
@@ -17,7 +17,7 @@ def test_serialize_activity_volume() -> None:
             distance_meters=10_000.0,
             duration_seconds=3_600,
             num_activities=2,
-        )
+        ),
     )
 
     assert serialized == {

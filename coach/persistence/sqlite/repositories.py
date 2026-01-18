@@ -8,10 +8,10 @@ from coach.domain.models import Activity
 from coach.domain.models import ActivitySource
 from coach.domain.models import SportType
 from coach.domain.models import TrainingState
-from coach.persistence.sqlite.database import Database
 from coach.persistence.repository_interface import Repository
 from coach.persistence.serialization import deserialize_training_state
 from coach.persistence.serialization import serialize_training_state
+from coach.persistence.sqlite.database import Database
 
 
 class SQLiteActivityRepository(Repository[Activity]):
