@@ -78,6 +78,7 @@ force-single-line = true
 
 [dependency-groups]
 dev = [
+    "freezegun>=1.5.1",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "ruff>=0.14.11",
