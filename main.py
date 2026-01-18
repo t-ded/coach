@@ -9,7 +9,7 @@ from coach.ingestion.strava.mapper import StravaMapper
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.persistence.sqlite.repositories import SQLiteTrainingStateRepository
-from coach.builders.training_state_builder import build_training_state
+from coach.builders.training_state import build_training_state
 
 configure_logging()
 

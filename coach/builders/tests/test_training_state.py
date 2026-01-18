@@ -1,6 +1,6 @@
 from datetime import date
 
-from coach.builders.training_state_builder import build_training_state
+from coach.builders.training_state import build_training_state
 from coach.domain.models import SportType
 from coach.tests.utils_for_tests import SAMPLE_RIDE
 from coach.tests.utils_for_tests import SAMPLE_RUN
