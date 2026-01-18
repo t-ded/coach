@@ -1,11 +1,14 @@
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import UTC
-from datetime import date, datetime
-from typing import Iterable, Optional
+from datetime import date
+from datetime import datetime
+from typing import Optional
 
-from coach.domain.models import Activity, SportType
-from coach.training_state.training_state import TrainingState
-from coach.training_state.training_state import ActivityVolume
+from coach.domain.models import Activity
+from coach.domain.models import ActivityVolume
+from coach.domain.models import SportType
+from coach.domain.models import TrainingState
 
 
 def get_activities_between_dates(

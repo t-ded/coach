@@ -1,11 +1,11 @@
+import json
 from dataclasses import asdict
 from datetime import date
 from datetime import datetime
-import json
 from typing import Any
 
-from coach.training_state.training_state import ActivityVolume
-from coach.training_state.training_state import TrainingState
+from coach.domain.models import ActivityVolume
+from coach.domain.models import TrainingState
 
 
 def serialize_activity_volume(volume: ActivityVolume) -> dict[str, Any]:

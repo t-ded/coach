@@ -1,15 +1,17 @@
+import json
+from collections.abc import Iterable
 from datetime import UTC
 from datetime import datetime
-import json
-from typing import Iterable
 from typing import Optional
 
-from coach.domain.models import Activity, ActivitySource, SportType
-from coach.persistence.database import Database
+from coach.domain.models import Activity
+from coach.domain.models import ActivitySource
+from coach.domain.models import SportType
+from coach.domain.models import TrainingState
+from coach.persistence.sqlite.database import Database
 from coach.persistence.repository_interface import Repository
-from coach.training_state.serialization import deserialize_training_state
-from coach.training_state.serialization import serialize_training_state
-from coach.training_state.training_state import TrainingState
+from coach.persistence.serialization import deserialize_training_state
+from coach.persistence.serialization import serialize_training_state
 
 
 class SQLiteActivityRepository(Repository[Activity]):
@@ -19,7 +21,7 @@ class SQLiteActivityRepository(Repository[Activity]):
 
     def _ensure_schema(self) -> None:
         self._conn.execute(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS activities (
                 activity_id INTEGER PRIMARY KEY,
                 source TEXT NOT NULL,
@@ -38,7 +40,7 @@ class SQLiteActivityRepository(Repository[Activity]):
                 is_race INTEGER NOT NULL,
                 UNIQUE (source, source_activity_id)
             )
-            '''
+            """,
         )
         self._conn.commit()
 
@@ -58,11 +60,11 @@ class SQLiteActivityRepository(Repository[Activity]):
 
     @property
     def _insert_activity_query(self) -> str:
-        return '''
+        return """
             INSERT OR IGNORE INTO activities VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
-        '''
+        """
 
     @staticmethod
     def _activity_values(
@@ -126,7 +128,7 @@ class SQLiteTrainingStateRepository(Repository[TrainingState]):
 
     def _ensure_schema(self) -> None:
         self._conn.execute(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS training_state_snapshots
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,7 +139,7 @@ class SQLiteTrainingStateRepository(Repository[TrainingState]):
                 training_state_json TEXT NOT NULL,
                 UNIQUE (window_start, window_end)
             )
-            '''
+            """,
         )
         self._conn.commit()
 
@@ -157,13 +159,13 @@ class SQLiteTrainingStateRepository(Repository[TrainingState]):
 
     @property
     def _insert_training_state_query(self) -> str:
-        return '''
+        return """
             INSERT OR REPLACE INTO training_state_snapshots (
                 persisted_at, generated_at, window_start, window_end, training_state_json
             ) VALUES (
                 ?, ?, ?, ?, ?
             )
-        '''
+        """
 
     @staticmethod
     def _training_state_values(state: TrainingState) -> tuple[str, str, str, str, str]:

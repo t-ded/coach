@@ -4,13 +4,12 @@ from datetime import datetime
 
 from coach.config.logging import configure_logging
 from coach.config.settings import load_strava_settings
-from coach.ingestion.strava.mapper import StravaMapper
 from coach.ingestion.strava.client import StravaClient
-from coach.persistence.database import Database
-from coach.persistence.sqlite import SQLiteActivityRepository
-from coach.persistence.sqlite import SQLiteTrainingStateRepository
-from coach.training_state.builder import build_training_state
-from coach.training_state.training_state import TrainingState
+from coach.ingestion.strava.mapper import StravaMapper
+from coach.persistence.sqlite.database import Database
+from coach.persistence.sqlite.repositories import SQLiteActivityRepository
+from coach.persistence.sqlite.repositories import SQLiteTrainingStateRepository
+from coach.builders.training_state_builder import build_training_state
 
 configure_logging()
 

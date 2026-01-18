@@ -3,12 +3,12 @@ from datetime import date
 from datetime import datetime
 
 from coach.domain.models import SportType
-from coach.training_state.serialization import deserialize_activity_volume
-from coach.training_state.serialization import deserialize_training_state
-from coach.training_state.serialization import serialize_activity_volume
-from coach.training_state.serialization import serialize_training_state
-from coach.training_state.training_state import ActivityVolume
-from coach.training_state.training_state import TrainingState
+from coach.persistence.serialization import deserialize_activity_volume
+from coach.persistence.serialization import deserialize_training_state
+from coach.persistence.serialization import serialize_activity_volume
+from coach.persistence.serialization import serialize_training_state
+from coach.domain.models import ActivityVolume
+from coach.domain.models import TrainingState
 
 
 def test_serialize_activity_volume() -> None:
