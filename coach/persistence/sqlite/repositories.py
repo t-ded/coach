@@ -5,11 +5,11 @@ from datetime import datetime
 from typing import Optional
 
 from coach.domain.models import Activity
-from coach.domain.models import ActivitySource
-from coach.domain.models import SportType
 from coach.domain.models import TrainingState
 from coach.persistence.repository_interface import Repository
+from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import deserialize_training_state
+from coach.persistence.serialization import serialize_activity
 from coach.persistence.serialization import serialize_training_state
 from coach.persistence.sqlite.database import Database
 
@@ -75,50 +75,32 @@ class SQLiteActivityRepository(Repository[Activity]):
         Optional[float], Optional[float], Optional[float], Optional[float], Optional[float],
         int, int,
     ]:
+        serialized = serialize_activity(activity)
+
         return (
-            activity.activity_id,
-            activity.source.value,
-            activity.source_activity_id,
-            activity.sport_type.value,
+            serialized['activity_id'],
+            serialized['source'],
+            serialized['source_activity_id'],
+            serialized['sport_type'],
 
-            activity.name,
-            activity.start_time_utc.isoformat(),
-            activity.elapsed_time_seconds,
-            activity.moving_time_seconds,
+            serialized['name'],
+            serialized['start_time_utc'],
+            serialized['elapsed_time_seconds'],
+            serialized['moving_time_seconds'],
 
-            activity.distance_meters,
-            activity.elevation_gain_meters,
-            activity.average_heart_rate,
-            activity.max_heart_rate,
-            activity.average_power_watts,
+            serialized['distance_meters'],
+            serialized['elevation_gain_meters'],
+            serialized['average_heart_rate'],
+            serialized['max_heart_rate'],
+            serialized['average_power_watts'],
 
-            int(activity.is_manual),
-            int(activity.is_race),
+            serialized['is_manual'],
+            serialized['is_race'],
         )
 
     def list_all(self) -> list[Activity]:
         rows = self._conn.execute('SELECT * FROM activities').fetchall()
-
-        return [
-            Activity(
-                activity_id=row['activity_id'],
-                source=ActivitySource(row['source']),
-                source_activity_id=row['source_activity_id'],
-                sport_type=SportType(row['sport_type']),
-                name=row['name'],
-                start_time_utc=row['start_time_utc'],
-                elapsed_time_seconds=row['elapsed_time_seconds'],
-                moving_time_seconds=row['moving_time_seconds'],
-                distance_meters=row['distance_meters'],
-                elevation_gain_meters=row['elevation_gain_meters'],
-                average_heart_rate=row['average_heart_rate'],
-                max_heart_rate=row['max_heart_rate'],
-                average_power_watts=row['average_power_watts'],
-                is_manual=bool(row['is_manual']),
-                is_race=bool(row['is_race']),
-            )
-            for row in rows
-        ]
+        return [deserialize_activity(row) for row in rows]
 
 
 class SQLiteTrainingStateRepository(Repository[TrainingState]):
