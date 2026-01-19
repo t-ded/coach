@@ -1,4 +1,7 @@
+from pathlib import Path
 from typing import Optional
+
+from coach.utils import parse_file
 
 SYSTEM_PROMPT = """
 You are an AI training coach.
@@ -51,10 +54,10 @@ def _extend_parts(parts: list[str], part_title: str, prompt: Optional[str]) -> N
         )
 
 
-def build_coach_prompt(*, rendered_training_state: str, user_prompt: Optional[str] = None, user_system_prompt: Optional[str] = None) -> str:
+def build_coach_prompt(*, rendered_training_state: str, user_prompt: Optional[str] = None, user_system_prompt_path: Path = Path('../config/coach.md')) -> str:
     parts: list[str] = []
     parts.append(SYSTEM_PROMPT.strip())
-    _extend_parts(parts, 'User instructions and goals:', user_system_prompt)
+    _extend_parts(parts, 'User instructions and goals:', parse_file(user_system_prompt_path))
     _extend_parts(parts, 'Training context:', rendered_training_state)
     _extend_parts(parts, 'User question:', user_prompt)
     parts.append(OUTPUT_INSTRUCTIONS.strip())
