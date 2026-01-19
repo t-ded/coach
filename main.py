@@ -2,6 +2,7 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 
+from coach.builders.training_state import build_training_state
 from coach.config.logging import configure_logging
 from coach.config.settings import load_strava_settings
 from coach.ingestion.strava.client import StravaClient
@@ -9,7 +10,8 @@ from coach.ingestion.strava.mapper import StravaMapper
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.persistence.sqlite.repositories import SQLiteTrainingStateRepository
-from coach.builders.training_state import build_training_state
+from coach.reasoning.adapter import LLMCoachReasoner
+from coach.reasoning.clients import OpenAILLMClient
 
 configure_logging()
 
@@ -33,3 +35,8 @@ if __name__ == "__main__":
         generated_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
     state_repo.save(current_state)
+
+    llm_client = OpenAILLMClient(model='gpt-5-nano')
+    reasoner = LLMCoachReasoner(llm_client)
+
+    reasoner.reason(training_state=current_state, user_prompt='Provide me with workout plan for the upcoming week')

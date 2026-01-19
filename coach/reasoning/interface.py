@@ -18,3 +18,9 @@ class CoachReasoner(ABC):
     @abstractmethod
     def reason(self, *, training_state: TrainingState, user_prompt: Optional[str] = None) -> CoachResponse:
         ...
+
+
+class LLMClient(ABC):
+    @abstractmethod
+    def complete(self, prompt: str) -> str:
+        ...
