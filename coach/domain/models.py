@@ -3,10 +3,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import field
+from dataclasses import fields
 from datetime import date
 from datetime import datetime
 from enum import Enum
 from enum import StrEnum
+from typing import Any
 from typing import Optional
 
 
@@ -92,3 +95,19 @@ class TrainingState:
 
     volume_by_sport: Mapping[SportType, ActivityVolume]
     last_activity_date: Optional[date]
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class CoachResponse:
+    summary: str
+    observations: list[str] = field(metadata={'bullets': True})
+    recommendations: list[str] = field(metadata={'bullets': True})
+    confidence_notes: Optional[str] = field(default=None, metadata={'optional': True})
+
+    @classmethod
+    def headers(cls) -> list[str]:
+        return [f'{f.name.replace('_', ' ').title()}' for f in fields(cls)]
+
+    @classmethod
+    def field_info(cls) -> dict[str, dict[str, Any]]:
+        return {f.name: dict(f.metadata) for f in fields(cls)}

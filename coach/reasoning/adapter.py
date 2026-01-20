@@ -1,10 +1,11 @@
 from typing import Optional
 
+from coach.domain.models import CoachResponse
 from coach.domain.models import TrainingState
 from coach.reasoning.context import render_training_state_for_reasoning
 from coach.reasoning.interface import CoachReasoner
-from coach.reasoning.interface import CoachResponse
 from coach.reasoning.interface import LLMClient
+from coach.reasoning.parsing import parse_coach_response
 from coach.reasoning.prompts import build_coach_prompt
 
 
@@ -26,6 +27,4 @@ class LLMCoachReasoner(CoachReasoner):
         )
 
         raw_response = self._llm_client.complete(prompt)
-        print(raw_response)
-
-        raise NotImplementedError('Response parsing not yet implemented')
+        return parse_coach_response(raw_response)
