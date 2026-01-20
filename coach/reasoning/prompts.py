@@ -1,6 +1,8 @@
+from dataclasses import fields
 from pathlib import Path
 from typing import Optional
 
+from coach.domain.models import CoachResponse
 from coach.utils import parse_file
 
 SYSTEM_PROMPT = """
@@ -25,25 +27,6 @@ Your role is to:
 """
 
 
-OUTPUT_INSTRUCTIONS = """
-Respond in the following format:
-
-Summary:
-<short paragraph>
-
-Observations:
-- <bullet>
-- <bullet>
-
-Recommendations:
-- <bullet>
-- <bullet>
-
-Confidence Notes:
-<optional note or 'None'>
-"""
-
-
 def _extend_parts(parts: list[str], part_title: str, prompt: Optional[str]) -> None:
     if prompt:
         parts.extend(
@@ -54,12 +37,30 @@ def _extend_parts(parts: list[str], part_title: str, prompt: Optional[str]) -> N
         )
 
 
+def generate_output_instructions() -> str:
+    lines = ['\nRespond in the following format:\n']
+
+    for f in fields(CoachResponse):
+        header = f'{f.name.replace('_', ' ').title()}:'
+        lines.append(header)
+        if f.metadata.get('bullets', False):
+            lines.append('- <bullet>')
+            lines.append('- <bullet>')
+        elif f.metadata.get('optional', False):
+            lines.append("<optional content or 'None'>")
+        else:
+            lines.append('<content>')
+        lines.append('')
+
+    return '\n'.join(lines).strip()
+
+
 def build_coach_prompt(*, rendered_training_state: str, user_prompt: Optional[str] = None, user_system_prompt_path: Path = Path('../config/coach.md')) -> str:
     parts: list[str] = []
     parts.append(SYSTEM_PROMPT.strip())
     _extend_parts(parts, 'User instructions and goals:', parse_file(user_system_prompt_path))
     _extend_parts(parts, 'Training context:', rendered_training_state)
     _extend_parts(parts, 'User question:', user_prompt)
-    parts.append(OUTPUT_INSTRUCTIONS.strip())
+    parts.append(generate_output_instructions().strip())
 
     return '\n'.join(parts)
