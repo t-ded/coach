@@ -8,8 +8,12 @@ dependencies = [
     "openai>=2.15.0",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
+    "typer>=0.21.1",
     "types-requests>=2.32.4.20260107",
 ]
+
+[project.scripts]
+coach = "coach.main:app"
 
 [tool.mypy]
 no_implicit_reexport = true

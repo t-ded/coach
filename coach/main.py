@@ -1,21 +1,17 @@
-from datetime import UTC
-from datetime import date
-from datetime import datetime
+import typer
 
-from coach.builders.training_state import build_training_state
+from coach.cli.app import app as cli_app
 from coach.config.logging import configure_logging
-from coach.config.settings import load_strava_settings
-from coach.ingestion.strava.client import StravaClient
-from coach.ingestion.strava.mapper import StravaMapper
-from coach.persistence.sqlite.database import Database
-from coach.persistence.sqlite.repositories import SQLiteActivityRepository
-from coach.persistence.sqlite.repositories import SQLiteTrainingStateRepository
-from coach.reasoning.adapter import LLMCoachReasoner
-from coach.reasoning.clients import OpenAILLMClient
 
 configure_logging()
 
+app = typer.Typer()
+app.add_typer(cli_app)
 
+if __name__ == "__main__":
+    app()
+
+SAMPLE_PIPELINE = """
 if __name__ == "__main__":
     load_strava_settings()
 
@@ -40,3 +36,4 @@ if __name__ == "__main__":
     reasoner = LLMCoachReasoner(llm_client)
 
     reasoner.reason(training_state=current_state, user_prompt='Provide me with workout plan for the upcoming week')
+"""

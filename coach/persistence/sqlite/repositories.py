@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from collections.abc import Iterable
 from datetime import UTC
 from datetime import datetime
@@ -17,6 +18,7 @@ from coach.persistence.sqlite.database import Database
 class SQLiteActivityRepository(Repository[Activity]):
     def __init__(self, db: Database) -> None:
         self._conn = db.connection()
+        self._conn.row_factory = sqlite3.Row
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
@@ -102,10 +104,14 @@ class SQLiteActivityRepository(Repository[Activity]):
         rows = self._conn.execute('SELECT * FROM activities').fetchall()
         return [deserialize_activity(row) for row in rows]
 
+    def count(self) -> int:
+        return self._conn.execute('SELECT COUNT(*) FROM activities').fetchone()[0]
+
 
 class SQLiteTrainingStateRepository(Repository[TrainingState]):
     def __init__(self, db: Database) -> None:
         self._conn = db.connection()
+        self._conn.row_factory = sqlite3.Row
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
