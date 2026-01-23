@@ -55,12 +55,22 @@ def generate_output_instructions() -> str:
     return '\n'.join(lines).strip()
 
 
-def build_coach_prompt(*, rendered_training_state: str, user_prompt: Optional[str] = None, user_system_prompt_path: Path = Path('../config/coach.md')) -> str:
+OUTPUT_INSTRUCTIONS = generate_output_instructions()
+
+
+def build_coach_prompt(
+        *,
+        rendered_training_state: str,
+        user_prompt: Optional[str] = None,
+        user_system_prompt_path: Path = Path('../config/coach.md'),
+        chat_history: Optional[str] = None,
+) -> str:
     parts: list[str] = []
     parts.append(SYSTEM_PROMPT.strip())
     _extend_parts(parts, 'User instructions and goals:', parse_file(user_system_prompt_path))
     _extend_parts(parts, 'Training context:', rendered_training_state)
+    _extend_parts(parts, 'Conversation so far:', chat_history)
     _extend_parts(parts, 'User question:', user_prompt)
-    parts.append(generate_output_instructions().strip())
+    parts.append(OUTPUT_INSTRUCTIONS.strip())
 
     return '\n'.join(parts)

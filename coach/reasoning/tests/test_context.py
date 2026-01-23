@@ -7,6 +7,8 @@ from freezegun import freeze_time
 from coach.domain.models import ActivityVolume
 from coach.domain.models import SportType
 from coach.domain.models import TrainingState
+from coach.reasoning.context import ChatHistory
+from coach.reasoning.context import ChatTurn
 from coach.reasoning.context import render_training_state_for_reasoning
 
 
@@ -131,3 +133,26 @@ def test_render_training_state_empty_volume() -> None:
     assert 'Training window: 2024-01-01 to 2024-01-31' in lines[0]
     assert 'Volume by sport:' in result
     assert 'Last activity date' not in result
+
+
+class TestChatHistory:
+    def setup_method(self) -> None:
+        self._history = ChatHistory(max_turns=2)
+
+    def test_is_empty(self) -> None:
+        assert self._history.is_empty()
+        self._history.add(ChatTurn(role='user', content='hello'))
+        assert not self._history.is_empty()
+
+    def test_render(self) -> None:
+        self._history.add(ChatTurn(role='user', content='Hello'))
+        self._history.add(ChatTurn(role='coach', content='Hello back'))
+
+        assert self._history.render() == 'User: Hello\nCoach: Hello back'
+
+    def test_old_turns_are_dropped(self) -> None:
+        self._history.add(ChatTurn(role='user', content='Hello'))
+        self._history.add(ChatTurn(role='coach', content='Hello back'))
+        self._history.add(ChatTurn(role='user', content='How are you?'))
+
+        assert self._history.render() == 'Coach: Hello back\nUser: How are you?'
