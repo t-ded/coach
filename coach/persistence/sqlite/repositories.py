@@ -30,6 +30,8 @@ class SQLiteActivityRepository(Repository[Activity]):
                 source_activity_id INTEGER NOT NULL,
                 sport_type TEXT NOT NULL,
                 name TEXT,
+                description TEXT,
+                notes TEXT,
                 start_time_utc TEXT NOT NULL,
                 elapsed_time_seconds INTEGER NOT NULL,
                 moving_time_seconds INTEGER,
@@ -64,7 +66,7 @@ class SQLiteActivityRepository(Repository[Activity]):
     def _insert_activity_query(self) -> str:
         return """
             INSERT OR IGNORE INTO activities VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         """
 
@@ -72,9 +74,11 @@ class SQLiteActivityRepository(Repository[Activity]):
     def _activity_values(
         activity: Activity,
     ) -> tuple[
-        int, str, int, str,
-        Optional[str], str, int, Optional[int],
-        Optional[float], Optional[float], Optional[float], Optional[float], Optional[float],
+        int, str, int,
+        str, Optional[str], Optional[str], Optional[str],
+        str, int, Optional[int],
+        Optional[float], Optional[float],
+        Optional[float], Optional[float], Optional[float],
         int, int,
     ]:
         serialized = serialize_activity(activity)
@@ -83,15 +87,19 @@ class SQLiteActivityRepository(Repository[Activity]):
             serialized['activity_id'],
             serialized['source'],
             serialized['source_activity_id'],
-            serialized['sport_type'],
 
+            serialized['sport_type'],
             serialized['name'],
+            serialized['description'],
+            serialized['notes'],
+
             serialized['start_time_utc'],
             serialized['elapsed_time_seconds'],
             serialized['moving_time_seconds'],
 
             serialized['distance_meters'],
             serialized['elevation_gain_meters'],
+
             serialized['average_heart_rate'],
             serialized['max_heart_rate'],
             serialized['average_power_watts'],
@@ -106,6 +114,14 @@ class SQLiteActivityRepository(Repository[Activity]):
 
     def count(self) -> int:
         return self._conn.execute('SELECT COUNT(*) FROM activities').fetchone()[0]
+
+    def last_activity_timestamp(self) -> Optional[int]:
+        row = self._conn.execute('SELECT MAX(start_time_utc) FROM activities').fetchone()
+        return int(datetime.fromisoformat(row[0]).timestamp()) if (row and row[0]) else None
+
+    def reset_table(self) -> None:
+        self._conn.execute('DROP TABLE IF EXISTS activities')
+        self._ensure_schema()
 
 
 class SQLiteTrainingStateRepository(Repository[TrainingState]):

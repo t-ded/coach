@@ -1,5 +1,6 @@
 import typer
 
+from coach.domain.models import Activity
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.mapper import StravaMapper
 from coach.persistence.sqlite.database import Database
@@ -9,19 +10,22 @@ sync_app = typer.Typer(help='Data ingestion commands')
 
 
 @sync_app.command('strava')
-def sync_strava() -> None:
+def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) -> None:
     client = StravaClient()
     mapper = StravaMapper()
 
     db = Database('coach.db')
     activity_repo = SQLiteActivityRepository(db)
-    current_num_activities_in_db = activity_repo.count()
+    if fresh:
+        typer.echo('Dropping activities table...')
+        activity_repo.reset_table()
+    last_synced_activity_ts = activity_repo.last_activity_timestamp() or 0
 
     typer.echo('Fetching activities from Strava...')
-    activities = [mapper.map_strava_activity(raw_activity) for raw_activity in client.list_activities()]
-    num_all_strava_activities = len(activities)
+    raw_unsynced_activities = client.list_activities(detailed=True, after=last_synced_activity_ts)
+    unsynced_activities = mapper.map_activities(raw_unsynced_activities)
 
-    typer.echo(f'Saving {num_all_strava_activities - current_num_activities_in_db} new activities to database...')
-    activity_repo.save_many(activities)
+    typer.echo(f'Saving {len(unsynced_activities)} new activities to database...')
+    activity_repo.save_many(unsynced_activities)
 
-    typer.echo(f'Synced {len(activities)} activities.')
+    typer.echo(f'{activity_repo.count()} total activities stored in the database.')

@@ -24,6 +24,8 @@ def test_serialize_activity() -> None:
 
         'sport_type': SAMPLE_RUN.sport_type.value,
         'name': SAMPLE_RUN.name,
+        'description': SAMPLE_RUN.description,
+        'notes': SAMPLE_RUN.notes,
 
         'start_time_utc': SAMPLE_RUN.start_time_utc.isoformat(),
         'elapsed_time_seconds': SAMPLE_RUN.elapsed_time_seconds,
@@ -50,6 +52,8 @@ def test_deserialize_activity() -> None:
 
             'sport_type': SAMPLE_RUN.sport_type.value,
             'name': SAMPLE_RUN.name,
+            'description': SAMPLE_RUN.description,
+            'notes': SAMPLE_RUN.notes,
 
             'start_time_utc': SAMPLE_RUN.start_time_utc.isoformat(),
             'elapsed_time_seconds': SAMPLE_RUN.elapsed_time_seconds,

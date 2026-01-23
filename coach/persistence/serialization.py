@@ -52,6 +52,8 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
 
         sport_type=SportType(serialized['sport_type']),
         name=serialized['name'],
+        description=serialized['description'],
+        notes=serialized['notes'],
 
         start_time_utc=datetime.fromisoformat(serialized['start_time_utc']),
         elapsed_time_seconds=serialized['elapsed_time_seconds'],

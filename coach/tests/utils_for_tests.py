@@ -12,6 +12,8 @@ SAMPLE_RUN = Activity(
 
     sport_type=SportType.RUN,
     name='Sample Run',
+    description='Sample Run Description',
+    notes='Sample Run Notes',
 
     start_time_utc=datetime(2025, 1, 1, 1, 0, 0, tzinfo=UTC),
     elapsed_time_seconds=3_600,
@@ -35,6 +37,8 @@ SAMPLE_RIDE = Activity(
 
     sport_type=SportType.RIDE,
     name='Sample Ride',
+    description='Sample Ride Description',
+    notes='Sample Ride Notes',
 
     start_time_utc=datetime(2025, 1, 2, 1, 0, 0, tzinfo=UTC),
     elapsed_time_seconds=3_600,

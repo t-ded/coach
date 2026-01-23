@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Any
 
 from coach.domain.models import Activity
@@ -7,6 +8,9 @@ from coach.utils import parse_utc_datetime
 
 
 class StravaMapper:
+    def map_activities(self, payloads: Iterable[dict[str, Any]]) -> list[Activity]:
+        return [self.map_strava_activity(payload) for payload in payloads]
+
     def map_strava_activity(self, payload: dict[str, Any]) -> Activity:
         start_time = parse_utc_datetime(payload['start_date'])
 
@@ -16,6 +20,8 @@ class StravaMapper:
             source_activity_id=int(payload['id']),
             sport_type=self._map_sport_type(payload),
             name=payload.get('name'),
+            description=payload.get('description'),
+            notes=payload.get('private_note'),
             start_time_utc=start_time,
             elapsed_time_seconds=int(payload['elapsed_time']),
             moving_time_seconds=payload.get('moving_time'),
