@@ -32,6 +32,8 @@ class OpenAILLMClient(LLMClient):
                 )
                 return response.output_text
             except Exception as exc:
+                if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+                    raise
                 last_error = exc
                 time.sleep(1)
 

@@ -1,6 +1,5 @@
 import typer
 
-from coach.domain.models import Activity
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.mapper import StravaMapper
 from coach.persistence.sqlite.database import Database
