@@ -37,25 +37,28 @@ def _extend_parts(parts: list[str], part_title: str, prompt: Optional[str]) -> N
         )
 
 
-def generate_output_instructions() -> str:
-    lines = ['\nRespond in the following format:\n']
+def generate_output_instructions(*, has_history: bool) -> str:
+    if has_history:
+        return 'Your answer: <response>\n'
+    else:
+        lines = ['\nRespond in the following format:\n']
 
-    for f in fields(CoachResponse):
-        header = f'{f.name.replace('_', ' ').title()}:'
-        lines.append(header)
-        if f.metadata.get('bullets', False):
-            lines.append('- <bullet>')
-            lines.append('- <bullet>')
-        elif f.metadata.get('optional', False):
-            lines.append("<optional content or 'None'>")
-        else:
-            lines.append('<content>')
-        lines.append('')
+        for f in fields(CoachResponse):
+            header = f'{f.name.replace('_', ' ').title()}:'
+            lines.append(header)
+            if f.metadata.get('bullets', False):
+                lines.append('- <bullet>')
+                lines.append('- <bullet>')
+            elif f.metadata.get('optional', False):
+                lines.append("<optional content or 'None'>")
+            else:
+                lines.append('<content>')
+            lines.append('')
 
-    return '\n'.join(lines).strip()
+        return '\n'.join(lines).strip()
 
 
-OUTPUT_INSTRUCTIONS = generate_output_instructions()
+INITIAL_OUTPUT_INSTRUCTIONS = generate_output_instructions(has_history=False)
 
 
 def build_coach_prompt(
@@ -71,6 +74,6 @@ def build_coach_prompt(
     _extend_parts(parts, 'Training context:', rendered_training_state)
     _extend_parts(parts, 'Conversation so far:', chat_history)
     _extend_parts(parts, 'User question:', user_prompt)
-    parts.append(OUTPUT_INSTRUCTIONS.strip())
+    parts.append(generate_output_instructions(has_history=chat_history is not None).strip())
 
     return '\n'.join(parts)

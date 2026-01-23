@@ -8,7 +8,7 @@ from coach.reasoning.interface import CoachReasoner
 from coach.reasoning.interface import LLMClient
 from coach.reasoning.parsing import CoachResponseParseError
 from coach.reasoning.parsing import parse_coach_response
-from coach.reasoning.prompts import OUTPUT_INSTRUCTIONS
+from coach.reasoning.prompts import INITIAL_OUTPUT_INSTRUCTIONS
 from coach.reasoning.prompts import build_coach_prompt
 
 
@@ -16,21 +16,17 @@ class LLMCoachReasoner(CoachReasoner):
     def __init__(self, llm_client: LLMClient) -> None:
         self._llm_client = llm_client
 
-    def reason(
-        self,
-        *,
-        training_state: TrainingState,
-        user_prompt: Optional[str] = None,
-        chat_history: Optional[str] = None,
-    ) -> CoachResponse:
+    def analyze(self, *, training_state: TrainingState, user_prompt: Optional[str] = None) -> CoachResponse:
         rendered_state = render_training_state_for_reasoning(training_state)
+        prompt = build_coach_prompt(rendered_training_state=rendered_state, user_prompt=user_prompt)
+        return self._parse_analyze_response_with_retry(prompt)
 
-        prompt = build_coach_prompt(
-            rendered_training_state=rendered_state,
-            user_prompt=user_prompt,
-            chat_history=chat_history,
-        )
+    def chat(self, *, training_state: TrainingState, user_prompt: str, chat_history: Optional[str] = None) -> str:
+        rendered_state = render_training_state_for_reasoning(training_state)
+        prompt = build_coach_prompt(rendered_training_state=rendered_state, user_prompt=user_prompt, chat_history=chat_history)
+        return self._llm_client.complete(prompt)
 
+    def _parse_analyze_response_with_retry(self, prompt: str) -> CoachResponse:
         attempt = 0
 
         while True:
@@ -40,17 +36,17 @@ class LLMCoachReasoner(CoachReasoner):
                 return parse_coach_response(raw_response)
             except CoachResponseParseError as exc:
                 if attempt <= MAX_CORRECTION_RETRIES:
-                    prompt = self._get_retry_prompt(exc, raw_response)
+                    prompt = self._get_analyze_retry_prompt(exc, raw_response)
                 else:
                     raise exc
 
             attempt += 1
 
     @staticmethod
-    def _get_retry_prompt(exception: Exception, raw_response: str) -> str:
+    def _get_analyze_retry_prompt(exception: Exception, raw_response: str) -> str:
         return (
             f'The previous response was invalid because: {exception}\n'
             f'Please return the same content but correctly formatted according to the following structure:\n'
-            f'{OUTPUT_INSTRUCTIONS}\n\n'
+            f'{INITIAL_OUTPUT_INSTRUCTIONS}\n\n'
             f'Original response:\n{raw_response}'
         )

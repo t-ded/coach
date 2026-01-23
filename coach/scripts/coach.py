@@ -57,19 +57,25 @@ class Coach:
             return None
 
     def _get_coach_response(self, user_input: str) -> str:
-        coach_response = self._reasoner.reason(training_state=self._last_week_state, user_prompt=user_input)
-        coach_text = self._format_response(coach_response)
+        if self._history.is_empty():
+            coach_response = self._reasoner.analyze(training_state=self._last_week_state, user_prompt=user_input)
+            coach_text = self._format_response(coach_response)
+        else:
+            coach_text = self._reasoner.chat(training_state=self._last_week_state, user_prompt=user_input, chat_history=self._history.render())
         self._history.add(ChatTurn(role='coach', content=coach_text))
         return coach_text
 
-    @staticmethod
-    def _format_response(response: CoachResponse) -> str:
+    def _format_response(self, response: CoachResponse) -> str:
         return (
-            f'Summary:\n{response.summary}\n\n'
-            f'Observations:\n' + '\n'.join(f'- {o}' for o in response.observations) + '\n\n'
-            'Recommendations:\n' + '\n'.join(f'- {r}' for r in response.recommendations) + '\n\n'
+            f'Summary:\n{response.summary}\n\n' +
+            self._get_bullets('Observations', response.observations) +
+            self._get_bullets('Recommendations', response.recommendations) +
             f"Confidence Notes:\n{response.confidence_notes or 'None'}"
         )
+
+    @staticmethod
+    def _get_bullets(subtitle: str, items: list[str]) -> str:
+        return f'{subtitle}:\n' + '\n'.join(f'- {item}' for item in items) + '\n\n'
 
 
 @coach_app.callback(invoke_without_command=True)
