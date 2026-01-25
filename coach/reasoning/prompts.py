@@ -65,7 +65,7 @@ def build_coach_prompt(
         *,
         rendered_recent_training_history: str,
         user_prompt: Optional[str] = None,
-        user_system_prompt_path: Path = Path('../config/coach.md'),
+        user_system_prompt_path: Path = Path('coach/config/coach.md'),
         chat_history: Optional[str] = None,
 ) -> str:
     parts: list[str] = []

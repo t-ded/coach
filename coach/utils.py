@@ -32,7 +32,7 @@ def days_ago(past_date: date | datetime) -> int:
 def parse_file(path: Path) -> Optional[str]:
     if not path.exists():
         return None
-    return path.read_text(encoding="utf-8").strip()
+    return path.read_text(encoding='utf-8').strip()
 
 
 def parse_private_notes_activity_summary(private_notes: Optional[str]) -> str:
