@@ -13,6 +13,7 @@ from coach.persistence.serialization import deserialize_training_state
 from coach.persistence.serialization import serialize_activity
 from coach.persistence.serialization import serialize_training_state
 from coach.persistence.sqlite.database import Database
+from coach.utils import build_sqlite_where_clause
 
 
 class SQLiteActivityRepository(Repository[Activity]):
@@ -108,8 +109,10 @@ class SQLiteActivityRepository(Repository[Activity]):
             serialized['is_race'],
         )
 
-    def list_all(self) -> list[Activity]:
-        rows = self._conn.execute('SELECT * FROM activities').fetchall()
+    def list_all(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list[Activity]:
+        base_query = 'SELECT * FROM activities'
+        where_query, params = build_sqlite_where_clause(base_query, {'start_time_utc': [('>=', start_date), ('<', end_date)]})
+        rows = self._conn.execute(where_query, params).fetchall()
         return [deserialize_activity(row) for row in rows]
 
     def count(self) -> int:

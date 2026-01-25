@@ -63,7 +63,7 @@ INITIAL_OUTPUT_INSTRUCTIONS = generate_output_instructions(has_history=False)
 
 def build_coach_prompt(
         *,
-        rendered_training_state: str,
+        rendered_recent_training_history: str,
         user_prompt: Optional[str] = None,
         user_system_prompt_path: Path = Path('../config/coach.md'),
         chat_history: Optional[str] = None,
@@ -71,7 +71,7 @@ def build_coach_prompt(
     parts: list[str] = []
     parts.append(SYSTEM_PROMPT.strip())
     _extend_parts(parts, 'User instructions and goals:', parse_file(user_system_prompt_path))
-    _extend_parts(parts, 'Training context:', rendered_training_state)
+    _extend_parts(parts, 'Training context:', rendered_recent_training_history)
     _extend_parts(parts, 'Conversation so far:', chat_history)
     _extend_parts(parts, 'User question:', user_prompt)
     parts.append(generate_output_instructions(has_history=chat_history is not None).strip())

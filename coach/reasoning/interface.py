@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Optional
 
 from coach.domain.models import CoachResponse
-from coach.domain.models import TrainingState
+from coach.domain.models import RecentTrainingHistory
 
 
 class ReasoningMode(Enum):
@@ -14,11 +14,11 @@ class ReasoningMode(Enum):
 
 class CoachReasoner(ABC):
     @abstractmethod
-    def analyze(self, *, training_state: TrainingState, user_prompt: Optional[str] = None) -> CoachResponse:
+    def analyze(self, *, recent_training_history: RecentTrainingHistory, user_prompt: Optional[str] = None) -> CoachResponse:
         ...
 
     @abstractmethod
-    def chat(self, *, training_state: TrainingState, user_prompt: str, chat_history: Optional[str] = None) -> str:
+    def chat(self, *, recent_training_history: RecentTrainingHistory, user_prompt: str, chat_history: Optional[str] = None) -> str:
         ...
 
 

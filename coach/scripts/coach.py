@@ -1,11 +1,10 @@
 from datetime import UTC
 from datetime import datetime
-from datetime import timedelta
 from typing import Optional
 
 import typer
 
-from coach.builders.training_state import build_training_state
+from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.models import CoachResponse
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
@@ -18,16 +17,16 @@ coach_app = typer.Typer(help='Coach reasoning commands')
 
 
 class Coach:
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, num_history_weeks: int) -> None:
         self._model = model
 
         self._db = Database('coach.db')
         self._activity_repo = SQLiteActivityRepository(self._db)
 
-        self._last_week_state = build_training_state(
+        self._recent_training_history = build_recent_training_history(
             activities=self._activity_repo.list_all(),
-            window_start=datetime.now(tz=UTC).date() - timedelta(days=7),
-            window_end=datetime.now(tz=UTC).date(),
+            generated_at=datetime.now(tz=UTC),
+            num_history_weeks=num_history_weeks,
         )
 
         self._llm_client = OpenAILLMClient(model=self._model)
@@ -57,11 +56,11 @@ class Coach:
             return None
 
     def _get_coach_response(self, user_input: str) -> str:
-        if self._history.is_empty():
-            coach_response = self._reasoner.analyze(training_state=self._last_week_state, user_prompt=user_input)
+        if self._history.has_no_coach_response():
+            coach_response = self._reasoner.analyze(recent_training_history=self._recent_training_history, user_prompt=user_input)
             coach_text = self._format_response(coach_response)
         else:
-            coach_text = self._reasoner.chat(training_state=self._last_week_state, user_prompt=user_input, chat_history=self._history.render())
+            coach_text = self._reasoner.chat(recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=self._history.render())
         self._history.add(ChatTurn(role='coach', content=coach_text))
         return coach_text
 
@@ -79,8 +78,15 @@ class Coach:
 
 
 @coach_app.callback(invoke_without_command=True)
-def chat_callback(ctx: typer.Context, model: str = typer.Option('gpt-5-nano', help='Open AI model')) -> None:
-    coach = Coach(model=model)
+def chat_callback(
+        ctx: typer.Context,
+        model: str = typer.Option(default='gpt-5-nano', help='Open AI model'),
+        num_history_weeks: int = typer.Option(
+            default=2,
+            help='Number of weeks used to build a summary of the current training state. Weeks are indexed from monday and the current week is always included.',
+        ),
+) -> None:
+    coach = Coach(model=model, num_history_weeks=num_history_weeks)
     ctx.obj = coach
 
     if ctx.invoked_subcommand is None:
