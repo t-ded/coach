@@ -113,4 +113,3 @@ class TestBuildSqliteWhereClause:
         )
         assert query == 'SELECT * FROM activities WHERE sport_type = ?'
         assert params == ['Run']
-

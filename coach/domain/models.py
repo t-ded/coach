@@ -144,16 +144,6 @@ class RecentTrainingHistory:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class TrainingState:
-    generated_at: datetime
-    window_start: date
-    window_end: date
-
-    volume_by_sport: Mapping[SportType, ActivityVolume]
-    last_activity_date: Optional[date]
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
 class CoachResponse:
     summary: str
     observations: list[str] = field(metadata={'bullets': True})
