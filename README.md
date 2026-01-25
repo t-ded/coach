@@ -8,6 +8,7 @@ An AI-powered training coach that provides personalized coaching advice based on
 - **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
 - **🎯 Personalized Goals**: Customize your training goals, constraints, and preferences
+- **📝 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
 
 ## 📋 Prerequisites
 
@@ -60,6 +61,14 @@ coach sync strava
 
 This fetches all your activities from Strava and stores them locally for analysis.
 
+**Options**:
+- `--fresh`: Remove all existing entries from the database and re-ingest all activities
+
+Example for a fresh sync:
+```bash
+coach sync strava --fresh
+```
+
 #### 💭 Chat Commands
 
 Start an interactive coaching session:
@@ -70,17 +79,20 @@ coach chat
 
 **Options**:
 - `--model`: Specify the OpenAI model to use (default: `gpt-5-nano`)
+- `--num-history-weeks`: Number of weeks to include in the training state analysis (default: `2`)
 
-Example with a specific model:
+Example with a specific model and extended history:
 ```bash
-coach chat --model gpt-4o
+coach chat --model gpt-4o --num-history-weeks 4
 ```
 
 The coach will:
-1. Load your activities from the past 7 days
+1. Build training state from recent weeks (specified by `--num-history-weeks` parameter)
 2. Analyze your training state on the first question
 3. Provide structured feedback with summary, observations, recommendations, and confidence notes
 4. Continue the conversation with follow-up questions in a natural chat format
+
+**Note**: Weeks are indexed from Monday and the current week is always included in the analysis.
 
 ### Typical Workflow
 
@@ -144,3 +156,17 @@ The AI coach uses this information to provide advice aligned with your specific 
 ## 💾 Data Storage
 
 Activities are stored in a local SQLite database (`coach.db`) in the project directory. This allows for quick analysis without repeatedly calling the Strava API.
+
+## 📝 Using Private Notes
+
+You can provide additional context to the coach by adding information to your Strava activity private notes. To ensure the coach analyzes specific portions of your notes, wrap them between dollar signs (`$...$`).
+
+### Example
+
+In your Strava activity private notes, you can write:
+
+```
+$VO2 max 5x1 @4:30 1:30 in between session, felt extremely hard, especially the last lap$
+```
+
+The coach will extract this information and use it to provide more accurate analysis and recommendations. Anything outside the dollar signs will be ignored, allowing you to keep personal notes separate from coaching-relevant information.
