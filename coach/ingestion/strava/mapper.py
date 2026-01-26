@@ -1,9 +1,9 @@
 from collections.abc import Iterable
 from typing import Any
 
-from coach.domain.models import Activity
-from coach.domain.models import ActivitySource
-from coach.domain.models import SportType
+from coach.domain.activity import Activity
+from coach.domain.activity import ActivitySource
+from coach.domain.activity import SportType
 from coach.utils import parse_utc_datetime
 
 

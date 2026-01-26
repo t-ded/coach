@@ -3,10 +3,10 @@ from datetime import date
 from datetime import datetime
 
 from coach.builders.recent_training_history import build_recent_training_history
-from coach.domain.models import ActivitySummary
-from coach.domain.models import ActivityVolume
-from coach.domain.models import SportType
-from coach.domain.models import WeeklySummary
+from coach.domain.activity import SportType
+from coach.domain.training_summaries import ActivitySummary
+from coach.domain.training_summaries import ActivityVolume
+from coach.domain.training_summaries import WeeklySummary
 from coach.tests.utils_for_tests import SAMPLE_RIDE
 from coach.tests.utils_for_tests import SAMPLE_RUN
 

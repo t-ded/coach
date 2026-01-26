@@ -4,11 +4,11 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
-from coach.domain.models import Activity
-from coach.domain.models import ActivitySummary
-from coach.domain.models import ActivityVolume
-from coach.domain.models import SportType
-from coach.domain.models import WeeklyActivities
+from coach.domain.activity import Activity
+from coach.domain.activity import SportType
+from coach.domain.training_summaries import ActivitySummary
+from coach.domain.training_summaries import ActivityVolume
+from coach.domain.training_summaries import WeeklyActivities
 
 
 def get_week_start_week_end(center_date: date | datetime) -> tuple[date, date]:

@@ -5,13 +5,13 @@ from typing import Optional
 import typer
 
 from coach.builders.recent_training_history import build_recent_training_history
-from coach.domain.models import CoachResponse
+from coach.domain.chat import ChatHistory
+from coach.domain.chat import ChatTurn
+from coach.domain.chat import CoachResponse
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.adapter import LLMCoachReasoner
 from coach.reasoning.clients import OpenAILLMClient
-from coach.reasoning.context import ChatHistory
-from coach.reasoning.context import ChatTurn
 
 coach_app = typer.Typer(help='Coach reasoning commands')
 

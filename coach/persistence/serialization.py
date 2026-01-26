@@ -4,10 +4,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from coach.domain.models import Activity
-from coach.domain.models import ActivitySource
-from coach.domain.models import ActivityVolume
-from coach.domain.models import SportType
+from coach.domain.activity import Activity
+from coach.domain.activity import ActivitySource
+from coach.domain.activity import SportType
+from coach.domain.training_summaries import ActivityVolume
 
 
 def _bools_to_ints(values: dict[str, Any]) -> dict[str, Any]:

@@ -3,8 +3,8 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Optional
 
-from coach.domain.models import CoachResponse
-from coach.domain.models import RecentTrainingHistory
+from coach.domain.chat import CoachResponse
+from coach.domain.training_summaries import RecentTrainingHistory
 
 
 class ReasoningMode(Enum):

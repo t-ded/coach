@@ -2,7 +2,7 @@ from dataclasses import fields
 from pathlib import Path
 from typing import Optional
 
-from coach.domain.models import CoachResponse
+from coach.domain.chat import CoachResponse
 from coach.utils import parse_file
 
 SYSTEM_PROMPT = """

@@ -1,14 +1,11 @@
-from collections import deque
-from dataclasses import dataclass
-from typing import Literal
 from typing import Optional
 from typing import cast
 
-from coach.domain.models import ActivitySummary
-from coach.domain.models import ActivityVolume
-from coach.domain.models import RecentTrainingHistory
-from coach.domain.models import WeeklyActivities
-from coach.domain.models import WeeklySummary
+from coach.domain.training_summaries import ActivitySummary
+from coach.domain.training_summaries import ActivityVolume
+from coach.domain.training_summaries import RecentTrainingHistory
+from coach.domain.training_summaries import WeeklyActivities
+from coach.domain.training_summaries import WeeklySummary
 from coach.utils import parse_distance_km
 from coach.utils import parse_duration
 
@@ -78,32 +75,3 @@ def render_recent_training_history(recent_training_history: RecentTrainingHistor
     lines.append(render_weekly_summary(recent_training_history.current_week_summary))
 
     return '\n'.join(lines)
-
-
-Role = Literal['user', 'coach']
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
-class ChatTurn:
-    role: Role
-    content: str
-
-
-class ChatHistory:
-    def __init__(self, *, max_turns: int = 6) -> None:
-        self._turns: deque[ChatTurn] = deque(maxlen=max_turns)
-
-    def add(self, turn: ChatTurn) -> None:
-        self._turns.append(turn)
-
-    def render(self) -> str:
-        lines: list[str] = []
-
-        for turn in self._turns:
-            prefix = turn.role.capitalize()
-            lines.append(f'{prefix}: {turn.content}')
-
-        return '\n'.join(lines)
-
-    def has_no_coach_response(self) -> bool:
-        return all(turn.role == 'user' for turn in self._turns)

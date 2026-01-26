@@ -1,7 +1,7 @@
 import re
 from dataclasses import fields
 
-from coach.domain.models import CoachResponse
+from coach.domain.chat import CoachResponse
 
 
 class CoachResponseParseError(Exception):

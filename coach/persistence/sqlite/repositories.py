@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Optional
 
-from coach.domain.models import Activity
+from coach.domain.activity import Activity
 from coach.persistence.repository_interface import Repository
 from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import serialize_activity

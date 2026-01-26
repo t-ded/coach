@@ -1,7 +1,7 @@
 from datetime import UTC
 from datetime import datetime
 
-from coach.domain.models import SportType
+from coach.domain.activity import SportType
 from coach.ingestion.strava.mapper import StravaMapper
 
 

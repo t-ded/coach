@@ -3,9 +3,9 @@ from datetime import datetime
 from datetime import timedelta
 
 from coach.builders.weekly_summary import build_weekly_summary
-from coach.domain.models import Activity
-from coach.domain.models import RecentTrainingHistory
-from coach.domain.models import WeeklySummary
+from coach.domain.activity import Activity
+from coach.domain.training_summaries import RecentTrainingHistory
+from coach.domain.training_summaries import WeeklySummary
 
 
 def build_recent_training_history(activities: Iterable[Activity], *, generated_at: datetime, num_history_weeks: int) -> RecentTrainingHistory:

@@ -1,8 +1,8 @@
 from typing import Optional
 
 from coach.config.config import MAX_CORRECTION_RETRIES
-from coach.domain.models import CoachResponse
-from coach.domain.models import RecentTrainingHistory
+from coach.domain.chat import CoachResponse
+from coach.domain.training_summaries import RecentTrainingHistory
 from coach.reasoning.context import render_recent_training_history
 from coach.reasoning.interface import CoachReasoner
 from coach.reasoning.interface import LLMClient

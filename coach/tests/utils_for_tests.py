@@ -1,9 +1,9 @@
 from datetime import UTC
 from datetime import datetime
 
-from coach.domain.models import Activity
-from coach.domain.models import ActivitySource
-from coach.domain.models import SportType
+from coach.domain.activity import Activity
+from coach.domain.activity import ActivitySource
+from coach.domain.activity import SportType
 
 SAMPLE_RUN = Activity(
     activity_id=1,

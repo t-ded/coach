@@ -6,8 +6,8 @@ from coach.builders.utils import bucket_activities_by_weekday
 from coach.builders.utils import get_activities_between_dates
 from coach.builders.utils import get_categorized_volume
 from coach.builders.utils import get_week_start_week_end
-from coach.domain.models import Activity
-from coach.domain.models import WeeklySummary
+from coach.domain.activity import Activity
+from coach.domain.training_summaries import WeeklySummary
 
 
 def build_weekly_summary(activities: Iterable[Activity], generated_at: date | datetime) -> WeeklySummary:

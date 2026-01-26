@@ -2,14 +2,12 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 
-from coach.domain.models import ActivitySummary
-from coach.domain.models import ActivityVolume
-from coach.domain.models import RecentTrainingHistory
-from coach.domain.models import SportType
-from coach.domain.models import WeeklyActivities
-from coach.domain.models import WeeklySummary
-from coach.reasoning.context import ChatHistory
-from coach.reasoning.context import ChatTurn
+from coach.domain.activity import SportType
+from coach.domain.training_summaries import ActivitySummary
+from coach.domain.training_summaries import ActivityVolume
+from coach.domain.training_summaries import RecentTrainingHistory
+from coach.domain.training_summaries import WeeklyActivities
+from coach.domain.training_summaries import WeeklySummary
 from coach.reasoning.context import render_activity_summary
 from coach.reasoning.context import render_activity_volume
 from coach.reasoning.context import render_recent_training_history
@@ -290,28 +288,3 @@ Ride: Ride 1
 """
 
     assert result == expected_result.lstrip()
-
-
-class TestChatHistory:
-    def setup_method(self) -> None:
-        self._history = ChatHistory(max_turns=2)
-
-    def test_is_empty(self) -> None:
-        assert self._history.has_no_coach_response()
-        self._history.add(ChatTurn(role='user', content='hello'))
-        assert self._history.has_no_coach_response()
-        self._history.add(ChatTurn(role='coach', content='hello back'))
-        assert not self._history.has_no_coach_response()
-
-    def test_render(self) -> None:
-        self._history.add(ChatTurn(role='user', content='Hello'))
-        self._history.add(ChatTurn(role='coach', content='Hello back'))
-
-        assert self._history.render() == 'User: Hello\nCoach: Hello back'
-
-    def test_old_turns_are_dropped(self) -> None:
-        self._history.add(ChatTurn(role='user', content='Hello'))
-        self._history.add(ChatTurn(role='coach', content='Hello back'))
-        self._history.add(ChatTurn(role='user', content='How are you?'))
-
-        assert self._history.render() == 'Coach: Hello back\nUser: How are you?'

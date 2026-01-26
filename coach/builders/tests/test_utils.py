@@ -7,9 +7,9 @@ from coach.builders.utils import categorize_activities_by_sport_type
 from coach.builders.utils import get_activities_between_dates
 from coach.builders.utils import get_categorized_volume
 from coach.builders.utils import get_week_start_week_end
-from coach.domain.models import ActivitySummary
-from coach.domain.models import ActivityVolume
-from coach.domain.models import SportType
+from coach.domain.activity import SportType
+from coach.domain.training_summaries import ActivitySummary
+from coach.domain.training_summaries import ActivityVolume
 from coach.tests.utils_for_tests import SAMPLE_RIDE
 from coach.tests.utils_for_tests import SAMPLE_RUN
 

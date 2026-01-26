@@ -1,5 +1,4 @@
-
-from coach.domain.models import ActivityVolume
+from coach.domain.training_summaries import ActivityVolume
 from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import deserialize_activity_volume
 from coach.persistence.serialization import serialize_activity
