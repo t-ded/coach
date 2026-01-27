@@ -7,7 +7,7 @@ from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
 from coach.utils import parse_distance_km
-from coach.utils import parse_duration
+from coach.utils import format_total_seconds
 
 
 def _optional_append(value: Optional[int | float | str], format_str: str, lines: list[str]) -> None:
@@ -18,7 +18,7 @@ def _optional_append(value: Optional[int | float | str], format_str: str, lines:
 def render_activity_volume(volume: ActivityVolume) -> str:
     lines: list[str] = []
     lines.append(f'- Num activities: {volume.num_activities}')
-    lines.append(f'- Total duration: {parse_duration(total_seconds=volume.duration_seconds)}')
+    lines.append(f'- Total duration: {format_total_seconds(total_seconds=volume.duration_seconds)}')
     _optional_append(parse_distance_km(meters=volume.distance_meters, decimals=1), '- Total distance: {}', lines)
     return '\n'.join(lines)
 
@@ -26,7 +26,7 @@ def render_activity_volume(volume: ActivityVolume) -> str:
 def render_activity_summary(activity_summary: ActivitySummary) -> str:
     lines: list[str] = []
     lines.append(f'{activity_summary.sport_type.value}: {activity_summary.description}')
-    lines.append(f'- Duration: {parse_duration(total_seconds=activity_summary.duration_seconds)}')
+    lines.append(f'- Duration: {format_total_seconds(total_seconds=activity_summary.duration_seconds)}')
     _optional_append(parse_distance_km(meters=activity_summary.distance_meters, decimals=1), '- Distance: {}', lines)
     _optional_append(activity_summary.elevation_gain_meters, '- Elevation gain: {} meters', lines)
     _optional_append(activity_summary.average_heart_rate, '- Average heart rate: {} bpm', lines)

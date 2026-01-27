@@ -20,6 +20,9 @@ class SportType(StrEnum):
     OTHER = 'Other'
 
 
+DISTANCE_SPORT_TYPES = (SportType.RUN, SportType.RIDE, SportType.SWIM, SportType.WALK)
+
+
 @dataclass(frozen=True, kw_only=True, slots=True)
 class Activity:
     """

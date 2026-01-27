@@ -7,6 +7,11 @@ from coach.builders.utils import categorize_activities_by_sport_type
 from coach.builders.utils import get_activities_between_dates
 from coach.builders.utils import get_categorized_volume
 from coach.builders.utils import get_week_start_week_end
+from coach.builders.utils import parse_date
+from coach.builders.utils import parse_distance
+from coach.builders.utils import parse_duration
+from coach.builders.utils import parse_pace
+from coach.builders.utils import parse_sport_type
 from coach.domain.activity import SportType
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
@@ -55,3 +60,49 @@ def test_get_categorized_volume() -> None:
         SportType.RUN: ActivityVolume(distance_meters=20_000.0, duration_seconds=7_000, num_activities=2),
         SportType.RIDE: ActivityVolume(distance_meters=20_000.0, duration_seconds=3_500, num_activities=1),
     }
+
+
+def test_parse_sport_type() -> None:
+    assert parse_sport_type('Run') == SportType.RUN
+    assert parse_sport_type('run') == SportType.RUN
+    assert parse_sport_type('running') == SportType.RUN
+
+    assert parse_sport_type('Gibberish') == SportType.OTHER
+
+
+def test_parse_distance() -> None:
+    assert parse_distance('21.0975 km') == 21_097.5
+    assert parse_distance('21.0975 kms') == 21_097.5
+    assert parse_distance('20000 m') == 20_000.0
+    assert parse_distance('20000 meters') == 20_000.0
+    assert parse_distance('1 mile') == 1_609.34
+    assert parse_distance('2 miles') == 2 * 1_609.34
+    assert parse_distance('Gibberish') is None
+
+
+def test_parse_duration() -> None:
+    assert parse_duration('01:00:00') == 3_600
+    assert parse_duration('01:01:05') == 3_665
+    assert parse_duration('01:05') == 65
+    assert parse_duration('1 minute 30 seconds') == 90
+    assert parse_duration('1 hour 30 minutes') == 5_400
+    assert parse_duration('Gibberish') is None
+
+
+def test_parse_pace() -> None:
+    assert parse_pace('4:30/km') == '4:30/km'
+    assert parse_pace('4:30 per km') == '4:30/km'
+    assert parse_pace('7:00/mi') == '7:00/mi'
+    assert parse_pace('7:00 per mi') == '7:00/mi'
+    assert parse_pace('Gibberish') is None
+
+
+def test_parse_date() -> None:
+    assert parse_date('2024-01-30') == date(2024, 1, 30)
+    assert parse_date('2024/01/30') == date(2024, 1, 30)
+    assert parse_date('30/01/2024') == date(2024, 1, 30)
+    assert parse_date('30/1/2024') == date(2024, 1, 30)
+    assert parse_date('30.1.2024') == date(2024, 1, 30)
+    assert parse_date('30. 1. 2024') == date(2024, 1, 30)
+    assert parse_date('30 January 2024') == date(2024, 1, 30)
+    assert parse_date('January 30, 2024') == date(2024, 1, 30)

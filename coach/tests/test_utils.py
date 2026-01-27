@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from coach.utils import build_sqlite_where_clause
 from coach.utils import days_ago
 from coach.utils import parse_distance_km
-from coach.utils import parse_duration
+from coach.utils import format_total_seconds
 from coach.utils import parse_file
 from coach.utils import parse_private_notes_activity_summary
 from coach.utils import parse_utc_datetime
@@ -20,9 +20,9 @@ def test_parse_utc_datetime() -> None:
 
 
 def test_parse_duration() -> None:
-    assert parse_duration(total_seconds=3600) == '01:00:00'
-    assert parse_duration(total_seconds=3665) == '01:01:05'
-    assert parse_duration(total_seconds=65) == '00:01:05'
+    assert format_total_seconds(total_seconds=3600) == '01:00:00'
+    assert format_total_seconds(total_seconds=3665) == '01:01:05'
+    assert format_total_seconds(total_seconds=65) == '00:01:05'
 
 
 def test_parse_distance_km() -> None:

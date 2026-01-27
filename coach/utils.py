@@ -11,7 +11,7 @@ def parse_utc_datetime(value: str) -> datetime:
     return dt.astimezone(UTC)
 
 
-def parse_duration(*, total_seconds: int) -> str:
+def format_total_seconds(*, total_seconds: int) -> str:
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
