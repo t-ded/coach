@@ -6,8 +6,8 @@ from tempfile import NamedTemporaryFile
 
 from coach.utils import build_sqlite_where_clause
 from coach.utils import days_ago
-from coach.utils import parse_distance_km
 from coach.utils import format_total_seconds
+from coach.utils import parse_distance_km
 from coach.utils import parse_file
 from coach.utils import parse_private_notes_activity_summary
 from coach.utils import parse_utc_datetime

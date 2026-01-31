@@ -41,7 +41,7 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
     name = _strip_bullet_point_line(lines[0])
 
     sport_type = None
-    goal_date = 'N/A'
+    goal_date = None
     notes = None
     distance_meters = None
     duration_seconds = None
@@ -74,7 +74,7 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
         return DistanceActivityTrainingGoal(
             sport_type=sport_type,
             name=name,
-            goal_date=goal_date,
+            goal_date=goal_date or 'N/A',
             notes=notes,
             goal_distance_meters=distance_meters,
             goal_duration_seconds=duration_seconds,
@@ -84,6 +84,6 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
         return TrainingGoal(
             sport_type=sport_type,
             name=name,
-            goal_date=goal_date,
+            goal_date=goal_date or 'N/A',
             notes=notes,
         )

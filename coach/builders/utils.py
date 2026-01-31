@@ -212,7 +212,7 @@ def _validate_pace_distance_duration(distance_meters: float, duration_seconds: i
         print(computed_duration, duration_seconds)
         raise ValueError(
             f'Inconsistent values: distance={distance_meters}m, '
-            f'duration={duration_seconds}s, pace={pace_str}'
+            f'duration={duration_seconds}s, pace={pace_str}',
         )
 
 

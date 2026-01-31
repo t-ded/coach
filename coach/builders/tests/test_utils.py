@@ -98,7 +98,9 @@ def test_parse_pace_into_minutes_per_km() -> None:
     assert parse_pace_into_minutes_per_km('7:00/mi') == '4:20/km'
     assert parse_pace_into_minutes_per_km('7:00 per mi') == '4:20/km'
     assert parse_pace_into_minutes_per_km('@4:30') == '4:30/km'
-    assert parse_pace_into_minutes_per_km('Gibberish') is None
+
+    with pytest.raises(ValueError, match='Invalid pace format:'):
+        parse_pace_into_minutes_per_km('Gibberish')
 
 
 def test_parse_date() -> None:
