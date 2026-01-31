@@ -1,4 +1,5 @@
 import re
+import typing
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import UTC
@@ -65,7 +66,7 @@ def get_categorized_volume(activities: Iterable[Activity]) -> dict[SportType, Ac
     return {sport_type: ActivityVolume.from_activities(activities) for sport_type, activities in categorized_activities.items()}
 
 
-def parse_sport_type(text: str) -> str:
+def parse_sport_type(text: str) -> SportType:
     """Parse sport type from text, handling common variations."""
     text_lower = text.lower().strip()
 
@@ -93,7 +94,7 @@ def parse_sport_type(text: str) -> str:
     return sport_map.get(text_lower, SportType.OTHER)
 
 
-def parse_distance(text: str) -> Optional[float]:
+def parse_distance_into_meters(text: str) -> Optional[float]:
     """Parse distance from text, supporting km, mi, m formats."""
     patterns = [
         (r'(\d+\.?\d*)\s*km', 1000),
@@ -112,7 +113,7 @@ def parse_distance(text: str) -> Optional[float]:
 
 def parse_duration(text: str) -> Optional[int]:
     """Parse duration from text, supporting HH:MM:SS, MM:SS, or descriptive formats."""
-    time_match = re.search(r"(\d+):(\d+)(?::(\d+))?", text)
+    time_match = re.search(r'(\d+):(\d+)(?::(\d+))?', text)
     if time_match:
         hours = int(time_match.group(1)) if time_match.group(3) else 0
         minutes = int(time_match.group(2)) if time_match.group(3) else int(time_match.group(1))
@@ -135,15 +136,28 @@ def parse_duration(text: str) -> Optional[int]:
     return int(total_seconds) if total_seconds > 0 else None
 
 
-def parse_pace(text: str) -> Optional[str]:
-    """Parse pace from text, supporting min/km, min/mi formats."""
+def parse_pace_into_minutes_per_km(text: str) -> str:
+    """Parse pace from text, supporting min/km, min/mi formats and @pace per km notation."""
+    at_pace_match = re.search(r'@(\d+:\d+)', text)
+    if at_pace_match:
+        return f'{at_pace_match.group(1)}/km'
+
     pace_match = re.search(r'(\d+:\d+)\s*(?:/|per)\s*(km|mi)', text.lower())
     if pace_match:
         pace_value = pace_match.group(1)
         unit = pace_match.group(2)
-        return f'{pace_value}/{unit}'
 
-    return None
+        if unit == 'mi':
+            minutes, seconds = map(int, pace_value.split(':'))
+            total_seconds = minutes * 60 + seconds
+            km_seconds = total_seconds / 1.60934
+            km_minutes = int(km_seconds // 60)
+            km_secs = int(km_seconds % 60)
+            return f'{km_minutes}:{km_secs:02d}/km'
+
+        return f'{pace_value}/km'
+
+    raise ValueError(f'Invalid pace format: {text}')
 
 
 def parse_date(text: str) -> str | date:
@@ -176,3 +190,61 @@ def parse_date(text: str) -> str | date:
                 continue
 
     return text
+
+
+def _seconds_per_meter_from_minutes_per_km(pace_str: str) -> float:
+    match = re.match(r'(\d+):(\d+)/km', pace_str)
+    if not match:
+        raise ValueError(f'Invalid pace format: {pace_str}')
+
+    minutes, seconds = int(match.group(1)), int(match.group(2))
+    seconds_per_meter = (minutes * 60 + seconds) / 1_000
+    return seconds_per_meter
+
+
+def _validate_pace_distance_duration(distance_meters: float, duration_seconds: int, pace_str: str) -> None:
+    pace_minutes_per_km = parse_pace_into_minutes_per_km(pace_str)
+    spm = _seconds_per_meter_from_minutes_per_km(pace_minutes_per_km)
+    computed_duration = distance_meters * spm
+
+    tolerance = 0.02
+    if abs(computed_duration - duration_seconds) / duration_seconds > tolerance:
+        print(computed_duration, duration_seconds)
+        raise ValueError(
+            f'Inconsistent values: distance={distance_meters}m, '
+            f'duration={duration_seconds}s, pace={pace_str}'
+        )
+
+
+def _seconds_per_meter_to_minutes_per_km(seconds_per_meter: int) -> str:
+    seconds_per_km = seconds_per_meter * 1_000
+    minutes = int(seconds_per_km // 60)
+    seconds = int(seconds_per_km % 60)
+    return f'{minutes}:{seconds:02d}/km'
+
+
+@typing.no_type_check
+def compute_distance_duration_pace(distance_meters: Optional[float], duration_seconds: Optional[int], pace_str: Optional[str]) -> tuple[float, int, str]:
+    """
+    Compute all three values from any two, or validate if all three are provided.
+    """
+    provided_count = sum(x is not None for x in [distance_meters, duration_seconds, pace_str])
+
+    match provided_count:
+        case 3:
+            _validate_pace_distance_duration(distance_meters, duration_seconds, pace_str)
+        case 2:
+            if pace_str is None:
+                spm = duration_seconds / distance_meters
+                pace_str = _seconds_per_meter_to_minutes_per_km(spm)
+            else:
+                pace_minutes_per_km = parse_pace_into_minutes_per_km(pace_str)
+                spm = _seconds_per_meter_from_minutes_per_km(pace_minutes_per_km)
+                if distance_meters is None:
+                    distance_meters = duration_seconds / spm
+                elif duration_seconds is None:
+                    duration_seconds = int(distance_meters * spm)
+        case _:
+            raise ValueError('At least 2 of distance, duration, and pace must be provided')
+
+    return distance_meters, duration_seconds, parse_pace_into_minutes_per_km(pace_str)

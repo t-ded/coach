@@ -2,15 +2,18 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 
+import pytest
+
 from coach.builders.utils import bucket_activities_by_weekday
 from coach.builders.utils import categorize_activities_by_sport_type
+from coach.builders.utils import compute_distance_duration_pace
 from coach.builders.utils import get_activities_between_dates
 from coach.builders.utils import get_categorized_volume
 from coach.builders.utils import get_week_start_week_end
 from coach.builders.utils import parse_date
-from coach.builders.utils import parse_distance
+from coach.builders.utils import parse_distance_into_meters
 from coach.builders.utils import parse_duration
-from coach.builders.utils import parse_pace
+from coach.builders.utils import parse_pace_into_minutes_per_km
 from coach.builders.utils import parse_sport_type
 from coach.domain.activity import SportType
 from coach.domain.training_summaries import ActivitySummary
@@ -70,14 +73,14 @@ def test_parse_sport_type() -> None:
     assert parse_sport_type('Gibberish') == SportType.OTHER
 
 
-def test_parse_distance() -> None:
-    assert parse_distance('21.0975 km') == 21_097.5
-    assert parse_distance('21.0975 kms') == 21_097.5
-    assert parse_distance('20000 m') == 20_000.0
-    assert parse_distance('20000 meters') == 20_000.0
-    assert parse_distance('1 mile') == 1_609.34
-    assert parse_distance('2 miles') == 2 * 1_609.34
-    assert parse_distance('Gibberish') is None
+def test_parse_distance_into_meters() -> None:
+    assert parse_distance_into_meters('21.0975 km') == 21_097.5
+    assert parse_distance_into_meters('21.0975 kms') == 21_097.5
+    assert parse_distance_into_meters('20000 m') == 20_000.0
+    assert parse_distance_into_meters('20000 meters') == 20_000.0
+    assert parse_distance_into_meters('1 mile') == 1_609.34
+    assert parse_distance_into_meters('2 miles') == 2 * 1_609.34
+    assert parse_distance_into_meters('Gibberish') is None
 
 
 def test_parse_duration() -> None:
@@ -89,12 +92,13 @@ def test_parse_duration() -> None:
     assert parse_duration('Gibberish') is None
 
 
-def test_parse_pace() -> None:
-    assert parse_pace('4:30/km') == '4:30/km'
-    assert parse_pace('4:30 per km') == '4:30/km'
-    assert parse_pace('7:00/mi') == '7:00/mi'
-    assert parse_pace('7:00 per mi') == '7:00/mi'
-    assert parse_pace('Gibberish') is None
+def test_parse_pace_into_minutes_per_km() -> None:
+    assert parse_pace_into_minutes_per_km('4:30/km') == '4:30/km'
+    assert parse_pace_into_minutes_per_km('4:30 per km') == '4:30/km'
+    assert parse_pace_into_minutes_per_km('7:00/mi') == '4:20/km'
+    assert parse_pace_into_minutes_per_km('7:00 per mi') == '4:20/km'
+    assert parse_pace_into_minutes_per_km('@4:30') == '4:30/km'
+    assert parse_pace_into_minutes_per_km('Gibberish') is None
 
 
 def test_parse_date() -> None:
@@ -106,3 +110,39 @@ def test_parse_date() -> None:
     assert parse_date('30. 1. 2024') == date(2024, 1, 30)
     assert parse_date('30 January 2024') == date(2024, 1, 30)
     assert parse_date('January 30, 2024') == date(2024, 1, 30)
+
+
+class TestComputeDistanceDurationPace:
+    def setup_method(self) -> None:
+        self._distance_meters = 10_000
+        self._duration_seconds = 3_000
+        self._pace_km = '5:00/km'
+        self._pace_mile = '8:03/mile'
+        self._pace_at = '@5:00'
+        self._correct_triplet = (self._distance_meters, self._duration_seconds, self._pace_km)
+
+    def test_only_one_provided(self) -> None:
+        with pytest.raises(ValueError, match='At least 2 of distance, duration, and pace must be provided'):
+            compute_distance_duration_pace(self._distance_meters, None, None)
+
+    def test_check_correct(self) -> None:
+        assert compute_distance_duration_pace(self._distance_meters, self._duration_seconds, self._pace_km) == self._correct_triplet
+        assert compute_distance_duration_pace(self._distance_meters, self._duration_seconds, self._pace_mile) == self._correct_triplet
+        assert compute_distance_duration_pace(self._distance_meters, self._duration_seconds, self._pace_at) == self._correct_triplet
+
+    def test_check_incorrect(self) -> None:
+        with pytest.raises(ValueError, match='Inconsistent values'):
+            compute_distance_duration_pace(self._distance_meters, self._duration_seconds, '@6:00')
+
+    def test_compute_distance(self) -> None:
+        assert compute_distance_duration_pace(None, self._duration_seconds, self._pace_km) == self._correct_triplet
+        assert compute_distance_duration_pace(None, self._duration_seconds, self._pace_mile) == self._correct_triplet
+        assert compute_distance_duration_pace(None, self._duration_seconds, self._pace_at) == self._correct_triplet
+
+    def test_compute_duration(self) -> None:
+        assert compute_distance_duration_pace(self._distance_meters, None, self._pace_km) == self._correct_triplet
+        assert compute_distance_duration_pace(self._distance_meters, None, self._pace_mile) == self._correct_triplet
+        assert compute_distance_duration_pace(self._distance_meters, None, self._pace_at) == self._correct_triplet
+
+    def test_compute_pace(self) -> None:
+        assert compute_distance_duration_pace(self._distance_meters, self._duration_seconds, None) == self._correct_triplet
