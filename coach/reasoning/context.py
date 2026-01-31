@@ -1,6 +1,12 @@
+from datetime import UTC
+from datetime import date
+from datetime import datetime
 from typing import Optional
 from typing import cast
 
+from coach.builders.training_goal import build_training_goal
+from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import TrainingGoal
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -75,3 +81,39 @@ def render_recent_training_history(recent_training_history: RecentTrainingHistor
     lines.append(render_weekly_summary(recent_training_history.current_week_summary))
 
     return '\n'.join(lines)
+
+
+def render_training_goal(training_goal: TrainingGoal) -> str:
+    lines: list[str] = []
+    lines.append(f'- {training_goal.name}')
+    lines.append(f'    - Sport: {training_goal.sport_type.value}')
+
+    time_until_suffix = ''
+    if isinstance(training_goal.goal_date, date):
+        today = datetime.now(tz=UTC).date()
+        days_until = (training_goal.goal_date - today).days
+        if days_until > 0:
+            time_until_suffix = f' (in {days_until} days)'
+    lines.append(f'    - Goal date: {training_goal.goal_date}' + time_until_suffix)
+
+    if isinstance(training_goal, DistanceActivityTrainingGoal):
+        lines.append(f'    - Distance: {parse_distance_km(meters=training_goal.goal_distance_meters, decimals=4)}')
+        lines.append(f'    - Total duration: {format_total_seconds(total_seconds=training_goal.goal_duration_seconds)}')
+        lines.append(f'    - Pace: {training_goal.goal_pace}')
+
+    if training_goal.notes:
+        lines.append(f'    - Notes: {training_goal.notes}')
+
+    return '\n'.join(lines)
+
+
+def render_system_prompt(system_prompt: Optional[str]) -> Optional[str]:
+    if system_prompt is None:
+        return None
+
+    parts = system_prompt.split('### Goals:')
+    text_lines = parts[0]
+    goals = [build_training_goal(goal) for goal in parts[1].split('\n\n')]
+    rendered_goals = '\n'.join([render_training_goal(goal) for goal in goals])
+
+    return text_lines + '### Goals:\n' + rendered_goals

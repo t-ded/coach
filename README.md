@@ -119,38 +119,57 @@ The coach will:
 
 ## ⚙️ Personalization
 
-### Training Goals and Preferences
+### Training Instructions, Goals and Preferences
 
 Create your personal `coach/config/coach.md` from the example template and customize:
 
-- **Primary Goals**: Your main race or performance targets (e.g., half-marathon time, 5K goal)
-- **Secondary Goals**: Additional objectives like injury prevention or cross-training
+- **Personal history and details**: Personal information, lifestyle, training experience, etc.
 - **Constraints**: Training frequency, preferred workout times, weekly long run schedule
 - **Preferences**: Workout variety, intensity focus, training style
+- **Goals**: Specific goals you want to achieve. The format of individual goals is specified by the template and is not to be changed. Not all fields need to be present for all goals though.
 
 The AI coach uses this information to provide advice aligned with your specific situation and goals.
+
+*Note: Keep the **Goals** section at the bottom and do not change its name to maintain correct parsing.*
 
 ### Example Configuration
 
 ```markdown
-# Training Goals
+# Training Instructions
 
-### Primary goals:
-- Half-marathon at 1:45:00 on 30. 5. 2026
-- Sub20 5K, ideally before the 5K race on 30. 6. 2026
-
-### Secondary goals:
-- Stay injury-free
-- Maintain strength training at least once per week
+### Personal history and details:
+- Age, weight, height
+- Started running in ..., weight lifting in ..., now mostly ...
+- Competitive ... from X years old (used to 4+ training sessions a week, camps on weekends and heavy camps with daily multiphase trainings)
+- Struggled with knee pain and shin splints during the peak of my first running summer in 2025
+    - Up and especially down hills triggered both a lot
+    - High quality warmup before and stretching after helped a lot (also keeping my knees warm in colder weather)
+- Work as a ..., spending most of my day ...
+- Typical diet ...
+- Biggest struggle is ...
 
 ### Constraints:
-- 4–5 training days per week
+- Maximum of 4–5 training days per week
 - Prefer evening workouts
-- Long run on weekends
+- Long run on weekends, not on weekdays
+- Stay injury-free
+- Maintain strength training at least once per week
 
 ### Preferences:
 - Strong variety in workout types
 - Focus on heavy workouts (VO2 Max intervals, tempo/threshold runs, etc.)
+
+### Goals:
+- Sub20 5K
+    - Sport: Run
+    - Goal date: 2026-06-30
+    - Distance: 5 km
+    - Total duration: 00:20:00
+    - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
+
+- Bench 120 kg
+    - Sport: WeightTraining
+    - Goal date: N/A
 ```
 
 ## 💾 Data Storage

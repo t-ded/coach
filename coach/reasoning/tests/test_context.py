@@ -1,8 +1,11 @@
 from datetime import UTC
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 
 from coach.domain.activity import SportType
+from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import TrainingGoal
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -11,6 +14,8 @@ from coach.domain.training_summaries import WeeklySummary
 from coach.reasoning.context import render_activity_summary
 from coach.reasoning.context import render_activity_volume
 from coach.reasoning.context import render_recent_training_history
+from coach.reasoning.context import render_system_prompt
+from coach.reasoning.context import render_training_goal
 from coach.reasoning.context import render_weekly_activities
 from coach.reasoning.context import render_weekly_summary
 
@@ -288,3 +293,97 @@ Ride: Ride 1
 """
 
     assert result == expected_result.lstrip()
+
+
+def test_render_training_goal_distance_activity() -> None:
+    today = datetime.now(tz=UTC).date()
+    goal_date = today + timedelta(days=10)
+    goal_date_str = goal_date.strftime('%Y-%m-%d')
+
+    training_goal = DistanceActivityTrainingGoal(
+        name='Half-marathon at 1:45:00',
+        sport_type=SportType.RUN,
+        goal_date=goal_date,
+        goal_distance_meters=21_097.5,
+        goal_duration_seconds=6_300,
+        goal_pace='5:00/km',
+        notes='Would like to try for the PB before the race so that I go into the race knowing I can make it',
+    )
+
+    result = render_training_goal(training_goal)
+    expected_result = f"""
+- Half-marathon at 1:45:00
+    - Sport: Run
+    - Goal date: {goal_date_str} (in 10 days)
+    - Distance: 21.0975 km
+    - Total duration: 01:45:00
+    - Pace: 5:00/km
+    - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
+"""
+
+    assert result == expected_result.strip()
+
+
+def test_render_training_goal_weight_training() -> None:
+    training_goal = TrainingGoal(
+        name='Bench 120 kg',
+        sport_type=SportType.STRENGTH,
+        goal_date='N/A',
+    )
+
+    result = render_training_goal(training_goal)
+    expected_result = """
+- Bench 120 kg
+    - Sport: WeightTraining
+    - Goal date: N/A
+"""
+
+    assert result == expected_result.strip()
+
+
+def test_render_system_prompt() -> None:
+    today = datetime.now(tz=UTC).date()
+    goal_date = today + timedelta(days=10)
+    goal_date_str = goal_date.strftime('%Y-%m-%d')
+
+    system_prompt = f"""# Training Instructions
+
+### Personal history and details:
+- 24 years old, roughly 91 kg, 190 cm tall
+- Started running in spring 2025
+
+### Goals:
+- Half-marathon at 1:45:00
+    - Sport: Run
+    - Goal date: {goal_date_str}
+    - Distance: 21.0975 km
+    - Total duration: 01:45:00
+
+- Bench 120 kg
+    - Sport: WeightTraining
+    - Goal date: N/A"""
+
+    result = render_system_prompt(system_prompt)
+    expected_result = f"""# Training Instructions
+
+### Personal history and details:
+- 24 years old, roughly 91 kg, 190 cm tall
+- Started running in spring 2025
+
+### Goals:
+- Half-marathon at 1:45:00
+    - Sport: Run
+    - Goal date: {goal_date_str} (in 10 days)
+    - Distance: 21.0975 km
+    - Total duration: 01:45:00
+    - Pace: 4:58/km
+- Bench 120 kg
+    - Sport: WeightTraining
+    - Goal date: N/A"""
+
+    assert result == expected_result
+
+
+def test_render_system_prompt_none() -> None:
+    result = render_system_prompt(None)
+    assert result is None

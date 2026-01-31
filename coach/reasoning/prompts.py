@@ -1,9 +1,7 @@
 from dataclasses import fields
-from pathlib import Path
 from typing import Optional
 
 from coach.domain.chat import CoachResponse
-from coach.utils import parse_file
 
 SYSTEM_PROMPT = """
 You are an AI training coach.
@@ -65,12 +63,12 @@ def build_coach_prompt(
         *,
         rendered_recent_training_history: str,
         user_prompt: Optional[str] = None,
-        user_system_prompt_path: Path = Path('coach/config/coach.md'),
+        rendered_system_prompt: Optional[str] = None,
         chat_history: Optional[str] = None,
 ) -> str:
     parts: list[str] = []
     parts.append(SYSTEM_PROMPT.strip())
-    _extend_parts(parts, 'User instructions and goals:', parse_file(user_system_prompt_path))
+    _extend_parts(parts, 'User instructions and goals:', rendered_system_prompt)
     _extend_parts(parts, 'Training context:', rendered_recent_training_history)
     _extend_parts(parts, 'Conversation so far:', chat_history)
     _extend_parts(parts, 'User question:', user_prompt)
