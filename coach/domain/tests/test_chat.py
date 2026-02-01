@@ -1,19 +1,5 @@
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
-from coach.domain.chat import CoachResponse
-
-
-def test_coach_response_headers() -> None:
-    assert CoachResponse.headers() == ['Summary', 'Observations', 'Recommendations', 'Confidence Notes']
-
-
-def test_coach_response_field_info() -> None:
-    assert CoachResponse.field_info() == {
-        'summary': {},
-        "observations": {'bullets': True},
-        "recommendations": {'bullets': True},
-        "confidence_notes": {'optional': True},
-    }
 
 
 class TestChatHistory:

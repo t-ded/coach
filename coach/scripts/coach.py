@@ -7,7 +7,6 @@ import typer
 from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
-from coach.domain.chat import CoachResponse
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.adapter import LLMCoachReasoner
@@ -56,25 +55,10 @@ class Coach:
             return None
 
     def _get_coach_response(self, user_input: str) -> str:
-        if self._history.has_no_coach_response():
-            coach_response = self._reasoner.analyze(recent_training_history=self._recent_training_history, user_prompt=user_input)
-            coach_text = self._format_response(coach_response)
-        else:
-            coach_text = self._reasoner.chat(recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=self._history.render())
-        self._history.add(ChatTurn(role='coach', content=coach_text))
-        return coach_text
-
-    def _format_response(self, response: CoachResponse) -> str:
-        return (
-            f'Summary:\n{response.summary}\n\n' +
-            self._get_bullets('Observations', response.observations) +
-            self._get_bullets('Recommendations', response.recommendations) +
-            f"Confidence Notes:\n{response.confidence_notes or 'None'}"
-        )
-
-    @staticmethod
-    def _get_bullets(subtitle: str, items: list[str]) -> str:
-        return f'{subtitle}:\n' + '\n'.join(f'- {item}' for item in items) + '\n\n'
+        chat_history = None if self._history.has_no_coach_response() else self._history.render()
+        coach_response = self._reasoner.chat(recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=chat_history)
+        self._history.add(ChatTurn(role='coach', content=coach_response))
+        return coach_response
 
 
 @coach_app.callback(invoke_without_command=True)

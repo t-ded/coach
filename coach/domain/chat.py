@@ -2,28 +2,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from dataclasses import field
-from dataclasses import fields
-from typing import Any
 from typing import Literal
-from typing import Optional
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
-class CoachResponse:
-    summary: str
-    observations: list[str] = field(metadata={'bullets': True})
-    recommendations: list[str] = field(metadata={'bullets': True})
-    confidence_notes: Optional[str] = field(default=None, metadata={'optional': True})
-
-    @classmethod
-    def headers(cls) -> list[str]:
-        return [f'{f.name.replace('_', ' ').title()}' for f in fields(cls)]
-
-    @classmethod
-    def field_info(cls) -> dict[str, dict[str, Any]]:
-        return {f.name: dict(f.metadata) for f in fields(cls)}
-
 
 Role = Literal['user', 'coach']
 
