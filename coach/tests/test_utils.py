@@ -11,6 +11,7 @@ from coach.utils import parse_distance_km
 from coach.utils import parse_file
 from coach.utils import parse_private_notes_activity_summary
 from coach.utils import parse_utc_datetime
+from coach.utils import weeks_and_days_until
 
 
 def test_parse_utc_datetime() -> None:
@@ -46,6 +47,17 @@ def test_days_ago_datetime() -> None:
     assert days_ago(now) == 0
     assert days_ago(now - timedelta(days=1)) == 1
     assert days_ago(now - timedelta(days=30)) == 30
+
+
+def test_weeks_and_days_until() -> None:
+    today = datetime.now(tz=UTC).date()
+
+    assert weeks_and_days_until(today) == ''
+    assert weeks_and_days_until(today + timedelta(days=1)) == '1 day'
+    assert weeks_and_days_until(today + timedelta(days=7)) == '1 week'
+    assert weeks_and_days_until(today + timedelta(days=14)) == '2 weeks'
+    assert weeks_and_days_until(today + timedelta(days=15)) == '2 weeks and 1 day'
+    assert weeks_and_days_until(today + timedelta(days=16)) == '2 weeks and 2 days'
 
 
 def test_parse_file_non_existent() -> None:

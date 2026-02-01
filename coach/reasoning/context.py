@@ -14,6 +14,7 @@ from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
 from coach.utils import format_total_seconds
 from coach.utils import parse_distance_km
+from coach.utils import weeks_and_days_until
 
 
 def _optional_append(value: Optional[int | float | str], format_str: str, lines: list[str]) -> None:
@@ -88,12 +89,7 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     lines.append(f'- {training_goal.name}')
     lines.append(f'    - Sport: {training_goal.sport_type.value}')
 
-    time_until_suffix = ''
-    if isinstance(training_goal.goal_date, date):
-        today = datetime.now(tz=UTC).date()
-        days_until = (training_goal.goal_date - today).days
-        if days_until > 0:
-            time_until_suffix = f' (in {days_until} days)'
+    time_until_suffix = f' (in {weeks_and_days_until(training_goal.goal_date)})' if isinstance(training_goal.goal_date, date) else ''
     lines.append(f'    - Goal date: {training_goal.goal_date}' + time_until_suffix)
 
     if isinstance(training_goal, DistanceActivityTrainingGoal):

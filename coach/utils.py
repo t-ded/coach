@@ -29,6 +29,24 @@ def days_ago(past_date: date | datetime) -> int:
     return (now - past_date).days
 
 
+def weeks_and_days_until(future_date: date) -> str:
+    now = datetime.now(tz=UTC).date()
+    days_until = (future_date - now).days
+    if days_until <= 0:
+        return ''
+
+    weeks_until = days_until // 7
+    and_days = days_until % 7
+
+    full_response: list[str] = []
+    if weeks_until > 0:
+        full_response.append(f'{weeks_until} week{"s" if weeks_until > 1 else ""}')
+    if and_days > 0:
+        full_response.append(f'{and_days} day{"s" if and_days > 1 else ""}')
+
+    return ' and '.join(full_response)
+
+
 def parse_file(path: Path) -> Optional[str]:
     if not path.exists():
         return None

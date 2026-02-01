@@ -314,7 +314,7 @@ def test_render_training_goal_distance_activity() -> None:
     expected_result = f"""
 - Half-marathon at 1:45:00
     - Sport: Run
-    - Goal date: {goal_date_str} (in 10 days)
+    - Goal date: {goal_date_str} (in 1 week and 3 days)
     - Distance: 21.0975 km
     - Total duration: 01:45:00
     - Pace: 5:00/km
@@ -373,7 +373,7 @@ def test_render_system_prompt() -> None:
 ### Goals:
 - Half-marathon at 1:45:00
     - Sport: Run
-    - Goal date: {goal_date_str} (in 10 days)
+    - Goal date: {goal_date_str} (in 1 week and 3 days)
     - Distance: 21.0975 km
     - Total duration: 01:45:00
     - Pace: 4:58/km
