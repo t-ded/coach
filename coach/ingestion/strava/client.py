@@ -50,3 +50,26 @@ class StravaClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def get_athlete(self) -> dict[str, Any]:
+        response = requests.get(
+            f'{self._base_url}/athlete',
+            headers=self._headers(),
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_athlete_id(self) -> int:
+        athlete = self.get_athlete()
+        return athlete['id']
+
+    def get_athlete_stats(self) -> dict[str, Any]:
+        athlete_id = self.get_athlete_id()
+        response = requests.get(
+            f'{self._base_url}/athletes/{athlete_id}/stats',
+            headers=self._headers(),
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
