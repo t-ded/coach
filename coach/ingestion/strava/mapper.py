@@ -1,11 +1,16 @@
 from collections.abc import Iterable
+from datetime import date
 from typing import Any
 
 from more_itertools import flatten
 
+from coach.builders.utils import compute_distance_duration_pace
 from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
 from coach.domain.activity import SportType
+from coach.domain.personal_bests import RUNNING_PBS_METERS_MAPPING
+from coach.domain.personal_bests import RunningPersonalBest
+from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.utils import parse_utc_datetime
 
 
@@ -41,19 +46,21 @@ class StravaMapper:
         raw = payload.get('sport_type') or payload.get('type') or SportType.OTHER
         return SportType(raw) if raw in SportType._value2member_map_ else SportType.OTHER
 
-    def map_pbs(self, payloads: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    def map_pbs(self, payloads: Iterable[dict[str, Any]]) -> RunningPersonalBestsSummary:
         all_best_efforts = flatten(best_effort for x in payloads if (best_effort := x.get('best_efforts')))
-        pbs: dict[str, dict[str, Any]] = {}
+        pbs: dict[str, RunningPersonalBest] = {}
 
         for effort in all_best_efforts:
-            if effort['pr_rank'] == 1:
-                pbs[effort['name']] = self._get_effort_summary(effort)
+            if effort['pr_rank'] == 1 and effort['name'] in RUNNING_PBS_METERS_MAPPING:
+                pbs[effort['name']] = self._get_running_pb(effort)
 
-        return pbs
+        return RunningPersonalBestsSummary.from_pbs(pbs)
 
     @staticmethod
-    def _get_effort_summary(effort: dict[str, Any]) -> dict[str, Any]:
-        return {
-            'date': effort['start_date_local'][:10],  # Extract YYYY-MM-DD
-            'time': effort['moving_time'],
-        }
+    def _get_running_pb(effort: dict[str, Any]) -> RunningPersonalBest:
+        moving_time_seconds: int = effort['moving_time']
+        distance_meters = RUNNING_PBS_METERS_MAPPING[effort['name']]
+        return RunningPersonalBest(
+            DATE=date.fromisoformat(effort['start_date_local'][:10]),
+            PACE_STR=compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=moving_time_seconds, pace_str=None)[2],
+        )
