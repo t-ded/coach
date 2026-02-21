@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 from typing import Any
 
+from more_itertools import flatten
+
 from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
 from coach.domain.activity import SportType
@@ -38,3 +40,20 @@ class StravaMapper:
     def _map_sport_type(payload: dict[str, str]) -> SportType:
         raw = payload.get('sport_type') or payload.get('type') or SportType.OTHER
         return SportType(raw) if raw in SportType._value2member_map_ else SportType.OTHER
+
+    def map_pbs(self, payloads: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        all_best_efforts = flatten(best_effort for x in payloads if (best_effort := x.get('best_efforts')))
+        pbs: dict[str, dict[str, Any]] = {}
+
+        for effort in all_best_efforts:
+            if effort['pr_rank'] == 1:
+                pbs[effort['name']] = self._get_effort_summary(effort)
+
+        return pbs
+
+    @staticmethod
+    def _get_effort_summary(effort: dict[str, Any]) -> dict[str, Any]:
+        return {
+            'date': effort['start_date_local'][:10],  # Extract YYYY-MM-DD
+            'time': effort['moving_time'],
+        }
