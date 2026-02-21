@@ -6,7 +6,7 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, NamedTuple
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
@@ -216,15 +216,21 @@ def _validate_pace_distance_duration(distance_meters: float, duration_seconds: i
         )
 
 
-def _seconds_per_meter_to_minutes_per_km(seconds_per_meter: int) -> str:
+def _seconds_per_meter_to_minutes_per_km(seconds_per_meter: float) -> str:
     seconds_per_km = seconds_per_meter * 1_000
     minutes = int(seconds_per_km // 60)
     seconds = int(seconds_per_km % 60)
     return f'{minutes}:{seconds:02d}/km'
 
 
+class DistanceDurationPace(NamedTuple):
+    distance_meters: float
+    duration_seconds: float
+    pace_str: str
+
+
 @typing.no_type_check
-def compute_distance_duration_pace(distance_meters: Optional[float], duration_seconds: Optional[int], pace_str: Optional[str]) -> tuple[float, int, str]:
+def compute_distance_duration_pace(distance_meters: Optional[float], duration_seconds: Optional[int], pace_str: Optional[str]) -> DistanceDurationPace:
     """
     Compute all three values from any two, or validate if all three are provided.
     """
@@ -247,4 +253,6 @@ def compute_distance_duration_pace(distance_meters: Optional[float], duration_se
         case _:
             raise ValueError('At least 2 of distance, duration, and pace must be provided')
 
-    return distance_meters, duration_seconds, parse_pace_into_minutes_per_km(pace_str)
+    pace_str_minutes_per_km = parse_pace_into_minutes_per_km(pace_str)
+
+    return DistanceDurationPace(distance_meters, duration_seconds, pace_str_minutes_per_km)

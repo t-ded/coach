@@ -148,3 +148,7 @@ class TestComputeDistanceDurationPace:
 
     def test_compute_pace(self) -> None:
         assert compute_distance_duration_pace(self._distance_meters, self._duration_seconds, None) == self._correct_triplet
+
+    def test_compute_pace_named_tuple(self) -> None:
+        res = compute_distance_duration_pace(self._distance_meters, self._duration_seconds, None)
+        assert res.pace_str == self._correct_triplet[2]

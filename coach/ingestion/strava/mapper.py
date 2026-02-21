@@ -62,5 +62,5 @@ class StravaMapper:
         distance_meters = RUNNING_PBS_METERS_MAPPING[effort['name']]
         return RunningPersonalBest(
             DATE=date.fromisoformat(effort['start_date_local'][:10]),
-            PACE_STR=compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=moving_time_seconds, pace_str=None)[2],
+            PACE_STR=compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=moving_time_seconds, pace_str=None).pace_str,
         )
