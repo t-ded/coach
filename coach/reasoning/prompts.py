@@ -34,6 +34,7 @@ def _extend_parts(parts: list[str], part_title: str, prompt: Optional[str]) -> N
 
 def build_coach_prompt(
         *,
+        running_pbs: str,
         rendered_recent_training_history: str,
         user_prompt: Optional[str] = None,
         rendered_system_prompt: Optional[str] = None,
@@ -43,6 +44,7 @@ def build_coach_prompt(
     parts.append(SYSTEM_PROMPT.strip())
     _extend_parts(parts, 'User instructions and goals:', rendered_system_prompt)
     _extend_parts(parts, 'Training context:', rendered_recent_training_history)
+    _extend_parts(parts, 'Running PBs:', running_pbs)
     _extend_parts(parts, 'Conversation so far:', chat_history)
     _extend_parts(parts, 'User question:', user_prompt)
     parts.append('Your answer: <response>')

@@ -4,9 +4,11 @@ from typing import Optional
 
 import typer
 
+from coach.builders.personal_bests import build_running_personal_bests_summary
 from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
+from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.adapter import LLMCoachReasoner
@@ -22,11 +24,15 @@ class Coach:
         self._db = Database('coach.db')
         self._activity_repo = SQLiteActivityRepository(self._db)
 
+        all_activities = self._activity_repo.list_all()
+
         self._recent_training_history = build_recent_training_history(
-            activities=self._activity_repo.list_all(),
+            activities=all_activities,
             generated_at=datetime.now(tz=UTC),
             num_history_weeks=num_history_weeks,
         )
+
+        self._pbs = build_running_personal_bests_summary(activities=all_activities)
 
         self._llm_client = OpenAILLMClient(model=self._model)
         self._reasoner = LLMCoachReasoner(self._llm_client)
@@ -56,7 +62,7 @@ class Coach:
 
     def _get_coach_response(self, user_input: str) -> str:
         chat_history = None if self._history.has_no_coach_response() else self._history.render()
-        coach_response = self._reasoner.chat(recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=chat_history)
+        coach_response = self._reasoner.chat(running_pbs=self._pbs, recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=chat_history)
         self._history.add(ChatTurn(role='coach', content=coach_response))
         return coach_response
 

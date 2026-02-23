@@ -7,6 +7,7 @@ from typing import cast
 from coach.builders.training_goal import build_training_goal
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import TrainingGoal
+from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -20,6 +21,28 @@ from coach.utils import weeks_and_days_until
 def _optional_append(value: Optional[int | float | str], format_str: str, lines: list[str]) -> None:
     if value:
         lines.append(format_str.format(value))
+
+
+def render_running_pbs(running_pbs: RunningPersonalBestsSummary) -> str:
+    pb_fields = [
+        ('1K', running_pbs.PB_1K),
+        ('5K', running_pbs.PB_5K),
+        ('10K', running_pbs.PB_10K),
+        ('15K', running_pbs.PB_15K),
+        ('Half Marathon', running_pbs.PB_HALF_MARATHON),
+        ('Marathon', running_pbs.PB_MARATHON),
+    ]
+
+    lines: list[str] = ['Running personal bests:']
+    for label, pb in pb_fields:
+        if pb is not None:
+            days_ago = (datetime.now(tz=UTC).date() - pb.DATE).days
+            days_ago_suffix = f' ({days_ago} day{"" if days_ago == 1 else "s"} ago)'
+            lines.append(f'- {label}: {pb.PACE_STR} /km on {pb.DATE}{days_ago_suffix}')
+        else:
+            lines.append(f'- {label}: No PB recorded')
+
+    return '\n'.join(lines)
 
 
 def render_activity_volume(volume: ActivityVolume) -> str:

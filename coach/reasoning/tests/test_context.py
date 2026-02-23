@@ -6,6 +6,8 @@ from datetime import timedelta
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import TrainingGoal
+from coach.domain.personal_bests import RunningPersonalBest
+from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -14,10 +16,36 @@ from coach.domain.training_summaries import WeeklySummary
 from coach.reasoning.context import render_activity_summary
 from coach.reasoning.context import render_activity_volume
 from coach.reasoning.context import render_recent_training_history
+from coach.reasoning.context import render_running_pbs
 from coach.reasoning.context import render_system_prompt
 from coach.reasoning.context import render_training_goal
 from coach.reasoning.context import render_weekly_activities
 from coach.reasoning.context import render_weekly_summary
+
+
+def test_render_running_pbs() -> None:
+    today = datetime.now(tz=UTC).date()
+    pbs = RunningPersonalBestsSummary(
+        PB_1K=RunningPersonalBest(DATE=today - timedelta(days=1), PACE_STR='3:30'),
+        PB_5K=RunningPersonalBest(DATE=today - timedelta(days=365), PACE_STR='4:00'),
+        PB_10K=None,
+        PB_15K=None,
+        PB_HALF_MARATHON=RunningPersonalBest(DATE=today - timedelta(days=30), PACE_STR='4:31'),
+        PB_MARATHON=None,
+    )
+
+    result = render_running_pbs(pbs)
+    expected_result = f"""
+Running personal bests:
+- 1K: 3:30 /km on {today - timedelta(days=1)} (1 day ago)
+- 5K: 4:00 /km on {today - timedelta(days=365)} (365 days ago)
+- 10K: No PB recorded
+- 15K: No PB recorded
+- Half Marathon: 4:31 /km on {today - timedelta(days=30)} (30 days ago)
+- Marathon: No PB recorded
+"""
+
+    assert result == expected_result.strip()
 
 
 def test_render_activity_volume() -> None:
