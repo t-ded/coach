@@ -2,6 +2,7 @@ from collections.abc import Iterable
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
+from coach.domain.personal_bests import RUNNING_PBS_METERS_MAPPING
 from coach.domain.personal_bests import RunningPersonalBest
 from coach.domain.personal_bests import RunningPersonalBestsSummary
 
@@ -12,8 +13,9 @@ def build_running_personal_bests_summary(activities: Iterable[Activity]) -> Runn
     for activity in activities:
         if activity.sport_type == SportType.RUN:
             for pb in activity.pbs:
-                # Activities are sorted chronologically during loading, hence the last PB per distance is always the actual best one
-                pbs_per_distance[pb.name] = RunningPersonalBest.from_running_best_effort(pb, activity_date=activity.start_time_utc)
+                if pb.name in RUNNING_PBS_METERS_MAPPING:
+                    # Activities are sorted chronologically during loading, hence the last PB per distance is always the actual best one
+                    pbs_per_distance[pb.name] = RunningPersonalBest.from_running_best_effort(pb, activity_date=activity.start_time_utc.date())
 
     return RunningPersonalBestsSummary(
         PB_1K=pbs_per_distance.get('1K'),

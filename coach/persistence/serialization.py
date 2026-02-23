@@ -54,7 +54,7 @@ def serialize_activity(activity: Activity) -> dict[str, Any]:
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:
     pbs: list[BestEffort] = []
-    for pb_json in json.loads(serialized.get('pbs', '[]')):
+    for pb_json in json.loads(serialized['pbs']):
         pb = BestEffort(
             name=pb_json['name'],
             moving_time_seconds=pb_json['moving_time_seconds'],

@@ -1,6 +1,4 @@
-from datetime import UTC
 from datetime import date
-from datetime import datetime
 from typing import Optional
 from typing import cast
 
@@ -13,6 +11,7 @@ from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
+from coach.utils import days_ago
 from coach.utils import format_total_seconds
 from coach.utils import parse_distance_km
 from coach.utils import weeks_and_days_until
@@ -33,15 +32,16 @@ def render_running_pbs(running_pbs: RunningPersonalBestsSummary) -> str:
         ('Marathon', running_pbs.PB_MARATHON),
     ]
 
-    lines: list[str] = ['Running personal bests:']
+    lines: list[str] = ['-' * 40, 'Running personal bests:']
     for label, pb in pb_fields:
         if pb is not None:
-            days_ago = (datetime.now(tz=UTC).date() - pb.DATE).days
-            days_ago_suffix = f' ({days_ago} day{"" if days_ago == 1 else "s"} ago)'
+            num_days_ago = days_ago(pb.DATE)
+            days_ago_suffix = f' ({num_days_ago} day{"" if num_days_ago == 1 else "s"} ago)'
             lines.append(f'- {label}: {pb.PACE_STR} /km on {pb.DATE}{days_ago_suffix}')
         else:
             lines.append(f'- {label}: No PB recorded')
 
+    lines.append('-' * 40)
     return '\n'.join(lines)
 
 

@@ -36,6 +36,7 @@ def test_render_running_pbs() -> None:
 
     result = render_running_pbs(pbs)
     expected_result = f"""
+----------------------------------------
 Running personal bests:
 - 1K: 3:30 /km on {today - timedelta(days=1)} (1 day ago)
 - 5K: 4:00 /km on {today - timedelta(days=365)} (365 days ago)
@@ -43,6 +44,7 @@ Running personal bests:
 - 15K: No PB recorded
 - Half Marathon: 4:31 /km on {today - timedelta(days=30)} (30 days ago)
 - Marathon: No PB recorded
+----------------------------------------
 """
 
     assert result == expected_result.strip()
