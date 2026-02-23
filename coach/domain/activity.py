@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 from enum import Enum
 from enum import StrEnum
@@ -20,18 +21,17 @@ class SportType(StrEnum):
     OTHER = 'Other'
 
 
+@dataclass(frozen=True, kw_only=True)
+class BestEffort:
+    name: str
+    moving_time_seconds: int
+
+
 DISTANCE_SPORT_TYPES = (SportType.RUN, SportType.RIDE, SportType.SWIM, SportType.WALK)
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class Activity:
-    """
-    Canonical representation of a single training session.
-
-    This model represents session-level facts only.
-    Derived metrics (pace, load, zones, splits) are intentionally excluded.
-    """
-
     # Identity
     activity_id: int
     source: ActivitySource
@@ -60,3 +60,6 @@ class Activity:
     # Metadata
     is_manual: bool
     is_race: bool
+
+    # Personal bests
+    pbs: list[BestEffort] = field(default_factory=list)

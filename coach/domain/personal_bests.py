@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 
+from coach.builders.utils import compute_distance_duration_pace
+from coach.domain.activity import BestEffort
+
 RUNNING_PBS_METERS_MAPPING: dict[str, float] = {
     '1K': 1_000.0,
     '5K': 5_000.0,
@@ -19,6 +22,18 @@ class RunningPersonalBest:
     DATE: date
     PACE_STR: str
 
+    @classmethod
+    def from_running_best_effort(cls, running_best_effort: BestEffort, *, activity_date: date) -> RunningPersonalBest:
+        if running_best_effort.name not in RUNNING_PBS_METERS_MAPPING:
+            raise ValueError('Input best effort is not valid running best effort')
+
+        distance_meters = RUNNING_PBS_METERS_MAPPING[running_best_effort.name]
+        pace_str = compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=running_best_effort.moving_time_seconds, pace_str=None).pace_str
+        return cls(
+            DATE=activity_date,
+            PACE_STR=pace_str,
+        )
+
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class RunningPersonalBestsSummary:
@@ -28,14 +43,3 @@ class RunningPersonalBestsSummary:
     PB_15K: Optional[RunningPersonalBest]
     PB_HALF_MARATHON: Optional[RunningPersonalBest]
     PB_MARATHON: Optional[RunningPersonalBest]
-
-    @classmethod
-    def from_pbs(cls, pbs: dict[str, RunningPersonalBest]) -> RunningPersonalBestsSummary:
-        return RunningPersonalBestsSummary(
-            PB_1K=pbs.get('1K'),
-            PB_5K=pbs.get('5K'),
-            PB_10K=pbs.get('10K'),
-            PB_15K=pbs.get('15K'),
-            PB_HALF_MARATHON=pbs.get('Half-Marathon'),
-            PB_MARATHON=pbs.get('Marathon'),
-        )

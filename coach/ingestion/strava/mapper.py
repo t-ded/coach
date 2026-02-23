@@ -1,12 +1,13 @@
 from collections.abc import Iterable
 from datetime import date
-from typing import Any
+from typing import Any, Optional
 
 from more_itertools import flatten
 
 from coach.builders.utils import compute_distance_duration_pace
 from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
+from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 from coach.domain.personal_bests import RUNNING_PBS_METERS_MAPPING
 from coach.domain.personal_bests import RunningPersonalBest
@@ -39,6 +40,7 @@ class StravaMapper:
             average_power_watts=payload.get('average_watts'),
             is_manual=bool(payload.get('manual', False)),
             is_race=bool(payload.get('workout_type') == 1),
+            pbs=self.map_pbs(payload.get('best_efforts')),
         )
 
     @staticmethod
@@ -46,21 +48,21 @@ class StravaMapper:
         raw = payload.get('sport_type') or payload.get('type') or SportType.OTHER
         return SportType(raw) if raw in SportType._value2member_map_ else SportType.OTHER
 
-    def map_pbs(self, payloads: Iterable[dict[str, Any]]) -> RunningPersonalBestsSummary:
-        all_best_efforts = flatten(best_effort for x in payloads if (best_effort := x.get('best_efforts')))
-        pbs: dict[str, RunningPersonalBest] = {}
+    @staticmethod
+    def map_pbs(best_efforts: Optional[list[list[dict[str, Any]]]]) -> list[BestEffort]:
+        if not best_efforts:
+            return []
+
+        all_best_efforts = flatten(best_efforts)
+        pbs: list[BestEffort] = []
 
         for effort in all_best_efforts:
-            if effort['pr_rank'] == 1 and effort['name'] in RUNNING_PBS_METERS_MAPPING:
-                pbs[effort['name']] = self._get_running_pb(effort)
+            if effort['pr_rank'] == 1:
+                pb = BestEffort(
+                    name=effort['name'],
+                    moving_time_seconds=effort['moving_time'],
+                    activity_date=date.fromisoformat(effort['start_date_local'][:10]),
+                )
+                pbs.append(pb)
 
-        return RunningPersonalBestsSummary.from_pbs(pbs)
-
-    @staticmethod
-    def _get_running_pb(effort: dict[str, Any]) -> RunningPersonalBest:
-        moving_time_seconds: int = effort['moving_time']
-        distance_meters = RUNNING_PBS_METERS_MAPPING[effort['name']]
-        return RunningPersonalBest(
-            DATE=date.fromisoformat(effort['start_date_local'][:10]),
-            PACE_STR=compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=moving_time_seconds, pace_str=None).pace_str,
-        )
+        return pbs
