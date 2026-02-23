@@ -38,8 +38,8 @@ class SQLiteActivityRepository(Repository[Activity]):
                 average_power_watts REAL,
                 is_manual INTEGER NOT NULL,
                 is_race INTEGER NOT NULL,
+                pbs TEXT DEFAULT '[]',
                 UNIQUE (source, source_activity_id)
-                pbs TEXT -- JSON array
             )
             """,
         )

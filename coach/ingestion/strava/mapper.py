@@ -49,19 +49,17 @@ class StravaMapper:
         return SportType(raw) if raw in SportType._value2member_map_ else SportType.OTHER
 
     @staticmethod
-    def map_pbs(best_efforts: Optional[list[list[dict[str, Any]]]]) -> list[BestEffort]:
+    def map_pbs(best_efforts: Optional[list[dict[str, Any]]]) -> list[BestEffort]:
         if not best_efforts:
             return []
 
-        all_best_efforts = flatten(best_efforts)
         pbs: list[BestEffort] = []
 
-        for effort in all_best_efforts:
+        for effort in best_efforts:
             if effort['pr_rank'] == 1:
                 pb = BestEffort(
                     name=effort['name'],
                     moving_time_seconds=effort['moving_time'],
-                    activity_date=date.fromisoformat(effort['start_date_local'][:10]),
                 )
                 pbs.append(pb)
 
