@@ -1,3 +1,6 @@
+from datetime import UTC
+from datetime import datetime
+
 import typer
 
 from coach.ingestion.strava.client import StravaClient
@@ -19,8 +22,9 @@ def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) ->
         typer.echo('Dropping activities table...')
         activity_repo.reset_table()
     last_synced_activity_ts = activity_repo.last_activity_timestamp() or 0
+    last_synced_date = datetime.fromtimestamp(last_synced_activity_ts, tz=UTC).date()
 
-    typer.echo('Fetching activities from Strava...')
+    typer.echo(f'Fetching activities from Strava from {last_synced_date} (last synced date) onwards...')
     raw_unsynced_activities = list(client.list_activities(detailed=True, after=last_synced_activity_ts))
     unsynced_activities = mapper.map_activities(raw_unsynced_activities)
 
