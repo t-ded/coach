@@ -67,15 +67,3 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
         is_manual=bool(serialized['is_manual']),
         is_race=bool(serialized['is_race']),
     )
-
-
-def serialize_activity_volume(volume: ActivityVolume) -> dict[str, Any]:
-    return asdict(volume)
-
-
-def deserialize_activity_volume(serialized: dict[str, Any]) -> ActivityVolume:
-    return ActivityVolume(
-        distance_meters=serialized['distance_meters'],
-        duration_seconds=serialized['duration_seconds'],
-        num_activities=serialized['num_activities'],
-    )

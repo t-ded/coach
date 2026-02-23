@@ -32,6 +32,7 @@ def test_serialize_activity() -> None:
 
         'is_manual': int(SAMPLE_RUN.is_manual),
         'is_race': int(SAMPLE_RUN.is_race),
+        'pbs': SAMPLE_RUN.pbs,
     }
 
 
@@ -60,39 +61,8 @@ def test_deserialize_activity() -> None:
 
             'is_manual': int(SAMPLE_RUN.is_manual),
             'is_race': int(SAMPLE_RUN.is_race),
+            'pbs': SAMPLE_RUN.pbs,
         },
     )
 
     assert deserialized == SAMPLE_RUN
-
-
-def test_serialize_activity_volume() -> None:
-    serialized = serialize_activity_volume(
-        ActivityVolume(
-            distance_meters=10_000.0,
-            duration_seconds=3_600,
-            num_activities=2,
-        ),
-    )
-
-    assert serialized == {
-        'distance_meters': 10_000.0,
-        'duration_seconds': 3_600,
-        'num_activities': 2,
-    }
-
-
-def test_deserialize_activity_volume() -> None:
-    deserialized = deserialize_activity_volume(
-        {
-            'distance_meters': 10_000.0,
-            'duration_seconds': 3_600,
-            'num_activities': 2,
-        },
-    )
-
-    assert deserialized == ActivityVolume(
-        distance_meters=10_000.0,
-        duration_seconds=3_600,
-        num_activities=2,
-    )
