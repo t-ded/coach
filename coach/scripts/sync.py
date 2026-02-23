@@ -23,8 +23,6 @@ def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) ->
     typer.echo('Fetching activities from Strava...')
     raw_unsynced_activities = list(client.list_activities(detailed=True, after=last_synced_activity_ts))
     unsynced_activities = mapper.map_activities(raw_unsynced_activities)
-    unsynced_pbs = mapper.map_pbs(raw_unsynced_activities)
-    print(unsynced_pbs)
 
     typer.echo(f'Saving {len(unsynced_activities)} new activities to database...')
     activity_repo.save_many(unsynced_activities)

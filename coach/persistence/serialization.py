@@ -1,3 +1,4 @@
+import json
 from dataclasses import asdict
 from datetime import date
 from datetime import datetime
@@ -6,8 +7,8 @@ from typing import Any
 
 from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
+from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
-from coach.domain.training_summaries import ActivityVolume
 
 
 def _bools_to_ints(values: dict[str, Any]) -> dict[str, Any]:
@@ -34,15 +35,32 @@ def _enums_to_values(values: dict[str, Any]) -> dict[str, Any]:
     return values_copy
 
 
+def _lists_to_json(values: dict[str, Any]) -> dict[str, Any]:
+    values_copy = values.copy()
+    for key, value in values_copy.items():
+        if isinstance(value, list):
+            values_copy[key] = json.dumps(value)
+    return values_copy
+
+
 def serialize_activity(activity: Activity) -> dict[str, Any]:
     serialized = asdict(activity)
     serialized = _bools_to_ints(serialized)
     serialized = _dates_to_isostrings(serialized)
     serialized = _enums_to_values(serialized)
+    serialized = _lists_to_json(serialized)
     return serialized
 
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:
+    pbs: list[BestEffort] = []
+    for pb_json in json.loads(serialized.get('pbs', '[]')):
+        pb = BestEffort(
+            name=pb_json['name'],
+            moving_time_seconds=pb_json['moving_time_seconds'],
+        )
+        pbs.append(pb)
+
     return Activity(
         activity_id=serialized['activity_id'],
         source=ActivitySource(serialized['source']),
@@ -66,4 +84,6 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
 
         is_manual=bool(serialized['is_manual']),
         is_race=bool(serialized['is_race']),
+
+        pbs=pbs,
     )

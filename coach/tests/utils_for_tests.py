@@ -3,6 +3,7 @@ from datetime import datetime
 
 from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
+from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 
 SAMPLE_RUN = Activity(
@@ -28,6 +29,8 @@ SAMPLE_RUN = Activity(
 
     is_manual=False,
     is_race=False,
+
+    pbs=[BestEffort(name='1K', moving_time_seconds=120)],
 )
 
 SAMPLE_RIDE = Activity(

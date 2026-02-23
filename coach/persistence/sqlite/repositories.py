@@ -39,6 +39,7 @@ class SQLiteActivityRepository(Repository[Activity]):
                 is_manual INTEGER NOT NULL,
                 is_race INTEGER NOT NULL,
                 UNIQUE (source, source_activity_id)
+                pbs TEXT -- JSON array
             )
             """,
         )
@@ -62,7 +63,7 @@ class SQLiteActivityRepository(Repository[Activity]):
     def _insert_activity_query(self) -> str:
         return """
             INSERT OR IGNORE INTO activities VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         """
 
@@ -75,7 +76,7 @@ class SQLiteActivityRepository(Repository[Activity]):
         str, int, Optional[int],
         Optional[float], Optional[float],
         Optional[float], Optional[float], Optional[float],
-        int, int,
+        int, int, str,
     ]:
         serialized = serialize_activity(activity)
 
@@ -102,6 +103,8 @@ class SQLiteActivityRepository(Repository[Activity]):
 
             serialized['is_manual'],
             serialized['is_race'],
+
+            serialized['pbs'],
         )
 
     def list_all(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list[Activity]:

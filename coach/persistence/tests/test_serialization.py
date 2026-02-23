@@ -1,8 +1,5 @@
-from coach.domain.training_summaries import ActivityVolume
 from coach.persistence.serialization import deserialize_activity
-from coach.persistence.serialization import deserialize_activity_volume
 from coach.persistence.serialization import serialize_activity
-from coach.persistence.serialization import serialize_activity_volume
 from coach.tests.utils_for_tests import SAMPLE_RUN
 
 
@@ -32,7 +29,7 @@ def test_serialize_activity() -> None:
 
         'is_manual': int(SAMPLE_RUN.is_manual),
         'is_race': int(SAMPLE_RUN.is_race),
-        'pbs': SAMPLE_RUN.pbs,
+        'pbs': '[{"name": "1K", "moving_time_seconds": 120}]',
     }
 
 
@@ -61,7 +58,7 @@ def test_deserialize_activity() -> None:
 
             'is_manual': int(SAMPLE_RUN.is_manual),
             'is_race': int(SAMPLE_RUN.is_race),
-            'pbs': SAMPLE_RUN.pbs,
+            'pbs': '[{"name": "1K", "moving_time_seconds": 120, "activity_date": "2025-01-01T01:00:00+00:00"}]',
         },
     )
 
