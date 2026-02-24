@@ -5,7 +5,7 @@ An AI-powered training coach that provides personalized coaching advice based on
 ## ✨ Features
 
 - **🔗 Strava Integration**: Automatically sync your activities from Strava
-- **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities
+- **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests and training profile
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
 - **🎯 Personalized Goals**: Customize your training goals, constraints, and preferences
 - **📝 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
