@@ -8,7 +8,8 @@ An AI-powered training coach that provides personalized coaching advice based on
 - **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests and training profile
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
 - **🎯 Personalized Goals**: Customize your training goals, constraints, and preferences
-- **📝 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
+- **📝 Easily Access Summary**: Get quick breakdown of training history and personal bests with single command
+- **🏃 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
 
 ## 📋 Prerequisites
 
@@ -49,7 +50,7 @@ An AI-powered training coach that provides personalized coaching advice based on
 
 ### Available Commands
 
-The application provides two main command groups:
+The application provides three main command groups:
 
 #### 🔄 Sync Commands
 
@@ -67,6 +68,22 @@ This fetches all your activities from Strava and stores them locally for analysi
 Example for a fresh sync:
 ```bash
 coach sync strava --fresh
+```
+
+#### 📝 Info Commands
+
+Get summary of training history stored in the database.
+
+```bash
+coach info <option_1> <option_2> ...
+```
+
+**Options**:
+- `--pbs`: Get summary of running personal bests (note that a Strava sync should always precede this)
+
+Example for a summary with running personal bests:
+```bash
+coach info --pbs
 ```
 
 #### 💭 Chat Commands
