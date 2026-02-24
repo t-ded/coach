@@ -8,7 +8,6 @@ from coach.builders.personal_bests import build_running_personal_bests_summary
 from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
-from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.adapter import LLMCoachReasoner

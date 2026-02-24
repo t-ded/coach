@@ -37,7 +37,7 @@ def render_running_pbs(running_pbs: RunningPersonalBestsSummary) -> str:
         if pb is not None:
             num_days_ago = days_ago(pb.DATE)
             days_ago_suffix = f' ({num_days_ago} day{"" if num_days_ago == 1 else "s"} ago)'
-            lines.append(f'- {label}: {pb.PACE_STR} /km on {pb.DATE}{days_ago_suffix}')
+            lines.append(f'- {label}: {pb.PACE_STR} on {pb.DATE}{days_ago_suffix}')
         else:
             lines.append(f'- {label}: No PB recorded')
 
