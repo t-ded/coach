@@ -26,11 +26,11 @@ from coach.reasoning.context import render_weekly_summary
 def test_render_running_pbs() -> None:
     today = datetime.now(tz=UTC).date()
     pbs = RunningPersonalBestsSummary(
-        PB_1K=RunningPersonalBest(DATE=today - timedelta(days=1), PACE_STR='3:30'),
-        PB_5K=RunningPersonalBest(DATE=today - timedelta(days=365), PACE_STR='4:00'),
+        PB_1K=RunningPersonalBest(DATE=today - timedelta(days=1), PACE_STR='3:30/km'),
+        PB_5K=RunningPersonalBest(DATE=today - timedelta(days=365), PACE_STR='4:00/km'),
         PB_10K=None,
         PB_15K=None,
-        PB_HALF_MARATHON=RunningPersonalBest(DATE=today - timedelta(days=30), PACE_STR='4:31'),
+        PB_HALF_MARATHON=RunningPersonalBest(DATE=today - timedelta(days=30), PACE_STR='4:31/km'),
         PB_MARATHON=None,
     )
 
@@ -38,11 +38,11 @@ def test_render_running_pbs() -> None:
     expected_result = f"""
 ----------------------------------------
 Running personal bests:
-- 1K: 3:30 /km on {today - timedelta(days=1)} (1 day ago)
-- 5K: 4:00 /km on {today - timedelta(days=365)} (365 days ago)
+- 1K: 3:30/km on {today - timedelta(days=1)} (1 day ago)
+- 5K: 4:00/km on {today - timedelta(days=365)} (365 days ago)
 - 10K: No PB recorded
 - 15K: No PB recorded
-- Half Marathon: 4:31 /km on {today - timedelta(days=30)} (30 days ago)
+- Half Marathon: 4:31/km on {today - timedelta(days=30)} (30 days ago)
 - Marathon: No PB recorded
 ----------------------------------------
 """
@@ -349,6 +349,7 @@ def test_render_training_goal_distance_activity() -> None:
     - Total duration: 01:45:00
     - Pace: 5:00/km
     - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
+    - Priority: MEDIUM
 """
 
     assert result == expected_result.strip()
@@ -366,6 +367,7 @@ def test_render_training_goal_weight_training() -> None:
 - Bench 120 kg
     - Sport: WeightTraining
     - Goal date: N/A
+    - Priority: MEDIUM
 """
 
     assert result == expected_result.strip()
@@ -388,6 +390,7 @@ def test_render_system_prompt() -> None:
     - Goal date: {goal_date_str}
     - Distance: 21.0975 km
     - Total duration: 01:45:00
+    - Priority: Very High
 
 - Bench 120 kg
     - Sport: WeightTraining
@@ -407,9 +410,11 @@ def test_render_system_prompt() -> None:
     - Distance: 21.0975 km
     - Total duration: 01:45:00
     - Pace: 4:58/km
+    - Priority: VERY HIGH
 - Bench 120 kg
     - Sport: WeightTraining
-    - Goal date: N/A"""
+    - Goal date: N/A
+    - Priority: MEDIUM"""
 
     assert result == expected_result
 

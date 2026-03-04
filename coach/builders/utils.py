@@ -1,3 +1,4 @@
+from coach.domain.goals import Priority
 import re
 import typing
 from collections import defaultdict
@@ -190,6 +191,11 @@ def parse_date(text: str) -> str | date:
                 continue
 
     return text
+
+
+def parse_priority(text: str) -> Priority:
+    text = text.strip().upper()
+    return Priority(text)
 
 
 def _seconds_per_meter_from_minutes_per_km(pace_str: str) -> float:

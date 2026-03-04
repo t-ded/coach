@@ -14,8 +14,10 @@ from coach.builders.utils import parse_date
 from coach.builders.utils import parse_distance_into_meters
 from coach.builders.utils import parse_duration
 from coach.builders.utils import parse_pace_into_minutes_per_km
+from coach.builders.utils import parse_priority
 from coach.builders.utils import parse_sport_type
 from coach.domain.activity import SportType
+from coach.domain.goals import Priority
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.tests.utils_for_tests import SAMPLE_RIDE
@@ -112,6 +114,15 @@ def test_parse_date() -> None:
     assert parse_date('30. 1. 2024') == date(2024, 1, 30)
     assert parse_date('30 January 2024') == date(2024, 1, 30)
     assert parse_date('January 30, 2024') == date(2024, 1, 30)
+
+
+def test_parse_priority() -> None:
+    assert parse_priority('LOW') == Priority.LOW
+    assert parse_priority('low') == Priority.LOW
+    assert parse_priority('MEDIUM') == Priority.MEDIUM
+    assert parse_priority('HIGH') == Priority.HIGH
+    assert parse_priority('VERY HIGH') == Priority.VERY_HIGH
+    assert parse_priority('Very High') == Priority.VERY_HIGH
 
 
 class TestComputeDistanceDurationPace:

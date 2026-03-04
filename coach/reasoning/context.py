@@ -123,6 +123,8 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     if training_goal.notes:
         lines.append(f'    - Notes: {training_goal.notes}')
 
+    lines.append(f'    - Priority: {training_goal.priority}')
+
     return '\n'.join(lines)
 
 

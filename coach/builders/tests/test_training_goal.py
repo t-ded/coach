@@ -3,6 +3,7 @@ from datetime import date
 from coach.builders.training_goal import build_training_goal
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 
 
@@ -19,6 +20,7 @@ class TestBuildTrainingGoal:
             sport_type=SportType.STRENGTH,
             name='Bench 120 kg',
             goal_date='N/A',
+            priority=Priority.MEDIUM,
         )
 
         assert training_goal == expected_training_goal
@@ -28,6 +30,7 @@ class TestBuildTrainingGoal:
 - Sub20 5K
     - Sport: Run
     - Goal date: 2026-06-30
+    - Priority: Very High
     - Distance: 5 km
     - Total duration: 00:20:00
     - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
@@ -39,6 +42,7 @@ class TestBuildTrainingGoal:
             sport_type=SportType.RUN,
             name='Sub20 5K',
             goal_date=date(2026, 6, 30),
+            priority=Priority.VERY_HIGH,
             notes='Would like to try for the PB before the race so that I go into the race knowing I can make it',
             goal_distance_meters=5_000,
             goal_duration_seconds=1_200,

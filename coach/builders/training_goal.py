@@ -3,9 +3,10 @@ from coach.builders.utils import parse_date
 from coach.builders.utils import parse_distance_into_meters
 from coach.builders.utils import parse_duration
 from coach.builders.utils import parse_pace_into_minutes_per_km
+from coach.builders.utils import parse_priority
 from coach.builders.utils import parse_sport_type
 from coach.domain.activity import DISTANCE_SPORT_TYPES
-from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import DistanceActivityTrainingGoal, Priority
 from coach.domain.goals import TrainingGoal
 
 
@@ -31,6 +32,7 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
     - Goal Name
         - Sport: <sport_type>
         - Goal date: <date or N/A>
+        - Priority: <Priority> (one of LOW, MEDIUM, HIGH, VERY HIGH)
         - Distance: <distance> (optional, for distance sports)
         - Total duration: <HH:MM:SS> (optional, for distance sports)
         - Pace: <MM:SS/unit> (optional, for distance sports)
@@ -42,6 +44,7 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
 
     sport_type = None
     goal_date = None
+    priority = Priority.MEDIUM
     notes = None
     distance_meters = None
     duration_seconds = None
@@ -56,6 +59,8 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
                 sport_type = parse_sport_type(line_value)
             case 'goal date':
                 goal_date = parse_date(line_value)
+            case 'priority':
+                priority = parse_priority(line_value)
             case 'notes':
                 notes = line_value
             case 'distance':
@@ -75,6 +80,7 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
             sport_type=sport_type,
             name=name,
             goal_date=goal_date or 'N/A',
+            priority=priority,
             notes=notes,
             goal_distance_meters=distance_meters,
             goal_duration_seconds=duration_seconds,
@@ -85,5 +91,6 @@ def build_training_goal(goal_description: str) -> TrainingGoal:
             sport_type=sport_type,
             name=name,
             goal_date=goal_date or 'N/A',
+            priority=priority,
             notes=notes,
         )
