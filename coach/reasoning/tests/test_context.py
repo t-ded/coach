@@ -349,7 +349,7 @@ def test_render_training_goal_distance_activity() -> None:
     - Total duration: 01:45:00
     - Pace: 5:00/km
     - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
-    - Priority: MEDIUM
+    - Priority: MEDIUM (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])
 """
 
     assert result == expected_result.strip()
@@ -367,7 +367,7 @@ def test_render_training_goal_weight_training() -> None:
 - Bench 120 kg
     - Sport: WeightTraining
     - Goal date: N/A
-    - Priority: MEDIUM
+    - Priority: MEDIUM (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])
 """
 
     assert result == expected_result.strip()
@@ -410,11 +410,11 @@ def test_render_system_prompt() -> None:
     - Distance: 21.0975 km
     - Total duration: 01:45:00
     - Pace: 4:58/km
-    - Priority: VERY HIGH
+    - Priority: VERY HIGH (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])
 - Bench 120 kg
     - Sport: WeightTraining
     - Goal date: N/A
-    - Priority: MEDIUM"""
+    - Priority: MEDIUM (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])"""
 
     assert result == expected_result
 

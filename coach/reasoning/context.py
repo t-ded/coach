@@ -4,6 +4,7 @@ from typing import cast
 
 from coach.builders.training_goal import build_training_goal
 from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.domain.training_summaries import ActivitySummary
@@ -107,6 +108,9 @@ def render_recent_training_history(recent_training_history: RecentTrainingHistor
     return '\n'.join(lines)
 
 
+PRIORITY_OPTIONS = [prio.value for prio in Priority]
+
+
 def render_training_goal(training_goal: TrainingGoal) -> str:
     lines: list[str] = []
     lines.append(f'- {training_goal.name}')
@@ -123,7 +127,7 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     if training_goal.notes:
         lines.append(f'    - Notes: {training_goal.notes}')
 
-    lines.append(f'    - Priority: {training_goal.priority}')
+    lines.append(f'    - Priority: {training_goal.priority} (Options were: {PRIORITY_OPTIONS})')
 
     return '\n'.join(lines)
 
