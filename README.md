@@ -2,20 +2,89 @@
 
 An AI-powered training coach that provides personalized coaching advice based on your Strava activity data. The coach analyzes your recent training history and engages in interactive conversations to help you achieve your training goals.
 
+<details>
+<summary>💬 Example Session</summary>
+
+```
+coach sync strava
+coach chat --num-history-weeks=8
+```
+
+```
+You: How is my training going? Give me a plan for the upcoming week.
+
+Coach: 
+How your training is going (brief):
+- Solid overall consistency: regular running with recent interval work and a mix of easy and longer runs. 
+- You’ve shown good ability to handle VO2-style work (5x1k at around 4:15/km in the recent window) and you’ve built longer endurance without major stalls.
+- Some recurring risk signals to watch: knee sensitivity on downhills and GI issues during hard or long efforts. These will respond best to careful pacing, solid warmups, and mindful fueling/recovery. Strength work has supported stability, but shoulder/knee load should remain controlled if any pain flares.
+- Your current fitness shows speed and endurance potential toward the half and the 5K goals, but the HM target pace (about 4:58/km) will require steady progression and careful recovery to stay healthy.
+
+Plan for the upcoming week (5 training days, evenings, long run on weekend, stay injury-free)
+- Thursday: Easy run + strides
+  - 40–50 minutes easy pace
+  - Finish with 6 x 20-second strides (built-in accelerations, relaxed breathing)
+  - Rationale: maintains aerobic base, reinforces running form without overloading knees.
+
+- Friday: Strength training (full body with knee-friendly emphasis)
+  - 50–60 minutes
+  - Core post-work and posterior-chain emphasis (examples: hip hinge work like Romanian deadlifts or hip thrusts, glute bridges, step-ups or lunges with light load, upper-body work as tolerated)
+  - Keep loads moderate and technique solid; avoid high-impact jumping if knees feel off.
+  - Rationale: preserves strength and joint stability with lower knee risk while you maintain training frequency.
+
+- Saturday: Tempo/threshold run (shorter tempo block)
+  - 15–20 minute easy warm-up
+  - 3–5 km at tempo/threshold effort (roughly 5:10–5:25 per km depending on how you feel)
+  - 5–10 minute cooldown
+  - Rationale: reinforces HM-specific pace tolerance without pushing you into a long, high-stress run.
+
+- Sunday: Long run (easy to moderate)
+  - 75–95 minutes at an easy to steady pace (target breathing comfortable, generally ~5:20–5:40/km depending on how you feel)
+  - Optional: finish last 5–10 minutes with gentle pickups if you feel good (not mandatory)
+  - Rationale: builds aerobic base and endurance with a comfortable stimulus to avoid GI or knee overload.
+
+- Tuesday: Intervals (your high-intensity work for the week)
+  - 15–20 minute easy warm-up
+  - 5 x 1 km @ ~4:15/km with 90 seconds easy jog between repetitions
+  - 10 minute cooldown
+  - Rationale: maintains VO2 efficiency and speed, aligns with your recent interval work, while the easy jogs help recovery.
+
+Notes and practical tips
+- GI and fueling: to help bowel comfort during hard sessions, consider keeping meals 2–3 hours before workouts, or adjust timing/fiber load on training days. Practice fueling plans (gel, drink, snacks) during long-ish days to find what works for you.
+- Knee care: keep warm, use a soft surface when possible, and include a brief dynamic warm-up before runs. If downhills irritate knees, reduce downhill volume or substitute with flatter routes temporarily.
+- Progression guardrails: if you feel unusually fatigued or notice knee flare, swap a tempo day for an easy run and reduce the long run by ~10–15 minutes that week. Look for a smooth, steady buildup rather than big jumps.
+- Strength strategy: aim to maintain at least 1 strength session weekly; if you can add a second brief session every other week, that can help with injury prevention and running economy, as long as it doesn’t spike overall fatigue.
+- 12-week context: this week emphasizes a mix of easy, tempo, and interval work with a weekend long run, which is a sensible structure while moving toward HM peak. In the weeks ahead, you’ll generally want to keep 1 tempo/threshold week, 1 interval week, and 1 longer endurance week with conservative increases, then taper appropriately for the May target.
+
+If you’d like, I can tailor exact paces, distances, and session timings to match your actual weekly schedule, preferred training days, and how your knee and GI symptoms respond over the next couple of weeks. Also tell me if you want me to include a brief, progressive HM-specific build (e.g., a focused 4–6 week HM progression) after this upcoming week.
+
+
+You: Why did you go for a long run on Sunday?
+
+Coach: [RESPONSE HERE]
+```
+</details>
+
+---
+
 ## ✨ Features
 
 - **🔗 Strava Integration**: Automatically sync your activities from Strava
 - **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests and training profile
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
-- **🎯 Personalized Goals**: Customize your training goals, constraints, and preferences
+- **🎯 Personalized Goals**: Customize and prioritize your training goals, constraints, and preferences
 - **📝 Easily Access Summary**: Get quick breakdown of training history and personal bests with single command
 - **🏃 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
+
+---
 
 ## 📋 Prerequisites
 
 - Python 3.10+
 - Strava account and API credentials
 - OpenAI API key
+
+---
 
 ## 🚀 Setup
 
@@ -46,13 +115,16 @@ An AI-powered training coach that provides personalized coaching advice based on
 
    Edit `coach/config/coach.md` to set your training goals, constraints, and preferences. This file is used by the AI coach to provide personalized advice tailored to your objectives.
 
+---
+
 ## 💻 Usage
 
 ### Available Commands
 
 The application provides three main command groups:
 
-#### 🔄 Sync Commands
+<details>
+<summary>🔄 Sync Commands</summary>
 
 Sync your activities from Strava to the local database:
 
@@ -70,7 +142,10 @@ Example for a fresh sync:
 coach sync strava --fresh
 ```
 
-#### 📝 Info Commands
+</details>
+
+<details>
+<summary>📝 Info Commands</summary>
 
 Get summary of training history stored in the database.
 
@@ -86,7 +161,10 @@ Example for a summary with running personal bests:
 coach info --pbs
 ```
 
-#### 💭 Chat Commands
+</details>
+
+<details>
+<summary>💭 Chat Commands</summary>
 
 Start an interactive coaching session:
 
@@ -111,6 +189,8 @@ The coach will:
 
 **Note**: Weeks are indexed from Monday and the current week is always included in the analysis.
 
+</details>
+
 ### Typical Workflow
 
 1. **First time setup**:
@@ -133,6 +213,25 @@ The coach will:
    ```
 
 3. **Regular updates**: Run `coach sync strava` periodically to keep your data up to date.
+4. **Measure progress:** Run `coach info --pbs` to get a summary of personal bests.
+
+---
+
+## 📝 Using Private Notes
+
+You can provide additional context to the coach by adding information to your Strava activity private notes. To ensure the coach analyzes specific portions of your notes, wrap them between dollar signs (`$...$`).
+
+### Example
+
+In your Strava activity private notes, you can write:
+
+```
+$VO2 max 5x1 @4:30 1:30 in between session, felt extremely hard, especially the last lap$
+```
+
+The coach will extract this information and use it to provide more accurate analysis and recommendations. Anything outside the dollar signs will be ignored, allowing you to keep personal notes separate from coaching-relevant information.
+
+---
 
 ## ⚙️ Personalization
 
@@ -149,7 +248,8 @@ The AI coach uses this information to provide advice aligned with your specific 
 
 *Note: Keep the **Goals** section at the bottom and do not change its name to maintain correct parsing.*
 
-### Example Configuration
+<details>
+<summary>⚙️ Example Configuration</summary>
 
 ```markdown
 # Training Instructions
@@ -164,6 +264,7 @@ The AI coach uses this information to provide advice aligned with your specific 
 - Work as a ..., spending most of my day ...
 - Typical diet ...
 - Biggest struggle is ...
+- No need to overly focus or mention any of the above in the response, just to give context
 
 ### Constraints:
 - Maximum of 4–5 training days per week
@@ -171,6 +272,8 @@ The AI coach uses this information to provide advice aligned with your specific 
 - Long run on weekends, not on weekdays
 - Stay injury-free
 - Maintain strength training at least once per week
+- Concise answer, not unnecessarily wordy (avoid restating instructions)
+    - If summarizing current state and recent training history, do so briefly
 
 ### Preferences:
 - Strong variety in workout types
@@ -183,26 +286,18 @@ The AI coach uses this information to provide advice aligned with your specific 
     - Distance: 5 km
     - Total duration: 00:20:00
     - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
+    - Priority: Very high
 
 - Bench 120 kg
     - Sport: WeightTraining
     - Goal date: N/A
+    - Priority: low
 ```
+
+</details>
+
+---
 
 ## 💾 Data Storage
 
 Activities are stored in a local SQLite database (`coach.db`) in the project directory. This allows for quick analysis without repeatedly calling the Strava API.
-
-## 📝 Using Private Notes
-
-You can provide additional context to the coach by adding information to your Strava activity private notes. To ensure the coach analyzes specific portions of your notes, wrap them between dollar signs (`$...$`).
-
-### Example
-
-In your Strava activity private notes, you can write:
-
-```
-$VO2 max 5x1 @4:30 1:30 in between session, felt extremely hard, especially the last lap$
-```
-
-The coach will extract this information and use it to provide more accurate analysis and recommendations. Anything outside the dollar signs will be ignored, allowing you to keep personal notes separate from coaching-relevant information.
