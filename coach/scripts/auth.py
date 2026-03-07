@@ -2,7 +2,7 @@ import typer
 
 from coach.auth.google import setup_google_ai_key
 from coach.auth.openai import setup_openai_key
-from coach.auth.setup.strava import setup_strava
+from coach.auth.setup.strava import setup_strava_oauth
 from coach.config.credentials import CredentialsStore
 
 auth_app = typer.Typer(help='Authentication and setup commands')
@@ -27,7 +27,7 @@ def setup_all() -> None:
         typer.echo('[1/2] ✓ Strava already configured')
     else:
         typer.echo('[1/2] Setting up Strava...')
-        setup_strava()
+        setup_strava_oauth()
 
     if has_google:
         typer.echo('[2/2] ✓ Google AI already configured')
@@ -48,7 +48,7 @@ def setup_strava() -> None:
     if store.has_strava_credentials() and not typer.confirm('Reconfigure Strava?'):
         typer.echo('Cancelled.')
         return
-    setup_strava()
+    setup_strava_oauth()
 
 
 @auth_app.command('google')

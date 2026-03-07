@@ -17,7 +17,7 @@ REDIRECT_PORT = 8765
 REDIRECT_URI = f'http://localhost:{REDIRECT_PORT}/callback'
 
 
-def setup_strava() -> None:
+def setup_strava_oauth() -> None:
     print('\n=== Strava Setup ===')
     print('You will need a Strava API application. If you have not created one,')
     print('visit: https://www.strava.com/settings/api\n')

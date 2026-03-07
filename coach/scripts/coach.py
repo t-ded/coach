@@ -69,7 +69,7 @@ class Coach:
 def chat_callback(
         ctx: typer.Context,
         provider: str = typer.Option(default='google', help='LLM provider (google (default) or openai)'),
-        model: str = typer.Option(default='gpt-5-nano', help='Model name (uses provider default if not specified)'),
+        model: Optional[str] = typer.Option(default=None, help='Model name (uses provider default if not specified)'),
         num_history_weeks: int = typer.Option(
             default=2,
             help='Number of weeks used to build a summary of the current training state. Weeks are indexed from monday and the current week is always included.',

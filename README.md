@@ -1,6 +1,8 @@
 # 🏃 Coach
 
-An AI-powered training coach that provides personalized coaching advice based on your Strava activity data. The coach analyzes your recent training history and engages in interactive conversations to help you achieve your training goals.
+An AI-powered training coach that provides **personalized coaching advice** based on your Strava activity data. The coach analyzes your recent training history and engages in interactive conversations to help you achieve your training goals.
+
+It integrates even with a **free Strava account** and by default uses Google AI studio to provide **free LLM chat integration**.
 
 <details>
 <summary>💬 Example Session</summary>
@@ -69,7 +71,7 @@ Coach: [RESPONSE HERE]
 
 ## ✨ Features
 
-- **🔗 Strava Integration**: Automatically sync your activities from Strava
+- **🔗 Strava Integration**: Automatically sync your activities from Strava (even with a free account!)
 - **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests, and training profile
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
 - **🎯 Personalized Goals**: Customize and prioritize your training goals, constraints, and preferences
@@ -97,6 +99,7 @@ Coach: [RESPONSE HERE]
    ```bash
    pip install -e .
    ```
+<br>
 
 2. **Run the authentication setup**:
    ```bash
@@ -106,7 +109,10 @@ Coach: [RESPONSE HERE]
    This interactive command will:
    - Open your browser to authorize Strava
    - Open your browser to get a free Google AI API key
+   - Optionally, open your browser to get OpenAI API key (free but credits are then required for the use of OpenAI models)
    - Store credentials securely in `~/.coach/credentials.json`
+
+<br>
 
 3. **Personalize your coaching profile**:
 
@@ -185,7 +191,7 @@ coach chat
 **Options**:
 - `--provider`: LLM provider to use: `google` (default) or `openai`
 - `--model`: Model name (uses provider default if not specified)
-  - Google default: `gemini-2.0-flash-exp`
+  - Google default: `gemini-2.5-flash`
   - OpenAI default: `gpt-5-nano`
 - `--num-history-weeks`: Number of weeks to include in the training state analysis (default: `2`)
 

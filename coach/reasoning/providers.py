@@ -41,7 +41,7 @@ def create_llm_client(
     if provider == LLMProvider.GOOGLE:
         return GoogleAILLMClient(
             api_key=api_key,
-            model=model or 'gemini-2.0-flash-exp',
+            model=model or 'gemini-2.5-flash',
             max_retries=max_retries,
         )
 

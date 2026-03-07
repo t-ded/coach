@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -6,7 +7,7 @@ from typing import Optional
 
 class CredentialsStore:
     def __init__(self, config_dir: Optional[Path] = None) -> None:
-        self._config_dir = config_dir or Path.home() / '.coach'
+        self._config_dir = config_dir or Path(os.path.expanduser('~')) / '.coach'
         self._config_dir.mkdir(mode=0o700, exist_ok=True)
         self._credentials_file = self._config_dir / 'credentials.json'
 

@@ -39,7 +39,7 @@ class GoogleAILLMClient(BaseLLMClient):
         self,
         *,
         api_key: str,
-        model: str = 'gemini-2.0-flash-exp',
+        model: str,
         max_retries: int = 3,
         max_output_tokens: Optional[int] = None,
     ) -> None:
@@ -64,7 +64,7 @@ class OpenAILLMClient(BaseLLMClient):
         self,
         *,
         api_key: str,
-        model: str = 'gpt-5-nano',
+        model: str,
         max_retries: int = 3,
         max_output_tokens: Optional[int] = None,
     ) -> None:
