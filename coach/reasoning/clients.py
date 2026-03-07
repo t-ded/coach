@@ -3,7 +3,8 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Optional
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from openai import OpenAI
 
 from coach.reasoning.interface import LLMClient
@@ -43,12 +44,18 @@ class GoogleAILLMClient(BaseLLMClient):
         max_output_tokens: Optional[int] = None,
     ) -> None:
         super().__init__(max_retries=max_retries)
-        genai.configure(api_key=api_key)
-        self._generation_config = genai.GenerationConfig(max_output_tokens=max_output_tokens)
-        self._client = genai.GenerativeModel(model_name=model)
+        self._client = genai.Client(api_key=api_key)
+        self._model = model
+        self._generation_config = types.GenerateContentConfig(max_output_tokens=max_output_tokens)
 
     def _call_api(self, prompt: str) -> str:
-        response = self._client.generate_content(prompt, generation_config=self._generation_config)
+        response = self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config=self._generation_config,
+        )
+        if response.text is None:
+            raise ValueError('Empty response from Google AI API')
         return response.text
 
 
