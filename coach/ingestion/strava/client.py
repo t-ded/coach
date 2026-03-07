@@ -5,10 +5,12 @@ from typing import Any
 
 import requests
 
-from coach.config.env import get_env_var
-from coach.ingestion.strava.auth import StravaAuth
+from coach.auth.strava import StravaAuth
 
 logger = logging.getLogger(__name__)
+
+
+STRAVA_API_BASE_URL = 'https://www.strava.com/api/v3'
 
 
 class StravaRateLimitError(Exception):
@@ -24,7 +26,6 @@ class StravaClient:
 
     def __init__(self) -> None:
         self._auth = StravaAuth()
-        self._base_url = get_env_var('STRAVA_API_BASE_URL')
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -65,7 +66,7 @@ class StravaClient:
 
         while True:
             activities = self._get(
-                url=f'{self._base_url}/athlete/activities',
+                url=f'{STRAVA_API_BASE_URL}/athlete/activities',
                 params={'after': after, 'page': page, 'per_page': per_page},
             )
 
@@ -81,14 +82,14 @@ class StravaClient:
             page += 1
 
     def get_detailed_activity(self, activity_id: int) -> dict[str, Any]:
-        return self._get(f'{self._base_url}/activities/{activity_id}')
+        return self._get(f'{STRAVA_API_BASE_URL}/activities/{activity_id}')
 
     def get_athlete(self) -> dict[str, Any]:
-        return self._get(f'{self._base_url}/athlete')
+        return self._get(f'{STRAVA_API_BASE_URL}/athlete')
 
     def get_athlete_id(self) -> int:
         return self.get_athlete()['id']
 
     def get_athlete_stats(self) -> dict[str, Any]:
         athlete_id = self.get_athlete_id()
-        return self._get(f'{self._base_url}/athletes/{athlete_id}/stats')
+        return self._get(f'{STRAVA_API_BASE_URL}/athletes/{athlete_id}/stats')

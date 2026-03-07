@@ -2,6 +2,8 @@ import os
 from enum import StrEnum
 from typing import Optional
 
+from coach.auth.utils import no_credentials_found_message
+from coach.config.credentials import CredentialsStore
 from coach.reasoning.clients import GoogleAILLMClient
 from coach.reasoning.clients import OpenAILLMClient
 from coach.reasoning.interface import LLMClient
@@ -12,21 +14,20 @@ class LLMProvider(StrEnum):
     OPENAI = 'openai'
 
 
-API_KEY_NAMES_MAPPING = {
-    LLMProvider.GOOGLE: 'GOOGLE_AI_API_KEY',
-    LLMProvider.OPENAI: 'OPENAI_API_KEY',
-}
-
-
 def _get_api_key(provider: LLMProvider) -> str:
-    if provider not in API_KEY_NAMES_MAPPING:
-        raise ValueError(f'Unsupported provider: {provider}.')
+    store = CredentialsStore()
 
-    api_key_name = API_KEY_NAMES_MAPPING[provider]
-    api_key = os.getenv(api_key_name)
+    if provider == LLMProvider.GOOGLE:
+        api_key = store.get_google_api_key()
+    elif provider == LLMProvider.OPENAI:
+        api_key = store.get_openai_api_key()
+    else:
+        msg = f'Unsupported provider: {provider}'
+        raise ValueError(msg)
 
     if not api_key:
-        raise ValueError(f'{api_key_name} environment variable is required for {provider}')
+        msg = no_credentials_found_message(provider.value)
+        raise ValueError(msg)
 
     return api_key
 

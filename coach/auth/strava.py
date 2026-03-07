@@ -5,7 +5,9 @@ from typing import Optional
 
 import requests
 
-from coach.config.settings import load_strava_settings
+from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
+from coach.auth.utils import no_credentials_found_message
+from coach.config.credentials import CredentialsStore
 
 
 @dataclass(slots=True)
@@ -16,11 +18,11 @@ class StravaAccessToken:
 
 class StravaAuth:
     def __init__(self) -> None:
-        self._settings = load_strava_settings()
+        self._store = CredentialsStore()
         self._access_token: Optional[StravaAccessToken] = None
 
     def get_access_token(self) -> str:
-        if self._access_token is not None and not self._is_expired():
+        if self._access_token and not self._is_expired():
             return self._access_token.token
 
         self._refresh_access_token()
@@ -30,21 +32,34 @@ class StravaAuth:
         return datetime.now(UTC) >= self._access_token.expires_at  # type: ignore[union-attr]
 
     def _refresh_access_token(self) -> None:
+        credentials = self._store.get_strava_credentials()
+        if not credentials:
+            msg = no_credentials_found_message('Strava')
+            raise RuntimeError(msg)
+
         response = requests.post(
-            'https://www.strava.com/oauth/token',
+            STRAVA_OAUTH_ENDPOINT,
             data={
-                'client_id': self._settings.client_id,
-                'client_secret': self._settings.client_secret,
-                'refresh_token': self._settings.refresh_token,
+                'client_id': credentials['client_id'],
+                'client_secret': credentials['client_secret'],
+                'refresh_token': credentials['refresh_token'],
                 'grant_type': 'refresh_token',
             },
             timeout=10,
         )
         response.raise_for_status()
-
         payload = response.json()
+
         if 'access_token' not in payload:
             raise RuntimeError(f'Strava token refresh failed: {payload}')
+
+        self._store.store_strava_credentials(
+            client_id=credentials['client_id'],
+            client_secret=credentials['client_secret'],
+            access_token=payload['access_token'],
+            refresh_token=payload['refresh_token'],
+            expires_at=payload['expires_at'],
+        )
 
         self._access_token = StravaAccessToken(
             token=payload['access_token'],
