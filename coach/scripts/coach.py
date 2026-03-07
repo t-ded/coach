@@ -11,15 +11,14 @@ from coach.domain.chat import ChatTurn
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.adapter import LLMCoachReasoner
-from coach.reasoning.clients import OpenAILLMClient
+from coach.reasoning.providers import LLMProvider
+from coach.reasoning.providers import create_llm_client
 
 coach_app = typer.Typer(help='Coach reasoning commands')
 
 
 class Coach:
-    def __init__(self, model: str, num_history_weeks: int) -> None:
-        self._model = model
-
+    def __init__(self, provider: LLMProvider, model: Optional[str], num_history_weeks: int) -> None:
         self._db = Database('coach.db')
         self._activity_repo = SQLiteActivityRepository(self._db)
 
@@ -33,7 +32,7 @@ class Coach:
 
         self._pbs = build_running_personal_bests_summary(activities=all_activities)
 
-        self._llm_client = OpenAILLMClient(model=self._model)
+        self._llm_client = create_llm_client(provider=provider, model=model)
         self._reasoner = LLMCoachReasoner(self._llm_client)
         self._history = ChatHistory(max_turns=6)
 
@@ -69,13 +68,15 @@ class Coach:
 @coach_app.callback(invoke_without_command=True)
 def chat_callback(
         ctx: typer.Context,
-        model: str = typer.Option(default='gpt-5-nano', help='Open AI model'),
+        provider: str = typer.Option(default='google', help='LLM provider (google (default) or openai)'),
+        model: str = typer.Option(default='gpt-5-nano', help='Model name (uses provider default if not specified)'),
         num_history_weeks: int = typer.Option(
             default=2,
             help='Number of weeks used to build a summary of the current training state. Weeks are indexed from monday and the current week is always included.',
         ),
 ) -> None:
-    coach = Coach(model=model, num_history_weeks=num_history_weeks)
+    llm_provider = LLMProvider(provider.lower())
+    coach = Coach(provider=llm_provider, model=model, num_history_weeks=num_history_weeks)
     ctx.obj = coach
 
     if ctx.invoked_subcommand is None:

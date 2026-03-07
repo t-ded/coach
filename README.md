@@ -70,10 +70,10 @@ Coach: [RESPONSE HERE]
 ## ✨ Features
 
 - **🔗 Strava Integration**: Automatically sync your activities from Strava
-- **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests and training profile
+- **🤖 AI-Powered Analysis**: Get intelligent insights about your training based on your recent activities, personal bests, and training profile
 - **💬 Interactive Chat**: Have follow-up conversations with your coach for detailed guidance
 - **🎯 Personalized Goals**: Customize and prioritize your training goals, constraints, and preferences
-- **📝 Easily Access Summary**: Get quick breakdown of training history and personal bests with single command
+- **📝 Easily Access Summary**: Get a quick breakdown of training history and personal bests with a single command
 - **🏃 Private Notes Integration**: Extract contextual information from Strava private notes using `$...$` delimiters
 
 ---
@@ -82,7 +82,7 @@ Coach: [RESPONSE HERE]
 
 - Python 3.10+
 - Strava account and API credentials
-- OpenAI API key
+- Google AI Studio API key (free tier available) OR OpenAI API key
 
 ---
 
@@ -104,6 +104,9 @@ Coach: [RESPONSE HERE]
    - `STRAVA_CLIENT_ID`: Your Strava application client ID
    - `STRAVA_CLIENT_SECRET`: Your Strava application client secret
    - `STRAVA_REFRESH_TOKEN`: Your Strava refresh token
+   - `GOOGLE_AI_API_KEY`: Your Google AI Studio API key (get it for free at https://aistudio.google.com/apikey)
+
+   Optional (only if using OpenAI):
    - `OPENAI_API_KEY`: Your OpenAI API key
 
 3. **Personalize your coaching profile**:
@@ -113,7 +116,7 @@ Coach: [RESPONSE HERE]
    cp coach/config/coach.md.example coach/config/coach.md
    ```
 
-   Edit `coach/config/coach.md` to set your training goals, constraints, and preferences. This file is used by the AI coach to provide personalized advice tailored to your objectives.
+   Edit `coach/config/coach.md` to set your training goals, constraints, and preferences. This file is used by the AI coach to provide personalized advice tailored to you.
 
 ---
 
@@ -147,7 +150,7 @@ coach sync strava --fresh
 <details>
 <summary>📝 Info Commands</summary>
 
-Get summary of training history stored in the database.
+Get a summary of the training history stored in the database.
 
 ```bash
 coach info <option_1> <option_2> ...
@@ -173,12 +176,20 @@ coach chat
 ```
 
 **Options**:
-- `--model`: Specify the OpenAI model to use (default: `gpt-5-nano`)
+- `--provider`: LLM provider to use: `google` (default) or `openai`
+- `--model`: Model name (uses provider default if not specified)
+  - Google default: `gemini-2.0-flash-exp`
+  - OpenAI default: `gpt-5-nano`
 - `--num-history-weeks`: Number of weeks to include in the training state analysis (default: `2`)
 
-Example with a specific model and extended history:
+Example with default Google AI provider:
 ```bash
-coach chat --model gpt-4o --num-history-weeks 4
+coach chat --num-history-weeks 4
+```
+
+Example with OpenAI provider and specific model:
+```bash
+coach chat --provider openai --model gpt-4o --num-history-weeks 4
 ```
 
 The coach will:
@@ -235,14 +246,14 @@ The coach will extract this information and use it to provide more accurate anal
 
 ## ⚙️ Personalization
 
-### Training Instructions, Goals and Preferences
+### Training Instructions, Goals, and Preferences
 
 Create your personal `coach/config/coach.md` from the example template and customize:
 
 - **Personal history and details**: Personal information, lifestyle, training experience, etc.
 - **Constraints**: Training frequency, preferred workout times, weekly long run schedule
 - **Preferences**: Workout variety, intensity focus, training style
-- **Goals**: Specific goals you want to achieve. The format of individual goals is specified by the template and is not to be changed. Not all fields need to be present for all goals though.
+- **Goals**: Specific goals you want to achieve. The format of individual goals is specified by the template and is not to be changed. Not all fields need to be present for all goals, though.
 
 The AI coach uses this information to provide advice aligned with your specific situation and goals.
 
@@ -263,7 +274,7 @@ The AI coach uses this information to provide advice aligned with your specific 
     - High quality warmup before and stretching after helped a lot (also keeping my knees warm in colder weather)
 - Work as a ..., spending most of my day ...
 - Typical diet ...
-- Biggest struggle is ...
+- The biggest struggle is ...
 - No need to overly focus or mention any of the above in the response, just to give context
 
 ### Constraints:
