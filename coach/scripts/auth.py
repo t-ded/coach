@@ -8,17 +8,27 @@ from coach.config.credentials import CredentialsStore
 auth_app = typer.Typer(help='Authentication and setup commands')
 
 
+def _add_already_configured_info(original_string: str, is_configured: bool, provider: str) -> str:
+    if is_configured:
+        return original_string + f' - already configured, please run "coach auth {provider}" to reconfigure'
+    return original_string
+
+
 @auth_app.command('setup')
 def setup_all() -> None:
     store = CredentialsStore()
     has_strava = store.has_strava_credentials()
     has_google = store.has_google_credentials()
+    has_openai = store.has_openai_credentials()
 
-    if has_strava and has_google:
-        typer.echo('✓ All credentials configured!')
+    has_ai = has_google or has_openai
+
+    if has_strava and has_ai:
+        typer.echo('✓ All required credentials configured!')
         typer.echo('\nTo reconfigure:')
         typer.echo('  coach auth strava')
         typer.echo('  coach auth google')
+        typer.echo('  coach auth openai')
         return
 
     typer.echo('=== Coach Authentication Setup ===\n')
@@ -29,17 +39,34 @@ def setup_all() -> None:
         typer.echo('[1/2] Setting up Strava...')
         setup_strava_oauth()
 
-    if has_google:
-        typer.echo('[2/2] ✓ Google AI already configured')
+    typer.echo('\n[2/2] Setting up AI provider...')
+    typer.echo('Coach uses an AI model to analyze your training - please select your desired integration.\n')
+    typer.echo(_add_already_configured_info(original_string='  [1] Google AI Studio (free, recommended)', is_configured=has_google, provider='google'))
+    typer.echo(_add_already_configured_info(original_string='  [2] OpenAI (requires credits)', is_configured=has_openai, provider='openai'))
+    typer.echo('  [3] Both\n')
+
+    choice = typer.prompt('Choose provider')
+
+    if choice == '1':
+        if not has_google:
+            setup_google_ai_key()
+    elif choice == '2':
+        if not has_openai:
+            setup_openai_key()
+    elif choice == '3':
+        if not has_google:
+            setup_google_ai_key()
+        if not has_openai:
+            setup_openai_key()
     else:
-        typer.echo('\n[2/2] Setting up Google AI...')
-        setup_google_ai_key()
+        typer.echo('Invalid choice, skipping AI provider configuration')
+        return
 
     typer.echo('\n' + '=' * 40)
     typer.echo('✓ Setup complete!')
     typer.echo('\nNext:')
-    typer.echo('  coach sync strava  - Sync activities')
-    typer.echo('  coach chat         - Start chatting')
+    typer.echo('  coach sync strava  - Sync your activities')
+    typer.echo('  coach chat         - Start chatting with your coach')
 
 
 @auth_app.command('strava')
