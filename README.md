@@ -81,33 +81,32 @@ Coach: [RESPONSE HERE]
 ## 📋 Prerequisites
 
 - Python 3.10+
-- Strava account and API credentials
-- Google AI Studio API key (free tier available) OR OpenAI API key
+- Strava account (free)
+- Google account (for Google AI Studio - free tier available)
+
+**Optional:**
+- OpenAI API key (Optional - only for OpenAI integration)
 
 ---
 
 ## 🚀 Setup
+
+### Quick Start (Recommended)
 
 1. **Install dependencies**:
    ```bash
    pip install -e .
    ```
 
-2. **Configure environment variables**:
-
-   Copy `.env.example` to `.env` and fill in your credentials:
+2. **Run the authentication setup**:
    ```bash
-   cp .env.example .env
+   coach auth setup
    ```
 
-   Required variables:
-   - `STRAVA_CLIENT_ID`: Your Strava application client ID
-   - `STRAVA_CLIENT_SECRET`: Your Strava application client secret
-   - `STRAVA_REFRESH_TOKEN`: Your Strava refresh token
-   - `GOOGLE_AI_API_KEY`: Your Google AI Studio API key (get it for free at https://aistudio.google.com/apikey)
-
-   Optional (only if using OpenAI):
-   - `OPENAI_API_KEY`: Your OpenAI API key
+   This interactive command will:
+   - Open your browser to authorize Strava
+   - Open your browser to get a free Google AI API key
+   - Store credentials securely in `~/.coach/credentials.json`
 
 3. **Personalize your coaching profile**:
 
@@ -117,6 +116,14 @@ Coach: [RESPONSE HERE]
    ```
 
    Edit `coach/config/coach.md` to set your training goals, constraints, and preferences. This file is used by the AI coach to provide personalized advice tailored to you.
+
+### Authentication Commands
+
+- `coach auth setup` - Interactive setup for all credentials
+- `coach auth strava` - Setup/reconfigure Strava only
+- `coach auth google` - Setup/reconfigure Google AI only
+- `coach auth openai` - Setup/reconfigure OpenAI only
+- `coach auth status` - Check which credentials are configured
 
 ---
 
@@ -206,7 +213,8 @@ The coach will:
 
 1. **First time setup**:
    ```bash
-   coach sync strava
+   coach auth setup    # Authenticate with Strava and Google AI
+   coach sync strava   # Sync your activities
    ```
 
 2. **Get coaching advice**:
