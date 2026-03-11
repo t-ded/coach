@@ -1,10 +1,13 @@
 import typer
+from dotenv import load_dotenv
 
 from coach.scripts.auth import auth_app
 from coach.scripts.coach import coach_app
 from coach.scripts.info import info_app
 from coach.scripts.profile import profile_app
 from coach.scripts.sync import sync_app
+
+load_dotenv()
 
 app = typer.Typer(help='AI-powered training coach')
 
