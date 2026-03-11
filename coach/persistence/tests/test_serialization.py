@@ -13,7 +13,7 @@ def test_serialize_activity() -> None:
     serialized = serialize_activity(SAMPLE_RUN)
 
     assert serialized == {
-        'activity_id': SAMPLE_RUN.activity_id,
+        'id': SAMPLE_RUN.id,
 
         'sport_type': SAMPLE_RUN.sport_type.value,
         'name': SAMPLE_RUN.name,
@@ -39,7 +39,7 @@ def test_serialize_activity() -> None:
 def test_deserialize_activity() -> None:
     deserialized = deserialize_activity(
         {
-            'activity_id': SAMPLE_RUN.activity_id,
+            'id': SAMPLE_RUN.id,
 
             'sport_type': SAMPLE_RUN.sport_type.value,
             'name': SAMPLE_RUN.name,

@@ -89,7 +89,7 @@ class SQLiteActivityRepository(Repository[Activity]):
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS activities (
-                activity_id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 sport_type TEXT NOT NULL,
                 name TEXT,
                 description TEXT,
@@ -146,7 +146,7 @@ class SQLiteActivityRepository(Repository[Activity]):
         serialized = serialize_activity(activity)
 
         return (
-            serialized['activity_id'],
+            serialized['id'],
 
             serialized['sport_type'],
             serialized['name'],

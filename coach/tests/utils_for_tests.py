@@ -6,7 +6,7 @@ from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 
 SAMPLE_RUN = Activity(
-    activity_id=1,
+    id=1,
 
     sport_type=SportType.RUN,
     name='Sample Run',
@@ -30,7 +30,7 @@ SAMPLE_RUN = Activity(
 )
 
 SAMPLE_RIDE = Activity(
-    activity_id=2,
+    id=2,
 
     sport_type=SportType.RIDE,
     name='Sample Ride',

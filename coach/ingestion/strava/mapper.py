@@ -16,7 +16,7 @@ class StravaMapper:
         start_time = parse_utc_datetime(payload['start_date'])
 
         return Activity(
-            activity_id=int(payload['id']),
+            id=int(payload['id']),
             sport_type=self._map_sport_type(payload),
             name=payload.get('name'),
             description=payload.get('description'),
