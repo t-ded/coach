@@ -2,14 +2,11 @@ from datetime import UTC
 from datetime import datetime
 
 from coach.domain.activity import Activity
-from coach.domain.activity import ActivitySource
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 
 SAMPLE_RUN = Activity(
     activity_id=1,
-    source=ActivitySource.STRAVA,
-    source_activity_id=1,
 
     sport_type=SportType.RUN,
     name='Sample Run',
@@ -25,7 +22,6 @@ SAMPLE_RUN = Activity(
 
     average_heart_rate=None,
     max_heart_rate=None,
-    average_power_watts=None,
 
     is_manual=False,
     is_race=False,
@@ -35,8 +31,6 @@ SAMPLE_RUN = Activity(
 
 SAMPLE_RIDE = Activity(
     activity_id=2,
-    source=ActivitySource.STRAVA,
-    source_activity_id=2,
 
     sport_type=SportType.RIDE,
     name='Sample Ride',
@@ -52,7 +46,6 @@ SAMPLE_RIDE = Activity(
 
     average_heart_rate=None,
     max_heart_rate=None,
-    average_power_watts=None,
 
     is_manual=False,
     is_race=False,

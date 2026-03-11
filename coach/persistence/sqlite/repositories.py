@@ -88,8 +88,6 @@ class SQLiteActivityRepository(Repository[Activity]):
             """
             CREATE TABLE IF NOT EXISTS activities (
                 activity_id INTEGER PRIMARY KEY,
-                source TEXT NOT NULL,
-                source_activity_id INTEGER NOT NULL,
                 sport_type TEXT NOT NULL,
                 name TEXT,
                 description TEXT,
@@ -101,7 +99,6 @@ class SQLiteActivityRepository(Repository[Activity]):
                 elevation_gain_meters REAL,
                 average_heart_rate REAL,
                 max_heart_rate REAL,
-                average_power_watts REAL,
                 is_manual INTEGER NOT NULL,
                 is_race INTEGER NOT NULL,
                 pbs TEXT DEFAULT '[]',
@@ -129,7 +126,7 @@ class SQLiteActivityRepository(Repository[Activity]):
     def _insert_activity_query(self) -> str:
         return """
             INSERT OR IGNORE INTO activities VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         """
 
@@ -137,19 +134,17 @@ class SQLiteActivityRepository(Repository[Activity]):
     def _activity_values(
         activity: Activity,
     ) -> tuple[
-        int, str, int,
+        int,
         str, Optional[str], Optional[str], Optional[str],
         str, int, Optional[int],
         Optional[float], Optional[float],
-        Optional[float], Optional[float], Optional[float],
+        Optional[float], Optional[float],
         int, int, str,
     ]:
         serialized = serialize_activity(activity)
 
         return (
             serialized['activity_id'],
-            serialized['source'],
-            serialized['source_activity_id'],
 
             serialized['sport_type'],
             serialized['name'],
@@ -165,7 +160,6 @@ class SQLiteActivityRepository(Repository[Activity]):
 
             serialized['average_heart_rate'],
             serialized['max_heart_rate'],
-            serialized['average_power_watts'],
 
             serialized['is_manual'],
             serialized['is_race'],
