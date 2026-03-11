@@ -104,7 +104,7 @@ class SQLiteActivityRepository(Repository[Activity]):
                 is_manual INTEGER NOT NULL,
                 is_race INTEGER NOT NULL,
                 pbs TEXT DEFAULT '[]',
-                UNIQUE (source, source_activity_id)
+                UNIQUE (id)
             )
             """,
         )
@@ -132,10 +132,7 @@ class SQLiteActivityRepository(Repository[Activity]):
             )
         """
 
-    @staticmethod
-    def _activity_values(
-        activity: Activity,
-    ) -> tuple[
+    def _activity_values(self, activity: Activity) -> tuple[
         int,
         str, Optional[str], Optional[str], Optional[str],
         str, int, Optional[int],
@@ -143,7 +140,7 @@ class SQLiteActivityRepository(Repository[Activity]):
         Optional[float], Optional[float],
         int, int, str,
     ]:
-        serialized = serialize_activity(activity)
+        serialized = self._to_row(activity)
 
         return (
             serialized['id'],
@@ -173,7 +170,7 @@ class SQLiteActivityRepository(Repository[Activity]):
         base_query = 'SELECT * FROM activities'
         where_query, params = build_sqlite_where_clause(base_query, {'start_time_utc': [('>=', start_date), ('<', end_date)]})
         rows = self._conn.execute(where_query, params).fetchall()
-        return [deserialize_activity(row) for row in rows]
+        return [self._from_row(row) for row in rows]
 
     def count(self) -> int:
         return self._conn.execute('SELECT COUNT(*) FROM activities').fetchone()[0]
