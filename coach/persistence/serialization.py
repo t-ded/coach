@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Any
 
 from coach.domain.activity import Activity
-from coach.domain.activity import ActivitySource
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
@@ -103,8 +102,6 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
 
     return Activity(
         activity_id=serialized['activity_id'],
-        source=ActivitySource(serialized['source']),
-        source_activity_id=serialized['source_activity_id'],
 
         sport_type=SportType(serialized['sport_type']),
         name=serialized['name'],
@@ -120,7 +117,6 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
 
         average_heart_rate=serialized['average_heart_rate'],
         max_heart_rate=serialized['max_heart_rate'],
-        average_power_watts=serialized['average_power_watts'],
 
         is_manual=bool(serialized['is_manual']),
         is_race=bool(serialized['is_race']),

@@ -3,13 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
-from enum import Enum
 from enum import StrEnum
 from typing import Optional
-
-
-class ActivitySource(Enum):
-    STRAVA = 'Strava'
 
 
 class SportType(StrEnum):
@@ -34,8 +29,6 @@ DISTANCE_SPORT_TYPES = (SportType.RUN, SportType.RIDE, SportType.SWIM, SportType
 class Activity:
     # Identity
     activity_id: int
-    source: ActivitySource
-    source_activity_id: int
 
     # Classification
     sport_type: SportType
@@ -55,7 +48,6 @@ class Activity:
     # Intensity proxies
     average_heart_rate: Optional[float] = None
     max_heart_rate: Optional[float] = None
-    average_power_watts: Optional[float] = None
 
     # Metadata
     is_manual: bool

@@ -1,17 +1,10 @@
 from collections.abc import Iterable
-from datetime import date
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
-from more_itertools import flatten
-
-from coach.builders.utils import compute_distance_duration_pace
 from coach.domain.activity import Activity
-from coach.domain.activity import ActivitySource
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
-from coach.domain.personal_bests import RUNNING_PBS_METERS_MAPPING
-from coach.domain.personal_bests import RunningPersonalBest
-from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.utils import parse_utc_datetime
 
 
@@ -24,8 +17,6 @@ class StravaMapper:
 
         return Activity(
             activity_id=int(payload['id']),
-            source=ActivitySource.STRAVA,
-            source_activity_id=int(payload['id']),
             sport_type=self._map_sport_type(payload),
             name=payload.get('name'),
             description=payload.get('description'),
@@ -37,7 +28,6 @@ class StravaMapper:
             elevation_gain_meters=payload.get('total_elevation_gain'),
             average_heart_rate=payload.get('average_heartrate'),
             max_heart_rate=payload.get('max_heartrate'),
-            average_power_watts=payload.get('average_watts'),
             is_manual=bool(payload.get('manual', False)),
             is_race=bool(payload.get('workout_type') == 1),
             pbs=self.map_pbs(payload.get('best_efforts')),

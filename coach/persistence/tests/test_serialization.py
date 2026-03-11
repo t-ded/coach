@@ -14,8 +14,6 @@ def test_serialize_activity() -> None:
 
     assert serialized == {
         'activity_id': SAMPLE_RUN.activity_id,
-        'source': SAMPLE_RUN.source.value,
-        'source_activity_id': SAMPLE_RUN.source_activity_id,
 
         'sport_type': SAMPLE_RUN.sport_type.value,
         'name': SAMPLE_RUN.name,
@@ -31,7 +29,6 @@ def test_serialize_activity() -> None:
 
         'average_heart_rate': SAMPLE_RUN.average_heart_rate,
         'max_heart_rate': SAMPLE_RUN.max_heart_rate,
-        'average_power_watts': SAMPLE_RUN.average_power_watts,
 
         'is_manual': int(SAMPLE_RUN.is_manual),
         'is_race': int(SAMPLE_RUN.is_race),
@@ -43,8 +40,6 @@ def test_deserialize_activity() -> None:
     deserialized = deserialize_activity(
         {
             'activity_id': SAMPLE_RUN.activity_id,
-            'source': SAMPLE_RUN.source.value,
-            'source_activity_id': SAMPLE_RUN.source_activity_id,
 
             'sport_type': SAMPLE_RUN.sport_type.value,
             'name': SAMPLE_RUN.name,
@@ -60,7 +55,6 @@ def test_deserialize_activity() -> None:
 
             'average_heart_rate': SAMPLE_RUN.average_heart_rate,
             'max_heart_rate': SAMPLE_RUN.max_heart_rate,
-            'average_power_watts': SAMPLE_RUN.average_power_watts,
 
             'is_manual': int(SAMPLE_RUN.is_manual),
             'is_race': int(SAMPLE_RUN.is_race),
