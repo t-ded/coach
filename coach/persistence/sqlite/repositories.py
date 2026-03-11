@@ -2,12 +2,14 @@ import json
 import sqlite3
 from collections.abc import Iterable
 from datetime import datetime
+from typing import Any
 from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.goals import TrainingGoal
 from coach.domain.profile import UserProfile
 from coach.persistence.repository_interface import Repository
+from coach.persistence.serialization import _bools_to_ints
 from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import deserialize_goal
 from coach.persistence.serialization import serialize_activity
@@ -183,3 +185,16 @@ class SQLiteActivityRepository(Repository[Activity]):
     def reset_table(self) -> None:
         self._conn.execute('DROP TABLE IF EXISTS activities')
         self._ensure_schema()
+
+    @staticmethod
+    def _to_row(activity: Activity) -> dict[str, Any]:
+        row = serialize_activity(activity)
+        row = _bools_to_ints(row)
+        row['pbs'] = json.dumps(row['pbs'])
+        return row
+
+    @staticmethod
+    def _from_row(row: dict[str, Any]) -> Activity:
+        normalized = dict(row)
+        normalized['pbs'] = json.loads(normalized['pbs'])
+        return deserialize_activity(normalized)

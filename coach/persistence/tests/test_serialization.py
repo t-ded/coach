@@ -30,9 +30,9 @@ def test_serialize_activity() -> None:
         'average_heart_rate': SAMPLE_RUN.average_heart_rate,
         'max_heart_rate': SAMPLE_RUN.max_heart_rate,
 
-        'is_manual': int(SAMPLE_RUN.is_manual),
-        'is_race': int(SAMPLE_RUN.is_race),
-        'pbs': '[{"name": "1K", "moving_time_seconds": 120}]',
+        'is_manual': SAMPLE_RUN.is_manual,
+        'is_race': SAMPLE_RUN.is_race,
+        'pbs': [{"name": "1K", "moving_time_seconds": 120}],
     }
 
 
@@ -56,9 +56,9 @@ def test_deserialize_activity() -> None:
             'average_heart_rate': SAMPLE_RUN.average_heart_rate,
             'max_heart_rate': SAMPLE_RUN.max_heart_rate,
 
-            'is_manual': int(SAMPLE_RUN.is_manual),
-            'is_race': int(SAMPLE_RUN.is_race),
-            'pbs': '[{"name": "1K", "moving_time_seconds": 120, "activity_date": "2025-01-01T01:00:00+00:00"}]',
+            'is_manual': SAMPLE_RUN.is_manual,
+            'is_race': SAMPLE_RUN.is_race,
+            'pbs': [{"name": "1K", "moving_time_seconds": 120, "activity_date": "2025-01-01T01:00:00+00:00"}],
         },
     )
 
