@@ -96,7 +96,7 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
     ]
 
     return Activity(
-        activity_id=serialized['activity_id'],
+        id=serialized['id'],
 
         sport_type=SportType(serialized['sport_type']),
         name=serialized['name'],

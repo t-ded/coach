@@ -28,7 +28,7 @@ DISTANCE_SPORT_TYPES = (SportType.RUN, SportType.RIDE, SportType.SWIM, SportType
 @dataclass(frozen=True, kw_only=True, slots=True)
 class Activity:
     # Identity
-    activity_id: int
+    id: int
 
     # Classification
     sport_type: SportType
