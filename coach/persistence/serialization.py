@@ -47,10 +47,8 @@ def _lists_to_json(values: dict[str, Any]) -> dict[str, Any]:
 
 def serialize_activity(activity: Activity) -> dict[str, Any]:
     serialized = asdict(activity)
-    serialized = _bools_to_ints(serialized)
     serialized = _dates_to_isostrings(serialized)
     serialized = _enums_to_values(serialized)
-    serialized = _lists_to_json(serialized)
     return serialized
 
 
@@ -92,13 +90,10 @@ def deserialize_goal(raw: dict[str, Any]) -> TrainingGoal:
 
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:
-    pbs: list[BestEffort] = []
-    for pb_json in json.loads(serialized['pbs']):
-        pb = BestEffort(
-            name=pb_json['name'],
-            moving_time_seconds=pb_json['moving_time_seconds'],
-        )
-        pbs.append(pb)
+    pbs = [
+        BestEffort(name=pb['name'], moving_time_seconds=pb['moving_time_seconds'])
+        for pb in serialized['pbs']
+    ]
 
     return Activity(
         activity_id=serialized['activity_id'],
