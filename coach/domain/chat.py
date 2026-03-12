@@ -31,3 +31,6 @@ class ChatHistory:
 
     def has_no_coach_response(self) -> bool:
         return all(turn.role == 'user' for turn in self._turns)
+
+    def clear(self) -> None:
+        self._turns.clear()
