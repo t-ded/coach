@@ -6,7 +6,7 @@ class TestChatHistory:
     def setup_method(self) -> None:
         self._history = ChatHistory(max_turns=2)
 
-    def test_is_empty(self) -> None:
+    def test_has_no_coach_response(self) -> None:
         assert self._history.has_no_coach_response()
         self._history.add(ChatTurn(role='user', content='hello'))
         assert self._history.has_no_coach_response()
@@ -25,3 +25,9 @@ class TestChatHistory:
         self._history.add(ChatTurn(role='user', content='How are you?'))
 
         assert self._history.render() == 'Coach: Hello back\nUser: How are you?'
+
+    def test_clear(self) -> None:
+        self._history.add(ChatTurn(role='user', content='Hello'))
+        self._history.add(ChatTurn(role='coach', content='Hello back'))
+        self._history.clear()
+        assert self._history.render() == ''
