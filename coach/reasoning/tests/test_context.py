@@ -13,14 +13,14 @@ from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
-from coach.reasoning.context import render_activity_summary
-from coach.reasoning.context import render_activity_volume
-from coach.reasoning.context import render_recent_training_history
-from coach.reasoning.context import render_running_pbs
-from coach.reasoning.context import render_system_prompt
-from coach.reasoning.context import render_training_goal
-from coach.reasoning.context import render_weekly_activities
-from coach.reasoning.context import render_weekly_summary
+from coach.reasoning.coach.context import render_activity_summary
+from coach.reasoning.coach.context import render_activity_volume
+from coach.reasoning.coach.context import render_recent_training_history
+from coach.reasoning.coach.context import render_running_pbs
+from coach.reasoning.coach.context import render_system_prompt
+from coach.reasoning.coach.context import render_training_goal
+from coach.reasoning.coach.context import render_weekly_activities
+from coach.reasoning.coach.context import render_weekly_summary
 
 
 def test_render_running_pbs() -> None:
