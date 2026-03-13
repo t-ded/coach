@@ -59,9 +59,9 @@ class Coach:
             return None
 
     def _get_coach_response(self, user_input: str) -> str:
-        chat_history = None if self._history.has_no_coach_response() else self._history.render()
+        chat_history = None if self._history.has_no_assistant_response() else self._history.render()
         coach_response = self._reasoner.chat(running_pbs=self._pbs, recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=chat_history)
-        self._history.add(ChatTurn(role='coach', content=coach_response))
+        self._history.add(ChatTurn(role='assistant', content=coach_response))
         return coach_response
 
 

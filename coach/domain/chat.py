@@ -4,13 +4,16 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Literal
 
-Role = Literal['user', 'coach']
+Role = Literal['user', 'assistant']
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class ChatTurn:
     role: Role
     content: str
+
+    def render(self) -> str:
+        return f'{self.role.capitalize()}: {self.content}'
 
 
 class ChatHistory:
@@ -21,15 +24,10 @@ class ChatHistory:
         self._turns.append(turn)
 
     def render(self) -> str:
-        lines: list[str] = []
-
-        for turn in self._turns:
-            prefix = turn.role.capitalize()
-            lines.append(f'{prefix}: {turn.content}')
-
+        lines: list[str] = [turn.render() for turn in self._turns]
         return '\n'.join(lines)
 
-    def has_no_coach_response(self) -> bool:
+    def has_no_assistant_response(self) -> bool:
         return all(turn.role == 'user' for turn in self._turns)
 
     def clear(self) -> None:
