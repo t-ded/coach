@@ -3,7 +3,7 @@ import typer
 from coach.builders.personal_bests import build_running_personal_bests_summary
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
-from coach.reasoning.context import render_running_pbs
+from coach.reasoning.coach.context import render_running_pbs
 
 info_app = typer.Typer(help='Activity history information')
 
