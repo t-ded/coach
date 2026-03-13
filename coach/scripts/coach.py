@@ -1,5 +1,6 @@
 from datetime import UTC
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -10,9 +11,13 @@ from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
-from coach.reasoning.adapter import LLMCoachReasoner
+from coach.reasoning.context import render_recent_training_history
+from coach.reasoning.context import render_running_pbs
+from coach.reasoning.context import render_system_prompt
+from coach.reasoning.prompts import build_coach_prompt
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import create_llm_client
+from coach.utils import parse_file
 
 coach_app = typer.Typer(help='Coach reasoning commands')
 
@@ -33,7 +38,7 @@ class Coach:
         self._pbs = build_running_personal_bests_summary(activities=all_activities)
 
         self._llm_client = create_llm_client(provider=provider, model=model)
-        self._reasoner = LLMCoachReasoner(self._llm_client)
+        self._rendered_system_prompt = render_system_prompt(parse_file(Path('coach/config/coach.md')))
         self._history = ChatHistory(max_turns=6)
 
     def run_chat_loop(self) -> None:
@@ -59,10 +64,20 @@ class Coach:
             return None
 
     def _get_coach_response(self, user_input: str) -> str:
-        chat_history = None if self._history.has_no_assistant_response() else self._history.render()
-        coach_response = self._reasoner.chat(running_pbs=self._pbs, recent_training_history=self._recent_training_history, user_prompt=user_input, chat_history=chat_history)
+        prompt = self._build_prompt(user_input)
+        coach_response = self._llm_client.complete(prompt)
         self._history.add(ChatTurn(role='assistant', content=coach_response))
         return coach_response
+
+    def _build_prompt(self, user_input: str) -> str:
+        chat_history = None if self._history.has_no_assistant_response() else self._history.render()
+        return build_coach_prompt(
+            running_pbs=render_running_pbs(self._pbs),
+            rendered_recent_training_history=render_recent_training_history(self._recent_training_history),
+            user_prompt=user_input,
+            rendered_system_prompt=self._rendered_system_prompt,
+            chat_history=chat_history,
+        )
 
 
 @coach_app.callback(invoke_without_command=True)

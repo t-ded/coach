@@ -4,8 +4,8 @@ from typing import Optional
 from coach.auth.utils import no_credentials_found_message
 from coach.config.credentials import CredentialsStore
 from coach.reasoning.clients import GoogleAILLMClient
+from coach.reasoning.clients import LLMClient
 from coach.reasoning.clients import OpenAILLMClient
-from coach.reasoning.interface import LLMClient
 
 
 class LLMProvider(StrEnum):
