@@ -7,10 +7,8 @@ from google import genai
 from google.genai import types
 from openai import OpenAI
 
-from coach.reasoning.interface import LLMClient
 
-
-class BaseLLMClient(LLMClient, ABC):
+class LLMClient(ABC):
     def __init__(self, *, max_retries: int = 3) -> None:
         self._max_retries = max_retries
 
@@ -34,7 +32,7 @@ class BaseLLMClient(LLMClient, ABC):
         ...
 
 
-class GoogleAILLMClient(BaseLLMClient):
+class GoogleAILLMClient(LLMClient):
     def __init__(
         self,
         *,
@@ -59,7 +57,7 @@ class GoogleAILLMClient(BaseLLMClient):
         return response.text
 
 
-class OpenAILLMClient(BaseLLMClient):
+class OpenAILLMClient(LLMClient):
     def __init__(
         self,
         *,
