@@ -213,3 +213,6 @@ __marimo__/
 
 # App
 coach/config/coach.md
+
+# Claude Code
+.claude/
