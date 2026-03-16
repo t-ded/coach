@@ -1,3 +1,4 @@
+import dataclasses
 import re
 from typing import Optional
 
@@ -52,7 +53,9 @@ def _goal_from_fields(fields: dict[str, str]) -> Optional[TrainingGoal]:
     return TrainingGoal(name=name, sport_type=sport_type, goal_date=goal_date, priority=priority, notes=notes)
 
 
-def _parse_goals(raw: str) -> tuple[TrainingGoal, ...]:
+def _parse_goals(raw: Optional[str]) -> Optional[tuple[TrainingGoal, ...]]:
+    if not raw:
+        return None
     goals = [_goal_from_fields(_parse_block(block)) for block in re.split(r'\n\s*\n', raw.strip())]
     return tuple(goal for goal in goals if goal is not None)
 
@@ -69,29 +72,34 @@ class ProfileAssistant(Assistant):
         typer.echo("\nWelcome to Coach! Let's set up your profile so I can give you tailored guidance.\n")
         typer.echo('For each section, answer the prompt and continue the conversation. Press Enter on an empty line to move to the next section.\n')
 
-        self._run_conversation_loop(ProfileParts.CHAT_PREFERENCES)
-        chat_preferences = self._summarize(ProfileParts.CHAT_PREFERENCES)
-
-        self._run_conversation_loop(ProfileParts.TRAINING_PREFERENCES)
-        training_preferences = self._summarize(ProfileParts.TRAINING_PREFERENCES)
-
-        self._run_conversation_loop(ProfileParts.PERSONAL_INFORMATION)
-        personal_information = self._summarize(ProfileParts.PERSONAL_INFORMATION)
-
-        self._run_conversation_loop(ProfileParts.CONSTRAINTS)
-        constraints = self._summarize(ProfileParts.CONSTRAINTS)
-
-        self._run_conversation_loop(ProfileParts.GOALS)
-        goals = self._summarize(ProfileParts.GOALS)
+        profile = UserProfile(
+            chat_preferences=self._collect_text(ProfileParts.CHAT_PREFERENCES),
+            training_preferences=self._collect_text(ProfileParts.TRAINING_PREFERENCES),
+            personal_information=self._collect_text(ProfileParts.PERSONAL_INFORMATION),
+            constraints=self._collect_text(ProfileParts.CONSTRAINTS),
+            goals=_parse_goals(self._collect_text(ProfileParts.GOALS)),
+        )
 
         typer.echo('\nProfile setup complete! Coach can now provide tailored guidance.\n')
-        return UserProfile(
-            chat_preferences=chat_preferences,
-            training_preferences=training_preferences,
-            personal_information=personal_information,
-            constraints=constraints,
-            goals=_parse_goals(goals) if goals else None,
-        )
+        return profile
+
+    def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
+        new_text = self._collect_text(section)
+        match section:
+            case ProfileParts.CHAT_PREFERENCES:
+                return dataclasses.replace(profile, chat_preferences=new_text)
+            case ProfileParts.TRAINING_PREFERENCES:
+                return dataclasses.replace(profile, training_preferences=new_text)
+            case ProfileParts.PERSONAL_INFORMATION:
+                return dataclasses.replace(profile, personal_information=new_text)
+            case ProfileParts.CONSTRAINTS:
+                return dataclasses.replace(profile, constraints=new_text)
+            case ProfileParts.GOALS:
+                return dataclasses.replace(profile, goals=_parse_goals(new_text))
+
+    def _collect_text(self, section: ProfileParts) -> Optional[str]:
+        self._run_conversation_loop(section)
+        return self._summarize(section)
 
     def _run_conversation_loop(self, section: ProfileParts) -> None:
         self._history.clear()

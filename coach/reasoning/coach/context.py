@@ -7,6 +7,7 @@ from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.personal_bests import RunningPersonalBestsSummary
+from coach.domain.profile import UserProfile
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -130,6 +131,28 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     lines.append(f'    - Priority: {training_goal.priority} (Options were: {PRIORITY_OPTIONS})')
 
     return '\n'.join(lines)
+
+
+def render_profile(profile: UserProfile) -> str:
+    sections: list[str] = []
+    for label, value in [
+        ('Chat preferences', profile.chat_preferences),
+        ('Training preferences', profile.training_preferences),
+        ('Personal information', profile.personal_information),
+        ('Constraints', profile.constraints),
+    ]:
+        sections.append(f'--- {label} ---')
+        sections.append(value if value else '  (not set)')
+
+    sections.append('--- Goals ---')
+    if profile.goals:
+        for i, goal in enumerate(profile.goals, 1):
+            sections.append(f'Goal {i}:')
+            sections.append(render_training_goal(goal))
+    else:
+        sections.append('  (not set)')
+
+    return '\n'.join(sections)
 
 
 def render_system_prompt(system_prompt: Optional[str]) -> Optional[str]:
