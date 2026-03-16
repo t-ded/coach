@@ -40,10 +40,6 @@ class Coach(Assistant):
     def _response_label(self) -> str:
         return 'Coach'
 
-    def _user_system_prompt(self) -> Optional[str]:
-        # TODO: Eventually, move chat instructions here
-        return None
-
     def _additional_context(self) -> Optional[str]:
         parts: list[str] = []
         _extend_parts(parts, 'User instructions and goals:', self._coach_profile)

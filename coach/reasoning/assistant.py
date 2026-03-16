@@ -7,6 +7,7 @@ import typer
 
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
+from coach.domain.profile import UserProfile
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import create_llm_client
 
@@ -14,6 +15,12 @@ from coach.reasoning.providers import create_llm_client
 def _extend_parts(parts: list[str], part_title: str, content: Optional[str]) -> None:
     if content:
         parts.extend([part_title, content.strip()])
+
+
+def load_user_system_prompt(profile: Optional[UserProfile]) -> Optional[str]:
+    if profile is None:
+        return None
+    return profile.chat_preferences
 
 
 def build_assistant_prompt(
@@ -47,9 +54,9 @@ class Assistant(ABC):
     def _system_prompt(self) -> str:
         raise NotImplementedError
 
-    @abstractmethod
     def _user_system_prompt(self) -> Optional[str]:
-        raise NotImplementedError
+        # TODO: Persist after the refactor and actually load something
+        return load_user_system_prompt(UserProfile.mock())
 
     @abstractmethod
     def _additional_context(self) -> Optional[str]:
