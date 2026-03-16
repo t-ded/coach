@@ -1,15 +1,18 @@
 from datetime import UTC
 from datetime import datetime
-from functools import cached_property
 from pathlib import Path
 from typing import Optional
 
+import typer
+
 from coach.builders.personal_bests import build_running_personal_bests_summary
 from coach.builders.recent_training_history import build_recent_training_history
+from coach.domain.profile import UserProfile
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.reasoning.assistant import Assistant
 from coach.reasoning.assistant import _extend_parts
+from coach.reasoning.assistant import load_user_system_prompt
 from coach.reasoning.coach.context import render_recent_training_history
 from coach.reasoning.coach.context import render_running_pbs
 from coach.reasoning.coach.context import render_system_prompt
@@ -36,9 +39,21 @@ class Coach(Assistant):
         self._rendered_recent_training_history = render_recent_training_history(recent_training_history).strip()
         self._coach_profile: Optional[str] = render_system_prompt(parse_file(Path('coach/config/coach.md')))
 
-    @property
-    def _response_label(self) -> str:
-        return 'Coach'
+    def run_chat_loop(self) -> None:
+        typer.echo('Coach ready. Type your responses (Ctrl+C to exit).\n')
+        while True:
+            try:
+                user_input = typer.prompt('You')
+            except (EOFError, KeyboardInterrupt):
+                typer.echo('\nGoodbye.')
+                break
+            typer.echo('\nCoach:\n')
+            typer.echo(self._get_response(user_input))
+            typer.echo('')
+
+    def _user_system_prompt(self) -> Optional[str]:
+        # TODO: Load from UserProfileRepository once persistence is in place
+        return load_user_system_prompt(UserProfile.mock())
 
     def _additional_context(self) -> Optional[str]:
         parts: list[str] = []

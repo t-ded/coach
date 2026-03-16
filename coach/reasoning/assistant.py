@@ -1,9 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from functools import cached_property
 from typing import Optional
-
-import typer
 
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
@@ -45,37 +42,15 @@ class Assistant(ABC):
         self._llm_client = create_llm_client(provider=provider, model=model)
         self._history = ChatHistory(max_turns=max_history_turns)
 
-    @property
-    @abstractmethod
-    def _response_label(self) -> str:
-        raise NotImplementedError
-
     @abstractmethod
     def _system_prompt(self) -> str:
         raise NotImplementedError
 
     def _user_system_prompt(self) -> Optional[str]:
-        # TODO: Persist after the refactor and actually load something
-        return load_user_system_prompt(UserProfile.mock())
+        return None
 
-    @abstractmethod
     def _additional_context(self) -> Optional[str]:
-        raise NotImplementedError
-
-    def run_chat_loop(self) -> None:
-        self._on_chat_start()
-        while True:
-            try:
-                user_input = typer.prompt('You')
-            except (EOFError, KeyboardInterrupt):
-                typer.echo('\nGoodbye.')
-                break
-            typer.echo(f'\n{self._response_label}:\n')
-            typer.echo(self._get_response(user_input))
-            typer.echo('')
-
-    def _on_chat_start(self) -> None:
-        typer.echo(f'{self._response_label} ready. Type your responses (Ctrl+C to exit).\n')
+        return None
 
     def _get_response(self, user_input: str) -> str:
         response = self._llm_client.complete(self._build_prompt(user_input))
