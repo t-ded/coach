@@ -72,6 +72,10 @@ class SQLiteUserProfileRepository:
         goals_json = json.dumps([serialize_goal(g) for g in profile.goals]) if profile.goals is not None else None
         return self._LOCAL_USER_ID, profile.chat_preferences, profile.training_preferences, profile.personal_information, profile.constraints, goals_json
 
+    def delete(self) -> None:
+        self._conn.execute('DELETE FROM profiles WHERE user_id = ?', (self._LOCAL_USER_ID,))
+        self._conn.commit()
+
 
 class SQLiteActivityRepository(Repository[Activity]):
     def __init__(self, db: Database) -> None:

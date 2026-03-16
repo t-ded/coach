@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+from coach.reasoning.coach.context import PRIORITY_OPTIONS
+
 
 class ProfileParts(StrEnum):
     CHAT_PREFERENCES = 'chat preferences'
@@ -78,14 +80,14 @@ The user has already provided their initial answer. If you need to clarify or wa
 When you have enough information, respond with exactly: DONE
 """
 
-_GOALS_PROMPT = """
+_GOALS_PROMPT = f"""
 You are collecting a user's training goals for an AI coaching assistant.
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. For each goal, aim to confirm:
 - Specific performance target (time, distance, weight, etc.)
 - Sport type
 - Goal date or whether it is open-ended
-- Priority level
+- Priority level (out of {PRIORITY_OPTIONS})
 - Any notes on how they want to approach or prepare for it
 
 When you have confirmed all goals, respond with exactly: DONE
