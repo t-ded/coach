@@ -9,6 +9,9 @@ from coach.domain.activity import Activity
 from coach.domain.activity import ActivitySource
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
+from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import Priority
+from coach.domain.goals import TrainingGoal
 
 
 def _bools_to_ints(values: dict[str, Any]) -> dict[str, Any]:
@@ -50,6 +53,43 @@ def serialize_activity(activity: Activity) -> dict[str, Any]:
     serialized = _enums_to_values(serialized)
     serialized = _lists_to_json(serialized)
     return serialized
+
+
+def serialize_goal(goal: TrainingGoal) -> dict[str, Any]:
+    goal_date = goal.goal_date.isoformat() if isinstance(goal.goal_date, date) else goal.goal_date
+    base: dict[str, Any] = {
+        'name': goal.name,
+        'sport': goal.sport_type.value,
+        'goal_date': goal_date,
+        'priority': goal.priority.value,
+        'notes': goal.notes,
+    }
+    if isinstance(goal, DistanceActivityTrainingGoal):
+        base['type'] = 'distance'
+        base['goal_distance_meters'] = goal.goal_distance_meters
+        base['goal_duration_seconds'] = goal.goal_duration_seconds
+        base['goal_pace'] = goal.goal_pace
+    else:
+        base['type'] = 'base'
+    return base
+
+
+def deserialize_goal(raw: dict[str, Any]) -> TrainingGoal:
+    kwargs: dict[str, Any] = {
+        'name': raw['name'],
+        'sport_type': SportType(raw['sport']),
+        'goal_date': raw['goal_date'],
+        'priority': Priority(raw['priority']),
+        'notes': raw.get('notes'),
+    }
+    if raw.get('type') == 'distance':
+        return DistanceActivityTrainingGoal(
+            **kwargs,
+            goal_distance_meters=raw['goal_distance_meters'],
+            goal_duration_seconds=raw['goal_duration_seconds'],
+            goal_pace=raw['goal_pace'],
+        )
+    return TrainingGoal(**kwargs)
 
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:

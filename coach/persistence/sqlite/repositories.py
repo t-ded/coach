@@ -1,14 +1,76 @@
+import json
 import sqlite3
 from collections.abc import Iterable
 from datetime import datetime
 from typing import Optional
 
 from coach.domain.activity import Activity
+from coach.domain.goals import TrainingGoal
+from coach.domain.profile import UserProfile
 from coach.persistence.repository_interface import Repository
 from coach.persistence.serialization import deserialize_activity
+from coach.persistence.serialization import deserialize_goal
 from coach.persistence.serialization import serialize_activity
+from coach.persistence.serialization import serialize_goal
 from coach.persistence.sqlite.database import Database
 from coach.utils import build_sqlite_where_clause
+
+
+class SQLiteUserProfileRepository:
+    def __init__(self, db: Database) -> None:
+        self._conn = db.connection()
+        self._conn.row_factory = sqlite3.Row
+        self._ensure_schema()
+
+    _LOCAL_USER_ID = 'local'
+
+    def _ensure_schema(self) -> None:
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS profiles (
+                user_id TEXT NOT NULL PRIMARY KEY,
+                chat_preferences TEXT,
+                training_preferences TEXT,
+                personal_information TEXT,
+                constraints TEXT,
+                goals TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+        )
+        self._conn.commit()
+
+    def load(self) -> Optional[UserProfile]:
+        row = self._conn.execute('SELECT * FROM profiles WHERE user_id = ?', (self._LOCAL_USER_ID,)).fetchone()
+        return self._from_row(dict(row)) if row else None
+
+    def save(self, profile: UserProfile) -> None:
+        self._conn.execute(
+            """
+            INSERT OR REPLACE INTO profiles
+                (user_id, chat_preferences, training_preferences, personal_information, constraints, goals, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            self._to_row(profile),
+        )
+        self._conn.commit()
+
+    @staticmethod
+    def _from_row(row: dict) -> UserProfile:
+        goals: Optional[tuple[TrainingGoal, ...]] = None
+        if row['goals'] is not None:
+            goals = tuple(deserialize_goal(g) for g in json.loads(row['goals']))
+        return UserProfile(
+            chat_preferences=row['chat_preferences'],
+            training_preferences=row['training_preferences'],
+            personal_information=row['personal_information'],
+            constraints=row['constraints'],
+            goals=goals,
+        )
+
+    def _to_row(self, profile: UserProfile) -> tuple[str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
+        goals_json = json.dumps([serialize_goal(g) for g in profile.goals]) if profile.goals is not None else None
+        return self._LOCAL_USER_ID, profile.chat_preferences, profile.training_preferences, profile.personal_information, profile.constraints, goals_json
 
 
 class SQLiteActivityRepository(Repository[Activity]):
