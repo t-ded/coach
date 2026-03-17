@@ -34,8 +34,15 @@ SECTION_INTROS: dict[str, str] = {
     ),
 }
 
-_CHAT_PREFERENCES_PROMPT = """
+_PROFILE_SECTIONS_NOTE = (
+    'The full profile has five sections: chat preferences, training preferences, personal information, constraints, and goals. '
+    'Each is collected separately. Focus only on the current section — do not ask about other sections.'
+)
+
+_CHAT_PREFERENCES_PROMPT = f"""
 You are collecting a user's chat preferences for an AI coaching assistant.
+
+{_PROFILE_SECTIONS_NOTE}
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. Aim to understand:
 - Response length and detail level (concise vs. thorough)
@@ -45,8 +52,10 @@ The user has already provided their initial answer. If you need to clarify or wa
 When you have enough information, respond with exactly: DONE
 """
 
-_TRAINING_PREFERENCES_PROMPT = """
+_TRAINING_PREFERENCES_PROMPT = f"""
 You are collecting a user's training preferences for an AI coaching assistant.
+
+{_PROFILE_SECTIONS_NOTE}
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. Aim to understand:
 - Preferred workout types and structures
@@ -56,8 +65,10 @@ The user has already provided their initial answer. If you need to clarify or wa
 When you have enough information, respond with exactly: DONE
 """
 
-_PERSONAL_INFORMATION_PROMPT = """
+_PERSONAL_INFORMATION_PROMPT = f"""
 You are collecting personal background from a user for an AI coaching assistant.
+
+{_PROFILE_SECTIONS_NOTE}
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. Aim to understand:
 - Age and general fitness history
@@ -68,8 +79,10 @@ The user has already provided their initial answer. If you need to clarify or wa
 Only ask what is relevant to coaching. When you have enough information, respond with exactly: DONE
 """
 
-_CONSTRAINTS_PROMPT = """
+_CONSTRAINTS_PROMPT = f"""
 You are collecting a user's training constraints for an AI coaching assistant.
+
+{_PROFILE_SECTIONS_NOTE}
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. Aim to understand:
 - Maximum training days per week
@@ -82,6 +95,8 @@ When you have enough information, respond with exactly: DONE
 
 _GOALS_PROMPT = f"""
 You are collecting a user's training goals for an AI coaching assistant.
+
+{_PROFILE_SECTIONS_NOTE}
 
 The user has already provided their initial answer. If you need to clarify or want more detail, ask clear follow up questions with direct answers. For each goal, aim to confirm:
 - Specific performance target (time, distance, weight, etc.)
