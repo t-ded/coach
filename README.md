@@ -114,22 +114,15 @@ Coach: [RESPONSE HERE]
 
 <br>
 
-3. **Personalize your coaching profile**:
-
-   Copy `coach/config/coach.md.example` to `coach/config/coach.md` and customize it:
+3. **Set up your coaching profile**:
    ```bash
-   cp coach/config/coach.md.example coach/config/coach.md
+   coach profile setup
    ```
 
-   Edit `coach/config/coach.md` to set your training goals, constraints, and preferences. This file is used by the AI coach to provide personalized advice tailored to you.
+   This interactive command guides you through setting up your profile, section by section: chat preferences, training preferences, personal information, constraints, and goals. The AI coach uses this to provide advice tailored to you.
 
 ### Authentication Commands
 
-- `coach auth setup` - Interactive setup for all credentials
-- `coach auth strava` - Setup/reconfigure Strava only
-- `coach auth google` - Setup/reconfigure Google AI only
-- `coach auth openai` - Setup/reconfigure OpenAI only
-- `coach auth status` - Check which credentials are configured
 
 ---
 
@@ -137,7 +130,45 @@ Coach: [RESPONSE HERE]
 
 ### Available Commands
 
-The application provides three main command groups:
+The application provides five main command groups:
+
+<details>
+<summary>🔐 Authentication Commands</summary>
+
+Manage your authentication setup - add new integrations and reconfigure or check status of current ones.
+
+```bash
+`coach auth setup`       # Interactive setup for all credentials
+`coach auth strava`      # Setup/reconfigure Strava only
+`coach auth google`      # Setup/reconfigure Google AI only
+`coach auth openai`      # Setup/reconfigure OpenAI only
+`coach auth status`      # Check which credentials are configured
+```
+
+</details>
+
+<details>
+<summary>👤 Profile Commands</summary>
+
+Manage your coaching profile — the personal context the AI coach uses to tailor advice:
+
+```bash
+coach profile setup                    # Interactive guided setup (all sections)
+coach profile edit <section>           # Edit a single section
+coach profile show                     # Display your current profile
+coach profile reset                    # Delete your profile
+```
+
+**Sections** (used with `coach profile edit`):
+- `chat_preferences` — How you want the coach to communicate (tone, verbosity, style)
+- `training_preferences` — Workout variety, intensity focus, session structure
+- `personal_information` — Background, experience level, lifestyle context
+- `constraints` — Training frequency, preferred times, injury history
+- `goals` — Specific goals (sport, distance, target time, priority, date)
+
+Each section runs a short conversation where you describe your preferences in natural language, and the AI summarizes them into structured bullet points or goal entries.
+
+</details>
 
 <details>
 <summary>🔄 Sync Commands</summary>
@@ -219,8 +250,9 @@ The coach will:
 
 1. **First time setup**:
    ```bash
-   coach auth setup    # Authenticate with Strava and Google AI
-   coach sync strava   # Sync your activities
+   coach auth setup      # Authenticate with Strava and Google AI
+   coach profile setup   # Set up your coaching profile
+   coach sync strava     # Sync your activities
    ```
 
 2. **Get coaching advice**:
@@ -260,66 +292,26 @@ The coach will extract this information and use it to provide more accurate anal
 
 ## ⚙️ Personalization
 
-### Training Instructions, Goals, and Preferences
+Run `coach profile setup` to set up your coaching profile through a guided conversational flow. For each section, you describe your preferences in natural language and the AI distills them into a concise summary stored in the local database.
 
-Create your personal `coach/config/coach.md` from the example template and customize:
-
-- **Personal history and details**: Personal information, lifestyle, training experience, etc.
-- **Constraints**: Training frequency, preferred workout times, weekly long run schedule
-- **Preferences**: Workout variety, intensity focus, training style
-- **Goals**: Specific goals you want to achieve. The format of individual goals is specified by the template and is not to be changed. Not all fields need to be present for all goals, though.
-
-The AI coach uses this information to provide advice aligned with your specific situation and goals.
-
-*Note: Keep the **Goals** section at the bottom and do not change its name to maintain correct parsing.*
-
-<details>
-<summary>⚙️ Example Configuration</summary>
-
-```markdown
-# Training Instructions
-
-### Personal history and details:
-- Age, weight, height
-- Started running in ..., weight lifting in ..., now mostly ...
-- Competitive ... from X years old (used to 4+ training sessions a week, camps on weekends and heavy camps with daily multiphase trainings)
-- Struggled with knee pain and shin splints during the peak of my first running summer in 2025
-    - Up and especially down hills triggered both a lot
-    - High quality warmup before and stretching after helped a lot (also keeping my knees warm in colder weather)
-- Work as a ..., spending most of my day ...
-- Typical diet ...
-- The biggest struggle is ...
-- No need to overly focus or mention any of the above in the response, just to give context
-
-### Constraints:
-- Maximum of 4–5 training days per week
-- Prefer evening workouts
-- Long run on weekends, not on weekdays
-- Stay injury-free
-- Maintain strength training at least once per week
-- Concise answer, not unnecessarily wordy (avoid restating instructions)
-    - If summarizing current state and recent training history, do so briefly
-
-### Preferences:
-- Strong variety in workout types
-- Focus on heavy workouts (VO2 Max intervals, tempo/threshold runs, etc.)
-
-### Goals:
-- Sub20 5K
-    - Sport: Run
-    - Goal date: 2026-06-30
-    - Distance: 5 km
-    - Total duration: 00:20:00
-    - Notes: Would like to try for the PB before the race so that I go into the race knowing I can make it
-    - Priority: Very high
-
-- Bench 120 kg
-    - Sport: WeightTraining
-    - Goal date: N/A
-    - Priority: low
+To update a single section later:
+```bash
+coach profile edit chat_preferences
+coach profile edit training_preferences
+coach profile edit personal_information
+coach profile edit constraints
+coach profile edit goals
 ```
 
-</details>
+To review your current profile:
+```bash
+coach profile show
+```
+
+To remove your personal setup:
+```bash
+coach profile reset
+```
 
 ---
 
