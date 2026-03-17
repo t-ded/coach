@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from coach.utils import build_sqlite_where_clause
+from coach.utils import combine_sections
 from coach.utils import days_ago
 from coach.utils import format_total_seconds
 from coach.utils import parse_distance_km
@@ -62,6 +63,25 @@ def test_parse_private_notes_activity_summary() -> None:
     assert parse_private_notes_activity_summary('$Smthng') == ''
     assert parse_private_notes_activity_summary('Smthng$') == ''
     assert parse_private_notes_activity_summary(None) == ''
+
+
+def test_combine_sections_all_present() -> None:
+    result = combine_sections([('Title A:', 'content a'), ('Title B:', 'content b')])
+    assert result == ['Title A:\ncontent a', 'Title B:\ncontent b']
+
+
+def test_combine_sections_skips_none() -> None:
+    result = combine_sections([('Title A:', 'content a'), ('Title B:', None), ('Title C:', 'content c')])
+    assert result == ['Title A:\ncontent a', 'Title C:\ncontent c']
+
+
+def test_combine_sections_all_none() -> None:
+    assert combine_sections([('Title A:', None), ('Title B:', None)]) == []
+
+
+def test_combine_sections_strips_content() -> None:
+    result = combine_sections([('Title:', '  content with whitespace  ')])
+    assert result == ['Title:\ncontent with whitespace']
 
 
 class TestBuildSqliteWhereClause:

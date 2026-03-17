@@ -5,9 +5,11 @@ from datetime import timedelta
 
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.personal_bests import RunningPersonalBest
 from coach.domain.personal_bests import RunningPersonalBestsSummary
+from coach.domain.profile import UserProfile
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
@@ -15,6 +17,8 @@ from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
 from coach.reasoning.coach.context import render_activity_summary
 from coach.reasoning.coach.context import render_activity_volume
+from coach.reasoning.coach.context import render_profile
+from coach.reasoning.coach.context import render_profile_as_context
 from coach.reasoning.coach.context import render_recent_training_history
 from coach.reasoning.coach.context import render_running_pbs
 from coach.reasoning.coach.context import render_training_goal
@@ -372,3 +376,48 @@ def test_render_training_goal_weight_training() -> None:
     assert result == expected_result.strip()
 
 
+_SAMPLE_GOAL = TrainingGoal(name='Sub-20 5K', sport_type=SportType.RUN, goal_date='N/A', priority=Priority.HIGH)
+
+
+def test_render_profile_all_unset() -> None:
+    result = render_profile(UserProfile())
+    assert '--- Chat preferences ---' in result
+    assert '--- Goals ---' in result
+    assert result.count('  (not set)') == 5
+
+
+def test_render_profile_with_fields() -> None:
+    profile = UserProfile(chat_preferences='Be concise.', training_preferences='Variety is key.')
+    result = render_profile(profile)
+    assert '--- Chat preferences ---\nBe concise.' in result
+    assert '--- Training preferences ---\nVariety is key.' in result
+    assert '--- Personal information ---\n  (not set)' in result
+
+
+def test_render_profile_with_goals() -> None:
+    profile = UserProfile(goals=(_SAMPLE_GOAL,))
+    result = render_profile(profile)
+    assert 'Goal 1:' in result
+    assert 'Sub-20 5K' in result
+    assert '  (not set)' not in result.split('--- Goals ---')[1]
+
+
+def test_render_profile_as_context_empty_profile() -> None:
+    assert render_profile_as_context(UserProfile()) is None
+
+
+def test_render_profile_as_context_text_fields_only() -> None:
+    profile = UserProfile(training_preferences='Lots of intervals.', constraints='Max 5 days/week.')
+    result = render_profile_as_context(profile)
+    assert result is not None
+    assert 'Training preferences\nLots of intervals.' in result
+    assert 'Constraints\nMax 5 days/week.' in result
+    assert 'Chat preferences' not in result
+
+
+def test_render_profile_as_context_with_goals() -> None:
+    profile = UserProfile(goals=(_SAMPLE_GOAL,))
+    result = render_profile_as_context(profile)
+    assert result is not None
+    assert 'Goals\n' in result
+    assert 'Sub-20 5K' in result
