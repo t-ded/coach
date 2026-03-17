@@ -17,7 +17,6 @@ from coach.reasoning.coach.context import render_activity_summary
 from coach.reasoning.coach.context import render_activity_volume
 from coach.reasoning.coach.context import render_recent_training_history
 from coach.reasoning.coach.context import render_running_pbs
-from coach.reasoning.coach.context import render_system_prompt
 from coach.reasoning.coach.context import render_training_goal
 from coach.reasoning.coach.context import render_weekly_activities
 from coach.reasoning.coach.context import render_weekly_summary
@@ -373,52 +372,3 @@ def test_render_training_goal_weight_training() -> None:
     assert result == expected_result.strip()
 
 
-def test_render_system_prompt() -> None:
-    today = datetime.now(tz=UTC).date()
-    goal_date = today + timedelta(days=10)
-    goal_date_str = goal_date.strftime('%Y-%m-%d')
-
-    system_prompt = f"""# Training Instructions
-
-### Personal history and details:
-- 24 years old, roughly 91 kg, 190 cm tall
-- Started running in spring 2025
-
-### Goals:
-- Half-marathon at 1:45:00
-    - Sport: Run
-    - Goal date: {goal_date_str}
-    - Distance: 21.0975 km
-    - Total duration: 01:45:00
-    - Priority: Very High
-
-- Bench 120 kg
-    - Sport: WeightTraining
-    - Goal date: N/A"""
-
-    result = render_system_prompt(system_prompt)
-    expected_result = f"""# Training Instructions
-
-### Personal history and details:
-- 24 years old, roughly 91 kg, 190 cm tall
-- Started running in spring 2025
-
-### Goals:
-- Half-marathon at 1:45:00
-    - Sport: Run
-    - Goal date: {goal_date_str} (in 1 week and 3 days)
-    - Distance: 21.0975 km
-    - Total duration: 01:45:00
-    - Pace: 4:58/km
-    - Priority: VERY HIGH (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])
-- Bench 120 kg
-    - Sport: WeightTraining
-    - Goal date: N/A
-    - Priority: MEDIUM (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])"""
-
-    assert result == expected_result
-
-
-def test_render_system_prompt_none() -> None:
-    result = render_system_prompt(None)
-    assert result is None

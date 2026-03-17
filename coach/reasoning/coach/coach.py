@@ -1,6 +1,5 @@
 from datetime import UTC
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 import typer
@@ -10,14 +9,13 @@ from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.profile import UserProfile
 from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
+from coach.persistence.sqlite.repositories import SQLiteUserProfileRepository
 from coach.reasoning.assistant import Assistant
-from coach.reasoning.assistant import _extend_parts
-from coach.reasoning.assistant import load_user_system_prompt
+from coach.reasoning.coach.context import render_profile_as_context
 from coach.reasoning.coach.context import render_recent_training_history
 from coach.reasoning.coach.context import render_running_pbs
-from coach.reasoning.coach.context import render_system_prompt
 from coach.reasoning.providers import LLMProvider
-from coach.utils import parse_file
+from coach.utils import combine_sections
 
 
 class Coach(Assistant):
@@ -25,6 +23,11 @@ class Coach(Assistant):
         super().__init__(provider=provider, model=model)
 
         db = Database('coach.db')
+
+        self._profile: Optional[UserProfile] = SQLiteUserProfileRepository(db).load()
+        self._additional_context_attr = self._build_additional_context(db, num_history_weeks)
+
+    def _build_additional_context(self, db: Database, num_history_weeks: int) -> Optional[str]:
         activity_repo = SQLiteActivityRepository(db)
         all_activities = activity_repo.list_all()
 
@@ -35,9 +38,17 @@ class Coach(Assistant):
             num_history_weeks=num_history_weeks,
         )
 
-        self._rendered_pbs = render_running_pbs(pb_summary).strip()
-        self._rendered_recent_training_history = render_recent_training_history(recent_training_history).strip()
-        self._coach_profile: Optional[str] = render_system_prompt(parse_file(Path('coach/config/coach.md')))
+        rendered_profile = render_profile_as_context(self._profile) if self._profile else None
+        rendered_pbs = render_running_pbs(pb_summary).strip()
+        rendered_recent_training_history = render_recent_training_history(recent_training_history).strip()
+
+        sections = [
+            ('User profile:', rendered_profile),
+            ('Recent weeks training context:', rendered_recent_training_history),
+            ('Running PBs:', rendered_pbs),
+        ]
+        parts = combine_sections(sections)
+        return '\n'.join(parts) or None
 
     def run_chat_loop(self) -> None:
         typer.echo('Coach ready. Type your responses (Ctrl+C to exit).\n')
@@ -52,15 +63,10 @@ class Coach(Assistant):
             typer.echo('')
 
     def _user_system_prompt(self) -> Optional[str]:
-        # TODO: Load from UserProfileRepository once persistence is in place
-        return load_user_system_prompt(UserProfile.mock())
+        return self._profile.chat_preferences if self._profile else None
 
     def _additional_context(self) -> Optional[str]:
-        parts: list[str] = []
-        _extend_parts(parts, 'User instructions and goals:', self._coach_profile)
-        _extend_parts(parts, 'Recent weeks training context:', self._rendered_recent_training_history)
-        _extend_parts(parts, 'Running PBs:', self._rendered_pbs)
-        return '\n'.join(parts)
+        return self._additional_context_attr
 
     def _system_prompt(self) -> str:
         return """

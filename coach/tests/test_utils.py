@@ -1,14 +1,11 @@
 from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 from coach.utils import build_sqlite_where_clause
 from coach.utils import days_ago
 from coach.utils import format_total_seconds
 from coach.utils import parse_distance_km
-from coach.utils import parse_file
 from coach.utils import parse_private_notes_activity_summary
 from coach.utils import parse_utc_datetime
 from coach.utils import weeks_and_days_until
@@ -58,22 +55,6 @@ def test_weeks_and_days_until() -> None:
     assert weeks_and_days_until(today + timedelta(days=14)) == '2 weeks'
     assert weeks_and_days_until(today + timedelta(days=15)) == '2 weeks and 1 day'
     assert weeks_and_days_until(today + timedelta(days=16)) == '2 weeks and 2 days'
-
-
-def test_parse_file_non_existent() -> None:
-    non_existing_path = Path('non_existing_file_xyz123.txt')
-    assert parse_file(non_existing_path) is None
-
-
-def test_parse_file_existent() -> None:
-    with NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as temp_file:
-        temp_file.write('  test content  \n')
-        temp_path = Path(temp_file.name)
-
-    try:
-        assert parse_file(temp_path) == 'test content'
-    finally:
-        temp_path.unlink()
 
 
 def test_parse_private_notes_activity_summary() -> None:

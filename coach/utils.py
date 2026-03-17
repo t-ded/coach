@@ -1,7 +1,6 @@
 from datetime import UTC
 from datetime import date
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 from typing import Optional
 
@@ -47,12 +46,6 @@ def weeks_and_days_until(future_date: date) -> str:
     return ' and '.join(full_response)
 
 
-def parse_file(path: Path) -> Optional[str]:
-    if not path.exists():
-        return None
-    return path.read_text(encoding='utf-8').strip()
-
-
 def parse_private_notes_activity_summary(private_notes: Optional[str]) -> str:
     if not private_notes:
         return ''
@@ -66,6 +59,10 @@ def parse_private_notes_activity_summary(private_notes: Optional[str]) -> str:
         return ''
 
     return private_notes[start + 1 : end]
+
+
+def combine_sections(sections: list[tuple[str, Optional[str]]]) -> list[str]:
+    return [f'{title}\n{content.strip()}' for title, content in sections if content]
 
 
 def build_sqlite_where_clause(base_query: str, conditions: dict[str, list[tuple[str, Any]]]) -> tuple[str, list[Any]]:
