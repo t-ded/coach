@@ -113,6 +113,7 @@ class ProfileAssistant(Assistant):
             user_input = self._read_input()
             if not user_input.strip():
                 return
+            typer.echo('Thank you for your input!')
 
             response = self._get_response(user_input)
             if response.strip().upper() == 'DONE':
