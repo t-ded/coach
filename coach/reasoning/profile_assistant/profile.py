@@ -98,15 +98,19 @@ class ProfileAssistant(Assistant):
                 return dataclasses.replace(profile, goals=_parse_goals(new_text))
 
     def _collect_text(self, section: ProfileParts) -> Optional[str]:
-        self._run_conversation_loop(section)
-        return self._summarize(section)
+        try:
+            self._run_conversation_loop(section)
+            return self._summarize(section)
+        except (RuntimeError, ValueError) as e:
+            typer.echo(f'Error: {e} when collecting section {section.value}')
+            return None
 
     def _run_conversation_loop(self, section: ProfileParts) -> None:
         self._history.clear()
         self._current_section = section
         typer.echo(f'\n{SECTION_INTROS[section]}\n')
         while True:
-            user_input = typer.prompt('Your answer:', default='')
+            user_input = self._read_input()
             if not user_input.strip():
                 return
 
@@ -115,6 +119,17 @@ class ProfileAssistant(Assistant):
                 return
 
             typer.echo(f'\nAssistant:\n{response}\n')
+
+    @staticmethod
+    def _read_input() -> str:
+        typer.echo('Your answer: ', nl=False)
+        lines: list[str] = []
+        while True:
+            line = input()
+            if not line:
+                break
+            lines.append(line)
+        return '\n'.join(lines)
 
     def _summarize(self, section: ProfileParts) -> Optional[str]:
         if self._history.has_no_assistant_response():
