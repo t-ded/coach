@@ -2,7 +2,6 @@ from datetime import date
 from typing import Optional
 from typing import cast
 
-from coach.builders.training_goal import build_training_goal
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
@@ -13,6 +12,7 @@ from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
+from coach.utils import combine_sections
 from coach.utils import days_ago
 from coach.utils import format_total_seconds
 from coach.utils import parse_distance_km
@@ -155,13 +155,14 @@ def render_profile(profile: UserProfile) -> str:
     return '\n'.join(sections)
 
 
-def render_system_prompt(system_prompt: Optional[str]) -> Optional[str]:
-    if system_prompt is None:
-        return None
+def render_profile_as_context(profile: UserProfile) -> Optional[str]:
+    goals_text = '\n'.join(render_training_goal(g) for g in profile.goals) if profile.goals else None
+    sections = [
+        ('Training preferences', profile.training_preferences),
+        ('Personal information:', profile.personal_information),
+        ('Constraints', profile.constraints),
+        ('Goals', goals_text),
+    ]
 
-    parts = system_prompt.split('### Goals:')
-    text_lines = parts[0]
-    goals = [build_training_goal(goal) for goal in parts[1].split('\n\n')]
-    rendered_goals = '\n'.join([render_training_goal(goal) for goal in goals])
-
-    return text_lines + '### Goals:\n' + rendered_goals
+    parts = combine_sections(sections)
+    return '\n'.join(parts) if parts else None
