@@ -11,6 +11,7 @@ from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
+from coach.reasoning.coach.context import render_training_goal
 from coach.reasoning.profile_assistant.system_prompts import CONVERSATION_PROMPTS
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
@@ -60,6 +61,20 @@ def _parse_goals(raw: Optional[str]) -> Optional[tuple[TrainingGoal, ...]]:
     return tuple(goal for goal in goals if goal is not None)
 
 
+def _section_text(profile: UserProfile, section: ProfileParts) -> Optional[str]:
+    match section:
+        case ProfileParts.CHAT_PREFERENCES:
+            return profile.chat_preferences
+        case ProfileParts.TRAINING_PREFERENCES:
+            return profile.training_preferences
+        case ProfileParts.PERSONAL_INFORMATION:
+            return profile.personal_information
+        case ProfileParts.CONSTRAINTS:
+            return profile.constraints
+        case ProfileParts.GOALS:
+            return '\n'.join(render_training_goal(g) for g in profile.goals) if profile.goals else None
+
+
 def _build_context_note(collected: dict[ProfileParts, Optional[str]]) -> str:
     entries = [(section, text) for section, text in collected.items() if text]
     if not entries:
@@ -77,9 +92,16 @@ class ProfileAssistant(Assistant):
         self._collected_sections: dict[ProfileParts, Optional[str]] = {}
 
     def _system_prompt(self) -> str:
-        base = CONVERSATION_PROMPTS[self._current_section]
-        context = _build_context_note(self._collected_sections)
-        return f'{base}\n\n{context}' if context else base
+        return CONVERSATION_PROMPTS[self._current_section]
+
+    def _additional_context(self) -> Optional[str]:
+        other_sections = self._collected_sections.copy()
+        previous = other_sections.pop(self._current_section, None)
+        parts = [
+            _build_context_note(other_sections),
+            f'The user is editing this section. Previous value:\n{previous}' if previous else '',
+        ]
+        return '\n\n'.join(p for p in parts if p) or None
 
     def setup_profile(self) -> UserProfile:
         typer.echo("\nWelcome to Coach! Let's set up your profile so I can give you tailored guidance.\n")
@@ -110,16 +132,7 @@ class ProfileAssistant(Assistant):
         )
 
     def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
-        self._collected_sections = {
-            part: text
-            for part, text in {
-                ProfileParts.CHAT_PREFERENCES: profile.chat_preferences,
-                ProfileParts.TRAINING_PREFERENCES: profile.training_preferences,
-                ProfileParts.PERSONAL_INFORMATION: profile.personal_information,
-                ProfileParts.CONSTRAINTS: profile.constraints,
-            }.items()
-            if part != section and text is not None
-        }
+        self._collected_sections = {part: _section_text(profile, part) for part in ProfileParts}
         new_text = self._collect_text(section)
         match section:
             case ProfileParts.CHAT_PREFERENCES:
