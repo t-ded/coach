@@ -121,7 +121,24 @@ Coach: [RESPONSE HERE]
 
    This interactive command guides you through setting up your profile, section by section: chat preferences, training preferences, personal information, constraints, and goals. The AI coach uses this to provide advice tailored to you.
 
-### Authentication Commands
+<br>
+
+4. **Sync your Strava activities**:
+   ```bash
+   coach sync strava
+   ```
+
+   This fetches your activities from Strava and stores them locally. Run this periodically to keep your data up to date.
+
+<br>
+
+5. **Start a coaching chat**:
+   ```bash
+   coach chat
+   ```
+
+   This starts an interactive session where the coach analyzes your recent training and answers your questions. Use `--num-history-weeks` to include more training context (default is 8 weeks).
+
 
 
 ---
@@ -224,7 +241,7 @@ coach chat
 - `--model`: Model name (uses provider default if not specified)
   - Google default: `gemini-2.5-flash`
   - OpenAI default: `gpt-5-nano`
-- `--num-history-weeks`: Number of weeks to include in the training state analysis (default: `2`)
+- `--num-history-weeks`: Number of weeks to include in the training state analysis (default: `8`)
 
 Example with default Google AI provider:
 ```bash

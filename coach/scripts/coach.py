@@ -14,7 +14,7 @@ def chat_callback(
         provider: str = typer.Option(default='google', help='LLM provider (google (default) or openai)'),
         model: Optional[str] = typer.Option(default=None, help='Model name (uses provider default if not specified)'),
         num_history_weeks: int = typer.Option(
-            default=2,
+            default=8,
             help='Number of weeks used to build a summary of the current training state. Weeks are indexed from monday and the current week is always included.',
         ),
 ) -> None:
