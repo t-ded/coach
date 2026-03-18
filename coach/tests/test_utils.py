@@ -2,7 +2,6 @@ from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
 
-from coach.utils import build_sqlite_where_clause
 from coach.utils import combine_sections
 from coach.utils import days_ago
 from coach.utils import format_total_seconds
@@ -84,45 +83,3 @@ def test_combine_sections_strips_content() -> None:
     assert result == ['Title:\ncontent with whitespace']
 
 
-class TestBuildSqliteWhereClause:
-    def test_no_conditions(self) -> None:
-        query, params = build_sqlite_where_clause('SELECT * FROM activities', {})
-        assert query == 'SELECT * FROM activities'
-        assert params == []
-
-    def test_single_condition(self) -> None:
-        query, params = build_sqlite_where_clause('SELECT * FROM activities', {'sport_type': [('=', 'Run')]})
-        assert query == 'SELECT * FROM activities WHERE sport_type = ?'
-        assert params == ['Run']
-
-    def test_multiple_conditions_different_columns(self) -> None:
-        query, params = build_sqlite_where_clause(
-            'SELECT * FROM activities',
-            {
-                'sport_type': [('=', 'Run')],
-                'distance': [('>', 5000)],
-            },
-        )
-        assert query == 'SELECT * FROM activities WHERE sport_type = ? AND distance > ?'
-        assert params == ['Run', 5000]
-
-    def test_multiple_conditions_same_column(self) -> None:
-        query, params = build_sqlite_where_clause(
-            'SELECT * FROM activities',
-            {
-                'distance': [('>', 1000), ('<', 10000)],
-            },
-        )
-        assert query == 'SELECT * FROM activities WHERE distance > ? AND distance < ?'
-        assert params == [1000, 10000]
-
-    def test_none_values(self) -> None:
-        query, params = build_sqlite_where_clause(
-            'SELECT * FROM activities',
-            {
-                'sport_type': [('=', 'Run')],
-                'distance': [('>', None)],
-            },
-        )
-        assert query == 'SELECT * FROM activities WHERE sport_type = ?'
-        assert params == ['Run']

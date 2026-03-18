@@ -1,4 +1,3 @@
-import json
 from dataclasses import asdict
 from datetime import date
 from datetime import datetime
@@ -11,14 +10,6 @@ from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
-
-
-def _bools_to_ints(values: dict[str, Any]) -> dict[str, Any]:
-    values_copy = values.copy()
-    for key, value in values_copy.items():
-        if isinstance(value, bool):
-            values_copy[key] = int(value)
-    return values_copy
 
 
 def _dates_to_isostrings(values: dict[str, Any]) -> dict[str, Any]:
@@ -34,14 +25,6 @@ def _enums_to_values(values: dict[str, Any]) -> dict[str, Any]:
     for key, value in values_copy.items():
         if isinstance(value, Enum):
             values_copy[key] = value.value
-    return values_copy
-
-
-def _lists_to_json(values: dict[str, Any]) -> dict[str, Any]:
-    values_copy = values.copy()
-    for key, value in values_copy.items():
-        if isinstance(value, list):
-            values_copy[key] = json.dumps(value)
     return values_copy
 
 
