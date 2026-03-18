@@ -6,10 +6,8 @@ import typer
 
 from coach.builders.personal_bests import build_running_personal_bests_summary
 from coach.builders.recent_training_history import build_recent_training_history
+from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
-from coach.persistence.sqlite.database import Database
-from coach.persistence.sqlite.repositories import SQLiteActivityRepository
-from coach.persistence.sqlite.repositories import SQLiteUserProfileRepository
 from coach.reasoning.assistant import Assistant
 from coach.reasoning.coach.context import render_profile
 from coach.reasoning.coach.context import render_recent_training_history
@@ -19,21 +17,22 @@ from coach.utils import combine_sections
 
 
 class Coach(Assistant):
-    def __init__(self, provider: LLMProvider, model: Optional[str], num_history_weeks: int) -> None:
+    def __init__(
+        self,
+        provider: LLMProvider,
+        model: Optional[str],
+        profile: Optional[UserProfile],
+        activities: list[Activity],
+        num_history_weeks: int,
+    ) -> None:
         super().__init__(provider=provider, model=model)
+        self._profile = profile
+        self._additional_context_attr = self._build_additional_context(activities, num_history_weeks)
 
-        db = Database('coach.db')
-
-        self._profile: Optional[UserProfile] = SQLiteUserProfileRepository(db).load()
-        self._additional_context_attr = self._build_additional_context(db, num_history_weeks)
-
-    def _build_additional_context(self, db: Database, num_history_weeks: int) -> Optional[str]:
-        activity_repo = SQLiteActivityRepository(db)
-        all_activities = activity_repo.list_all()
-
-        pb_summary = build_running_personal_bests_summary(activities=all_activities)
+    def _build_additional_context(self, activities: list[Activity], num_history_weeks: int) -> Optional[str]:
+        pb_summary = build_running_personal_bests_summary(activities=activities)
         recent_training_history = build_recent_training_history(
-            activities=all_activities,
+            activities=activities,
             generated_at=datetime.now(tz=UTC),
             num_history_weeks=num_history_weeks,
         )
