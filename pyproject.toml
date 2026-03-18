@@ -79,6 +79,9 @@ select = [
     'Q001', # single quotes
 ]
 
+[tool.ruff.format]
+quote-style = 'single'
+
 [tool.ruff.lint.flake8-annotations]
 mypy-init-return = true
 

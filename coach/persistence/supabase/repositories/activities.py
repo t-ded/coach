@@ -34,7 +34,7 @@ class SupabaseActivityRepository(Repository[Activity]):
             self._save_query(rows)
 
     def _save_query(self, to_save: ActivityRow | list[ActivityRow]) -> None:
-        self._db.table(self.TABLE).upsert(to_save, on_conflict='id').execute()
+        self._table().upsert(to_save, on_conflict='id').execute()
 
     def list_all(
         self,
