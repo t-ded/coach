@@ -5,8 +5,8 @@ import typer
 
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.mapper import StravaMapper
-from coach.persistence.supabase.repositories.activities import SupabaseActivityRepository
-from coach.persistence.supabase.session import load_session
+from coach.persistence.repositories.activities import SupabaseActivityRepository
+from coach.persistence.session import load_session
 
 sync_app = typer.Typer(help='Data ingestion commands')
 

@@ -2,9 +2,9 @@ from typing import Optional
 
 import typer
 
-from coach.persistence.supabase.repositories.activities import SupabaseActivityRepository
-from coach.persistence.supabase.repositories.profiles import SupabaseUserProfileRepository
-from coach.persistence.supabase.session import load_session
+from coach.persistence.repositories.activities import SupabaseActivityRepository
+from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
+from coach.persistence.session import load_session
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.providers import LLMProvider
 
