@@ -60,30 +60,66 @@ def _parse_goals(raw: Optional[str]) -> Optional[tuple[TrainingGoal, ...]]:
     return tuple(goal for goal in goals if goal is not None)
 
 
+def _build_context_note(collected: dict[ProfileParts, Optional[str]]) -> str:
+    entries = [(section, text) for section, text in collected.items() if text]
+    if not entries:
+        return ''
+    lines = ['The following sections have ALREADY been collected in this session. Do NOT re-ask about these topics:']
+    for section, text in entries:
+        lines.append(f'\n[{section.title()}]\n{text}')
+    return '\n'.join(lines)
+
+
 class ProfileAssistant(Assistant):
     def __init__(self, provider: LLMProvider, model: Optional[str]) -> None:
         super().__init__(provider=provider, model=model)
         self._current_section: ProfileParts = ProfileParts.CHAT_PREFERENCES
+        self._collected_sections: dict[ProfileParts, Optional[str]] = {}
 
     def _system_prompt(self) -> str:
-        return CONVERSATION_PROMPTS[self._current_section]
+        base = CONVERSATION_PROMPTS[self._current_section]
+        context = _build_context_note(self._collected_sections)
+        return f'{base}\n\n{context}' if context else base
 
     def setup_profile(self) -> UserProfile:
         typer.echo("\nWelcome to Coach! Let's set up your profile so I can give you tailored guidance.\n")
         typer.echo('For each section, answer the prompt and continue the conversation. Press Enter on an empty line to move to the next section.\n')
 
-        profile = UserProfile(
-            chat_preferences=self._collect_text(ProfileParts.CHAT_PREFERENCES),
-            training_preferences=self._collect_text(ProfileParts.TRAINING_PREFERENCES),
-            personal_information=self._collect_text(ProfileParts.PERSONAL_INFORMATION),
-            constraints=self._collect_text(ProfileParts.CONSTRAINTS),
-            goals=_parse_goals(self._collect_text(ProfileParts.GOALS)),
-        )
+        self._collected_sections = {}
+        chat_preferences = self._collect_text(ProfileParts.CHAT_PREFERENCES)
+        self._collected_sections[ProfileParts.CHAT_PREFERENCES] = chat_preferences
+
+        training_preferences = self._collect_text(ProfileParts.TRAINING_PREFERENCES)
+        self._collected_sections[ProfileParts.TRAINING_PREFERENCES] = training_preferences
+
+        personal_information = self._collect_text(ProfileParts.PERSONAL_INFORMATION)
+        self._collected_sections[ProfileParts.PERSONAL_INFORMATION] = personal_information
+
+        constraints = self._collect_text(ProfileParts.CONSTRAINTS)
+        self._collected_sections[ProfileParts.CONSTRAINTS] = constraints
+
+        goals_text = self._collect_text(ProfileParts.GOALS)
 
         typer.echo('\nProfile setup complete! Coach can now provide tailored guidance.\n')
-        return profile
+        return UserProfile(
+            chat_preferences=chat_preferences,
+            training_preferences=training_preferences,
+            personal_information=personal_information,
+            constraints=constraints,
+            goals=_parse_goals(goals_text),
+        )
 
     def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
+        self._collected_sections = {
+            part: text
+            for part, text in {
+                ProfileParts.CHAT_PREFERENCES: profile.chat_preferences,
+                ProfileParts.TRAINING_PREFERENCES: profile.training_preferences,
+                ProfileParts.PERSONAL_INFORMATION: profile.personal_information,
+                ProfileParts.CONSTRAINTS: profile.constraints,
+            }.items()
+            if part != section and text is not None
+        }
         new_text = self._collect_text(section)
         match section:
             case ProfileParts.CHAT_PREFERENCES:
