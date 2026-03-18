@@ -11,7 +11,7 @@ from coach.persistence.sqlite.database import Database
 from coach.persistence.sqlite.repositories import SQLiteActivityRepository
 from coach.persistence.sqlite.repositories import SQLiteUserProfileRepository
 from coach.reasoning.assistant import Assistant
-from coach.reasoning.coach.context import render_profile_as_context
+from coach.reasoning.coach.context import render_profile
 from coach.reasoning.coach.context import render_recent_training_history
 from coach.reasoning.coach.context import render_running_pbs
 from coach.reasoning.providers import LLMProvider
@@ -38,7 +38,7 @@ class Coach(Assistant):
             num_history_weeks=num_history_weeks,
         )
 
-        rendered_profile = render_profile_as_context(self._profile) if self._profile else None
+        rendered_profile = render_profile(self._profile, include_chat_preferences=False) if self._profile else None
         rendered_pbs = render_running_pbs(pb_summary).strip()
         rendered_recent_training_history = render_recent_training_history(recent_training_history).strip()
 
