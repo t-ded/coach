@@ -133,36 +133,18 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     return '\n'.join(lines)
 
 
-def render_profile(profile: UserProfile) -> str:
-    sections: list[str] = []
-    for label, value in [
-        ('Chat preferences', profile.chat_preferences),
-        ('Training preferences', profile.training_preferences),
-        ('Personal information', profile.personal_information),
-        ('Constraints', profile.constraints),
-    ]:
-        sections.append(f'--- {label} ---')
-        sections.append(value if value else '  (not set)')
-
-    sections.append('--- Goals ---')
-    if profile.goals:
-        for i, goal in enumerate(profile.goals, 1):
-            sections.append(f'Goal {i}:')
-            sections.append(render_training_goal(goal))
-    else:
-        sections.append('  (not set)')
-
-    return '\n'.join(sections)
-
-
-def render_profile_as_context(profile: UserProfile) -> Optional[str]:
+def render_profile(profile: UserProfile, *, include_chat_preferences: bool = True) -> str:
     goals_text = '\n'.join(render_training_goal(g) for g in profile.goals) if profile.goals else None
-    sections = [
-        ('Training preferences', profile.training_preferences),
-        ('Personal information:', profile.personal_information),
-        ('Constraints', profile.constraints),
-        ('Goals', goals_text),
+    sections: list[tuple[str, Optional[str]]] = []
+
+    if include_chat_preferences:
+        sections.append(('--- Chat preferences ---', profile.chat_preferences or '(not set)'))
+
+    sections += [
+        ('--- Training preferences ---', profile.training_preferences or '(not set)'),
+        ('--- Personal information ---', profile.personal_information or '(not set)'),
+        ('--- Constraints ---', profile.constraints or '(not set)'),
+        ('--- Goals ---', goals_text or '(not set)'),
     ]
 
-    parts = combine_sections(sections)
-    return '\n'.join(parts) if parts else None
+    return '\n\n'.join(combine_sections(sections))
