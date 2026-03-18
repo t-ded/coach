@@ -2,6 +2,9 @@ from typing import Optional
 
 import typer
 
+from coach.persistence.supabase.repositories.activities import SupabaseActivityRepository
+from coach.persistence.supabase.repositories.profiles import SupabaseUserProfileRepository
+from coach.persistence.supabase.session import load_session
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.providers import LLMProvider
 
@@ -18,8 +21,17 @@ def chat_callback(
             help='Number of weeks used to build a summary of the current training state. Weeks are indexed from monday and the current week is always included.',
         ),
 ) -> None:
-    llm_provider = LLMProvider(provider.lower())
-    coach = Coach(provider=llm_provider, model=model, num_history_weeks=num_history_weeks)
+    session = load_session()
+    profile = SupabaseUserProfileRepository(session.client, session.user_id).load()
+    activities = SupabaseActivityRepository(session.client, session.user_id).list_all()
+
+    coach = Coach(
+        provider=LLMProvider(provider.lower()),
+        model=model,
+        profile=profile,
+        activities=activities,
+        num_history_weeks=num_history_weeks,
+    )
     ctx.obj = coach
 
     if ctx.invoked_subcommand is None:

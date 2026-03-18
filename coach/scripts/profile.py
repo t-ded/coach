@@ -2,8 +2,9 @@ from typing import Optional
 
 import typer
 
-from coach.persistence.sqlite.database import Database
-from coach.persistence.sqlite.repositories import SQLiteUserProfileRepository
+from coach.persistence.supabase.repositories.profiles import SupabaseUserProfileRepository
+from coach.persistence.supabase.session import UserSession
+from coach.persistence.supabase.session import load_session
 from coach.reasoning.coach.context import render_profile
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
@@ -15,8 +16,8 @@ _SECTION_NAMES = {p.name.lower(): p for p in ProfileParts}
 _SECTION_CHOICES = ', '.join(_SECTION_NAMES)
 
 
-def _get_repo() -> SQLiteUserProfileRepository:
-    return SQLiteUserProfileRepository(Database('coach.db'))
+def _get_repo(session: UserSession) -> SupabaseUserProfileRepository:
+    return SupabaseUserProfileRepository(session.client, session.user_id)
 
 
 def _get_assistant(provider: str, model: Optional[str]) -> ProfileAssistant:
@@ -28,7 +29,7 @@ def setup_profile(
     provider: str = typer.Option(default='google', help='LLM provider (google or openai)'),
     model: Optional[str] = typer.Option(default=None, help='Model name (uses provider default if omitted)'),
 ) -> None:
-    repo = _get_repo()
+    repo = _get_repo(load_session())
 
     if repo.load() is not None:
         typer.confirm('A profile already exists. Overwrite it?', abort=True)
@@ -49,7 +50,7 @@ def edit_section(
         typer.echo(f'Unknown section "{section}". Choose from: {_SECTION_CHOICES}')
         raise typer.Exit(1)
 
-    repo = _get_repo()
+    repo = _get_repo(load_session())
     profile = repo.load()
     if profile is None:
         typer.echo('No profile found. Run `coach profile setup` first.')
@@ -62,7 +63,7 @@ def edit_section(
 
 @profile_app.command('show')
 def show_profile() -> None:
-    profile = _get_repo().load()
+    profile = _get_repo(load_session()).load()
     if profile is None:
         typer.echo('No profile found. Run `coach profile setup` first.')
         raise typer.Exit(1)
@@ -72,5 +73,5 @@ def show_profile() -> None:
 @profile_app.command('reset')
 def reset_profile() -> None:
     typer.confirm('This will permanently delete your profile. Continue?', abort=True)
-    _get_repo().delete()
+    _get_repo(load_session()).delete()
     typer.echo('Profile deleted.')
