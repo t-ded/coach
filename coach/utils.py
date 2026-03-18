@@ -1,7 +1,6 @@
 from datetime import UTC
 from datetime import date
 from datetime import datetime
-from typing import Any
 from typing import Optional
 
 
@@ -63,30 +62,3 @@ def parse_private_notes_activity_summary(private_notes: Optional[str]) -> str:
 
 def combine_sections(sections: list[tuple[str, Optional[str]]]) -> list[str]:
     return [f'{title}\n{content.strip()}' for title, content in sections if content]
-
-
-def build_sqlite_where_clause(base_query: str, conditions: dict[str, list[tuple[str, Any]]]) -> tuple[str, list[Any]]:
-    """
-    Build a SQL query with optional filters.
-
-    Args:
-        base_query: The base SQL query (e.g., 'SELECT * FROM table')
-        conditions: Dict of {key: (operator, value)}
-                   Only non-None values are included.
-
-    Returns:
-        Tuple of (query_string, params_list)
-    """
-    clauses = []
-    params = []
-
-    for column, column_conditions in conditions.items():
-        for operator, value in column_conditions:
-            if value is not None:
-                clauses.append(f'{column} {operator} ?')
-                params.append(value)
-
-    where = (' WHERE ' + ' AND '.join(clauses)) if clauses else ''
-    query = base_query + where
-
-    return query, params
