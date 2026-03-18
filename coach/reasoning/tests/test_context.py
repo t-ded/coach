@@ -15,6 +15,10 @@ from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
+from coach.domain.activity import Activity
+from coach.domain.activity import BestEffort
+from coach.domain.activity import SportType as ActivitySportType
+from coach.reasoning.coach.context import build_coach_context
 from coach.reasoning.coach.context import render_activity_summary
 from coach.reasoning.coach.context import render_activity_volume
 from coach.reasoning.coach.context import render_profile
@@ -375,6 +379,8 @@ def test_render_training_goal_weight_training() -> None:
     assert result == expected_result.strip()
 
 
+_FIXED_NOW = datetime(2025, 3, 17, 10, 0, 0, tzinfo=UTC)
+
 _SAMPLE_GOAL = TrainingGoal(name='Sub-20 5K', sport_type=SportType.RUN, goal_date='N/A', priority=Priority.HIGH)
 
 
@@ -398,3 +404,49 @@ def test_render_profile_with_goals() -> None:
     result = render_profile(profile)
     assert 'Sub-20 5K' in result
     assert '(not set)' not in result.split('--- Goals ---')[1]
+
+
+def _run_with_pbs(id: int, pbs: list[BestEffort]) -> Activity:
+    return Activity(
+        id=id,
+        sport_type=ActivitySportType.RUN,
+        name=None,
+        description=None,
+        notes=None,
+        start_time_utc=_FIXED_NOW,
+        elapsed_time_seconds=3_600,
+        moving_time_seconds=None,
+        distance_meters=None,
+        elevation_gain_meters=None,
+        average_heart_rate=None,
+        max_heart_rate=None,
+        is_manual=False,
+        is_race=False,
+        pbs=pbs,
+    )
+
+
+class TestBuildCoachContext:
+    def test_profile_section_present_when_profile_is_set(self) -> None:
+        profile = UserProfile(training_preferences='Run lots of easy miles.')
+        result = build_coach_context(profile=profile, activities=[], num_history_weeks=4, generated_at=_FIXED_NOW)
+        assert result is not None
+        assert 'Run lots of easy miles.' in result
+
+    def test_profile_section_absent_when_no_profile(self) -> None:
+        result = build_coach_context(profile=None, activities=[], num_history_weeks=4, generated_at=_FIXED_NOW)
+        assert result is not None
+        assert 'User profile:' not in result
+
+    def test_pbs_flow_through_from_activities(self) -> None:
+        activity = _run_with_pbs(1, pbs=[BestEffort(name='5K', moving_time_seconds=1200)])
+        result = build_coach_context(profile=None, activities=[activity], num_history_weeks=4, generated_at=_FIXED_NOW)
+        assert result is not None
+        assert '5K' in result
+
+    def test_current_week_day_reflects_generated_at(self) -> None:
+        # _FIXED_NOW is a Monday — the training history header should reflect that
+        monday = datetime(2025, 3, 17, 10, 0, 0, tzinfo=UTC)  # actual Monday
+        result = build_coach_context(profile=None, activities=[], num_history_weeks=2, generated_at=monday)
+        assert result is not None
+        assert 'Monday' in result

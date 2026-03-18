@@ -4,16 +4,12 @@ from typing import Optional
 
 import typer
 
-from coach.builders.personal_bests import build_running_personal_bests_summary
-from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
+from coach.reasoning.coach.context import build_coach_context
 from coach.reasoning.coach.context import render_profile
-from coach.reasoning.coach.context import render_recent_training_history
-from coach.reasoning.coach.context import render_running_pbs
 from coach.reasoning.providers import LLMProvider
-from coach.utils import combine_sections
 
 
 class Coach(Assistant):
@@ -27,27 +23,12 @@ class Coach(Assistant):
     ) -> None:
         super().__init__(provider=provider, model=model)
         self._profile = profile
-        self._additional_context_attr = self._build_additional_context(activities, num_history_weeks)
-
-    def _build_additional_context(self, activities: list[Activity], num_history_weeks: int) -> Optional[str]:
-        pb_summary = build_running_personal_bests_summary(activities=activities)
-        recent_training_history = build_recent_training_history(
+        self._additional_context_attr = build_coach_context(
+            profile=profile,
             activities=activities,
-            generated_at=datetime.now(tz=UTC),
             num_history_weeks=num_history_weeks,
+            generated_at=datetime.now(tz=UTC),
         )
-
-        rendered_profile = render_profile(self._profile, include_chat_preferences=False) if self._profile else None
-        rendered_pbs = render_running_pbs(pb_summary).strip()
-        rendered_recent_training_history = render_recent_training_history(recent_training_history).strip()
-
-        sections = [
-            ('User profile:', rendered_profile),
-            ('Recent weeks training context:', rendered_recent_training_history),
-            ('Running PBs:', rendered_pbs),
-        ]
-        parts = combine_sections(sections)
-        return '\n'.join(parts) or None
 
     def run_chat_loop(self) -> None:
         typer.echo('Coach ready. Type your responses (Ctrl+C to exit).\n')

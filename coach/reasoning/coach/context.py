@@ -1,7 +1,11 @@
 from datetime import date
+from datetime import datetime
 from typing import Optional
 from typing import cast
 
+from coach.builders.personal_bests import build_running_personal_bests_summary
+from coach.builders.recent_training_history import build_recent_training_history
+from coach.domain.activity import Activity
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
@@ -131,6 +135,32 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     lines.append(f'    - Priority: {training_goal.priority} (Options were: {PRIORITY_OPTIONS})')
 
     return '\n'.join(lines)
+
+
+def build_coach_context(
+    *,
+    profile: Optional[UserProfile],
+    activities: list[Activity],
+    num_history_weeks: int,
+    generated_at: datetime,
+) -> Optional[str]:
+    pb_summary = build_running_personal_bests_summary(activities=activities)
+    recent_training_history = build_recent_training_history(
+        activities=activities,
+        generated_at=generated_at,
+        num_history_weeks=num_history_weeks,
+    )
+
+    rendered_profile = render_profile(profile, include_chat_preferences=False) if profile else None
+    rendered_pbs = render_running_pbs(pb_summary).strip()
+    rendered_history = render_recent_training_history(recent_training_history).strip()
+
+    parts = combine_sections([
+        ('User profile:', rendered_profile),
+        ('Recent weeks training context:', rendered_history),
+        ('Running PBs:', rendered_pbs),
+    ])
+    return '\n'.join(parts) or None
 
 
 def render_profile(profile: UserProfile, *, include_chat_preferences: bool = True) -> str:
