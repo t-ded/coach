@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from supabase import Client
 
-from coach.persistence.supabase.database import SupabaseDatabase
+from coach.persistence.database import SupabaseDatabase
 
 
 @dataclass(frozen=True)

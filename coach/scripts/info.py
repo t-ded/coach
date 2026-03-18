@@ -1,8 +1,8 @@
 import typer
 
 from coach.builders.personal_bests import build_running_personal_bests_summary
-from coach.persistence.supabase.repositories.activities import SupabaseActivityRepository
-from coach.persistence.supabase.session import load_session
+from coach.persistence.repositories.activities import SupabaseActivityRepository
+from coach.persistence.session import load_session
 from coach.reasoning.coach.context import render_running_pbs
 
 info_app = typer.Typer(help='Activity history information')

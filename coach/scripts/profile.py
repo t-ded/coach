@@ -2,9 +2,9 @@ from typing import Optional
 
 import typer
 
-from coach.persistence.supabase.repositories.profiles import SupabaseUserProfileRepository
-from coach.persistence.supabase.session import UserSession
-from coach.persistence.supabase.session import load_session
+from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
+from coach.persistence.session import UserSession
+from coach.persistence.session import load_session
 from coach.reasoning.coach.context import render_profile
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
