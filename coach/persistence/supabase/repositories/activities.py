@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Any
 from typing import Optional
+from typing import cast
 
 from postgrest import CountMethod
 from postgrest import SyncRequestBuilder
@@ -48,7 +49,7 @@ class SupabaseActivityRepository(Repository[Activity]):
             query = query.lt('start_time_utc', end_date)
 
         response = query.execute()
-        return [deserialize_activity(row) for row in response.data]
+        return [deserialize_activity(cast(ActivityRow, row)) for row in response.data]
 
     def count(self) -> int:
         response = self._table().select('id', count=CountMethod.exact).eq(column='user_id', value=self._user_id).execute()
@@ -58,7 +59,8 @@ class SupabaseActivityRepository(Repository[Activity]):
         response = self._table().select('start_time_utc').order('start_time_utc', desc=True).eq(column='user_id', value=self._user_id).limit(1).execute()
         if not response.data:
             return None
-        return int(datetime.fromisoformat(response.data[0]['start_time_utc']).timestamp())
+        row = cast(ActivityRow, response.data[0])
+        return int(datetime.fromisoformat(cast(str, row['start_time_utc'])).timestamp())
 
     def reset_table(self) -> None:
         self._table().delete().eq(column='user_id', value=self._user_id).execute()

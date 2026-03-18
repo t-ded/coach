@@ -5,8 +5,8 @@ import typer
 
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.mapper import StravaMapper
-from coach.persistence.sqlite.database import Database
-from coach.persistence.sqlite.repositories import SQLiteActivityRepository
+from coach.persistence.supabase.repositories.activities import SupabaseActivityRepository
+from coach.persistence.supabase.session import load_session
 
 sync_app = typer.Typer(help='Data ingestion commands')
 
@@ -16,8 +16,8 @@ def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) ->
     client = StravaClient()
     mapper = StravaMapper()
 
-    db = Database('coach.db')
-    activity_repo = SQLiteActivityRepository(db)
+    session = load_session()
+    activity_repo = SupabaseActivityRepository(session.client, session.user_id)
     if fresh:
         typer.echo('Dropping activities table...')
         activity_repo.reset_table()
