@@ -63,6 +63,28 @@ class TestCredentialsStoreOpenAI:
         assert store.get_openai_api_key() == 'oai-key'
 
 
+class TestCredentialsStoreSupabase:
+    def test_has_no_session_initially(self, store: CredentialsStore) -> None:
+        assert store.has_supabase_session() is False
+        assert store.get_supabase_session() is None
+
+    def test_store_and_retrieve(self, store: CredentialsStore) -> None:
+        store.store_supabase_session(access_token='access-tok', refresh_token='refresh-tok')
+        assert store.has_supabase_session() is True
+        session = store.get_supabase_session()
+        assert session is not None
+        assert session['access_token'] == 'access-tok'
+        assert session['refresh_token'] == 'refresh-tok'
+
+    def test_overwrite_existing_session(self, store: CredentialsStore) -> None:
+        store.store_supabase_session(access_token='old', refresh_token='r1')
+        store.store_supabase_session(access_token='new', refresh_token='r2')
+        session = store.get_supabase_session()
+        assert session is not None
+        assert session['access_token'] == 'new'
+        assert session['refresh_token'] == 'r2'
+
+
 class TestCredentialsStoreIsolation:
     def test_providers_do_not_interfere(self, store: CredentialsStore) -> None:
         store.store_google_api_key('ggl-key')

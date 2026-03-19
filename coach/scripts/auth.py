@@ -117,7 +117,7 @@ def setup_openai() -> None:
 def check_status() -> None:
     store = CredentialsStore()
     typer.echo('Authentication Status:\n')
-    typer.echo(f'{"✓" if store.has_supabase_session() else "✗"} Supabase (Google login)')
+    typer.echo(f'{"✓" if store.has_supabase_session() else "✗"} Personal Profile Storage (Google)')
     typer.echo(f'{"✓" if store.has_strava_credentials() else "✗"} Strava')
     typer.echo(f'{"✓" if store.has_google_credentials() else "✗"} Google AI')
     typer.echo(f'{"✓" if store.has_openai_credentials() else "✗"} OpenAI')
