@@ -82,12 +82,12 @@ Coach: [RESPONSE HERE]
 
 ## 📋 Prerequisites
 
-- Python 3.10+
+- Python 3.13+
+- Google account (for login and Google AI Studio)
 - Strava account (free)
-- Google account (for Google AI Studio - free tier available)
 
 **Optional:**
-- OpenAI API key (Optional - only for OpenAI integration)
+- OpenAI API key (only needed if using the OpenAI provider)
 
 ---
 
@@ -107,10 +107,11 @@ Coach: [RESPONSE HERE]
    ```
 
    This interactive command will:
+   - Open your browser to sign in with Google (creates your account and stores your session)
    - Open your browser to authorize Strava
    - Open your browser to get a free Google AI API key
-   - Optionally, open your browser to get OpenAI API key (free but credits are then required for the use of OpenAI models)
-   - Store credentials securely in `~/.coach/credentials.json`
+   - Optionally, open your browser to get an OpenAI API key (free but OpenAI credits are then required to use OpenAI-provided models)
+   - Store all credentials securely in `~/.coach/credentials.json`
 
 <br>
 
@@ -156,6 +157,7 @@ Manage your authentication setup - add new integrations and reconfigure or check
 
 ```bash
 `coach auth setup`       # Interactive setup for all credentials
+`coach auth login`       # Sign in / re-authenticate with Google
 `coach auth strava`      # Setup/reconfigure Strava only
 `coach auth google`      # Setup/reconfigure Google AI only
 `coach auth openai`      # Setup/reconfigure OpenAI only
@@ -196,7 +198,7 @@ Sync your activities from Strava to the local database:
 coach sync strava
 ```
 
-This fetches all your activities from Strava and stores them locally for analysis.
+This fetches all your activities from Strava and stores them in Supabase for analysis.
 
 **Options**:
 - `--fresh`: Remove all existing entries from the database and re-ingest all activities
@@ -334,4 +336,4 @@ coach profile reset
 
 ## 💾 Data Storage
 
-Activities are stored in a local SQLite database (`coach.db`) in the project directory. This allows for quick analysis without repeatedly calling the Strava API.
+Activities and profiles are stored in Supabase, scoped to your Google account. This allows for quick analysis without repeatedly calling the Strava API, and means your data follows you across devices.
