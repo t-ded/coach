@@ -63,6 +63,20 @@ class CredentialsStore:
     def has_openai_credentials(self) -> bool:
         return self.get_openai_api_key() is not None
 
+    def store_supabase_session(self, *, access_token: str, refresh_token: str) -> None:
+        credentials = self._load_credentials()
+        credentials['supabase'] = {'access_token': access_token, 'refresh_token': refresh_token}
+        self._save_credentials(credentials)
+
+    def get_supabase_session(self) -> Optional[dict[str, str]]:
+        supabase = self._load_credentials().get('supabase')
+        if supabase is None:
+            return None
+        return {'access_token': supabase['access_token'], 'refresh_token': supabase['refresh_token']}
+
+    def has_supabase_session(self) -> bool:
+        return self.get_supabase_session() is not None
+
     def _load_credentials(self) -> dict[str, Any]:
         if not self._credentials_file.exists():
             return {}
