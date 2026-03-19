@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 from supabase import create_client
 
 from coach.config.credentials import CredentialsStore
+from coach.persistence.database import SUPABASE_ANON_KEY
+from coach.persistence.database import SUPABASE_URL
 
 _CALLBACK_PORT = 8585
 _CALLBACK_PATH = '/callback'
@@ -18,12 +20,10 @@ _REDIRECT_URI = f'http://localhost:{_CALLBACK_PORT}{_CALLBACK_PATH}'
 
 
 def setup_supabase_login() -> None:
-    supabase_url = os.environ['SUPABASE_URL']
-    anon_key = os.environ['SUPABASE_ANON_KEY']
-    client = create_client(supabase_url, anon_key)
+    client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
     code_verifier, code_challenge = _generate_pkce_pair()
-    auth_url = _build_auth_url(supabase_url, code_challenge)
+    auth_url = _build_auth_url(SUPABASE_URL, code_challenge)
 
     print('\n=== Supabase Login ===')
     print('Opening browser for Google login...')
