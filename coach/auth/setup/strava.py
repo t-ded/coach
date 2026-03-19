@@ -17,7 +17,8 @@ REDIRECT_PORT = 8765
 REDIRECT_URI = f'http://localhost:{REDIRECT_PORT}/callback'
 
 
-def setup_strava_oauth() -> None:
+def setup_strava_oauth() -> int:
+    """Run Strava OAuth flow. Returns the authenticated athlete's Strava user ID."""
     print('\n=== Strava Setup ===')
     print('You will need a Strava API application. If you have not created one,')
     print('visit: https://www.strava.com/settings/api\n')
@@ -41,6 +42,8 @@ def setup_strava_oauth() -> None:
 
     print('\n✓ Strava authorization successful!')
     print('Credentials stored securely in ~/.coach/credentials.json')
+
+    return int(token_data['athlete']['id'])
 
 
 def _run_oauth_flow(client_id: str) -> str:
