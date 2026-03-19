@@ -3,6 +3,7 @@ import typer
 from coach.auth.google import setup_google_ai_key
 from coach.auth.openai import setup_openai_key
 from coach.auth.setup.strava import setup_strava_oauth
+from coach.auth.supabase_auth import setup_supabase_login
 from coach.config.credentials import CredentialsStore
 
 auth_app = typer.Typer(help='Authentication and setup commands')
@@ -17,15 +18,16 @@ def _add_already_configured_info(original_string: str, is_configured: bool, prov
 @auth_app.command('setup')
 def setup_all() -> None:
     store = CredentialsStore()
+    has_supabase = store.has_supabase_session()
     has_strava = store.has_strava_credentials()
     has_google = store.has_google_credentials()
     has_openai = store.has_openai_credentials()
-
     has_ai = has_google or has_openai
 
-    if has_strava and has_ai:
+    if has_supabase and has_strava and has_ai:
         typer.echo('✓ All required credentials configured!')
         typer.echo('\nTo reconfigure:')
+        typer.echo('  coach auth login')
         typer.echo('  coach auth strava')
         typer.echo('  coach auth google')
         typer.echo('  coach auth openai')
@@ -33,13 +35,19 @@ def setup_all() -> None:
 
     typer.echo('=== Coach Authentication Setup ===\n')
 
-    if has_strava:
-        typer.echo('[1/2] ✓ Strava already configured')
+    if has_supabase:
+        typer.echo('[1/3] ✓ Already logged in')
     else:
-        typer.echo('[1/2] Setting up Strava...')
+        typer.echo('[1/3] Logging in...')
+        setup_supabase_login()
+
+    if has_strava:
+        typer.echo('\n[2/3] ✓ Strava already configured')
+    else:
+        typer.echo('\n[2/3] Setting up Strava...')
         setup_strava_oauth()
 
-    typer.echo('\n[2/2] Setting up AI provider...')
+    typer.echo('\n[3/3] Setting up AI provider...')
     typer.echo('Coach uses an AI model to analyze your training - please select your desired integration.\n')
     typer.echo(_add_already_configured_info(original_string='  [1] Google AI Studio (free, recommended)', is_configured=has_google, provider='google'))
     typer.echo(_add_already_configured_info(original_string='  [2] OpenAI (requires credits)', is_configured=has_openai, provider='openai'))
@@ -67,6 +75,15 @@ def setup_all() -> None:
     typer.echo('\nNext:')
     typer.echo('  coach sync strava  - Sync your activities')
     typer.echo('  coach chat         - Start chatting with your coach')
+
+
+@auth_app.command('login')
+def login() -> None:
+    store = CredentialsStore()
+    if store.has_supabase_session() and not typer.confirm('Already logged in. Re-authenticate?'):
+        typer.echo('Cancelled.')
+        return
+    setup_supabase_login()
 
 
 @auth_app.command('strava')
@@ -100,9 +117,10 @@ def setup_openai() -> None:
 def check_status() -> None:
     store = CredentialsStore()
     typer.echo('Authentication Status:\n')
+    typer.echo(f'{"✓" if store.has_supabase_session() else "✗"} Supabase (Google login)')
     typer.echo(f'{"✓" if store.has_strava_credentials() else "✗"} Strava')
     typer.echo(f'{"✓" if store.has_google_credentials() else "✗"} Google AI')
     typer.echo(f'{"✓" if store.has_openai_credentials() else "✗"} OpenAI')
 
-    if not store.has_strava_credentials() or not store.has_google_credentials():
+    if not store.has_supabase_session() or not store.has_strava_credentials() or not (store.has_google_credentials() or store.has_openai_credentials()):
         typer.echo('\nRun "coach auth setup" to configure.')
