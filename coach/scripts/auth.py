@@ -5,6 +5,8 @@ from coach.auth.openai import setup_openai_key
 from coach.auth.setup.strava import setup_strava_oauth
 from coach.auth.supabase_auth import setup_supabase_login
 from coach.config.credentials import CredentialsStore
+from coach.persistence.repositories.users import SupabaseUsersRepository
+from coach.persistence.session import load_session
 
 auth_app = typer.Typer(help='Authentication and setup commands')
 
@@ -45,7 +47,7 @@ def setup_all() -> None:
         typer.echo('\n[2/3] ✓ Strava already configured')
     else:
         typer.echo('\n[2/3] Setting up Strava...')
-        setup_strava_oauth()
+        _setup_strava_and_save_user_id()
 
     typer.echo('\n[3/3] Setting up AI provider...')
     typer.echo('Coach uses an AI model to analyze your training - please select your desired integration.\n')
@@ -86,13 +88,19 @@ def login() -> None:
     setup_supabase_login()
 
 
+def _setup_strava_and_save_user_id() -> None:
+    strava_user_id = setup_strava_oauth()
+    session = load_session()
+    SupabaseUsersRepository(session.client, session.user_id).set_strava_user_id(strava_user_id)
+
+
 @auth_app.command('strava')
 def setup_strava() -> None:
     store = CredentialsStore()
     if store.has_strava_credentials() and not typer.confirm('Reconfigure Strava?'):
         typer.echo('Cancelled.')
         return
-    setup_strava_oauth()
+    _setup_strava_and_save_user_id()
 
 
 @auth_app.command('google')
