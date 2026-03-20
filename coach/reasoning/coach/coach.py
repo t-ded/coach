@@ -8,7 +8,6 @@ from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
 from coach.reasoning.coach.context import build_coach_context
-from coach.reasoning.coach.context import render_profile
 from coach.reasoning.providers import LLMProvider
 
 
@@ -20,9 +19,11 @@ class Coach(Assistant):
         profile: Optional[UserProfile],
         activities: list[Activity],
         num_history_weeks: int,
+        first_name: Optional[str] = None,
     ) -> None:
         super().__init__(provider=provider, model=model)
         self._profile = profile
+        self._first_name = first_name
         self._additional_context_attr = build_coach_context(
             profile=profile,
             activities=activities,
@@ -31,7 +32,8 @@ class Coach(Assistant):
         )
 
     def run_chat_loop(self) -> None:
-        typer.echo('Coach ready. Type your responses (Ctrl+C to exit).\n')
+        greeting = f'Ready, {self._first_name}.' if self._first_name else 'Coach ready.'
+        typer.echo(f'{greeting} Type your question (Ctrl+C to exit).\n')
         while True:
             try:
                 user_input = typer.prompt('You')

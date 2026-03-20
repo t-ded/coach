@@ -103,8 +103,9 @@ class ProfileAssistant(Assistant):
         ]
         return '\n\n'.join(p for p in parts if p) or None
 
-    def setup_profile(self) -> UserProfile:
-        typer.echo("\nWelcome to Coach! Let's set up your profile so I can give you tailored guidance.\n")
+    def setup_profile(self, first_name: Optional[str] = None) -> UserProfile:
+        greeting = f'Welcome, {first_name}!' if first_name else 'Welcome to Coach!'
+        typer.echo(f"\n{greeting} Let's set up your profile so I can give you tailored guidance.\n")
         typer.echo('For each section, answer the prompt and continue the conversation. Press Enter twice on an empty line to move to the next section.\n')
 
         self._collected_sections = {}

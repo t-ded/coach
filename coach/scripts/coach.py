@@ -31,6 +31,7 @@ def chat_callback(
         profile=profile,
         activities=activities,
         num_history_weeks=num_history_weeks,
+        first_name=session.first_name,
     )
     ctx.obj = coach
 
