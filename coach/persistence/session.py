@@ -1,15 +1,18 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from supabase import Client
 
 from coach.config.credentials import CredentialsStore
 from coach.persistence.database import SupabaseDatabase
+from coach.persistence.repositories.users import SupabaseUsersRepository
 
 
 @dataclass(frozen=True)
 class UserSession:
     client: Client
     user_id: str
+    first_name: Optional[str]
 
 
 def load_session() -> UserSession:
@@ -29,4 +32,8 @@ def load_session() -> UserSession:
         refresh_token=response.session.refresh_token,
     )
 
-    return UserSession(client=client, user_id=response.user.id)
+    user_id = response.user.id
+    display_name = SupabaseUsersRepository(client, user_id).get_display_name()
+    first_name = display_name.split()[0] if display_name else None
+
+    return UserSession(client=client, user_id=user_id, first_name=first_name)
