@@ -20,6 +20,7 @@ from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
+from coach.persistence.repositories.users import SupabaseUsersRepository
 
 router = APIRouter()
 
@@ -108,7 +109,7 @@ def strava_oauth_callback(
     SupabaseStravaTokenRepository(secret_client).save_tokens(user_id, tokens)
 
     strava_athlete_id: int = token_data['athlete']['id']
-    secret_client.table('users').update({'strava_user_id': strava_athlete_id}).eq('id', user_id).execute()
+    SupabaseUsersRepository(secret_client, user_id).set_strava_user_id(strava_athlete_id)
 
     chainlit_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
     return RedirectResponse(chainlit_url)

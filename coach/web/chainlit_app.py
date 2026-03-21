@@ -6,6 +6,7 @@ from supabase import Client
 
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
+from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.web.app import create_app
 from coach.web.auth import build_authenticated_client
 from coach.web.auth import refresh_if_needed
@@ -56,7 +57,7 @@ async def on_chat_start() -> None:
     _init_user_session(user)
 
     user_id: str = cl.user_session.get('supabase_user_id')
-    strava_user_id = _get_strava_user_id(user_id, _get_authenticated_client())
+    strava_user_id = SupabaseUsersRepository(_get_authenticated_client(), user_id).get_strava_user_id()
 
     if not strava_user_id:
         actions = [cl.Action(name='connect_strava', value='connect_strava', label='Connect Strava')]
@@ -80,11 +81,6 @@ def _init_user_session(user: cl.User) -> None:
     cl.user_session.set('supabase_refresh_token', metadata['supabase_refresh_token'])
     cl.user_session.set('supabase_user_id', metadata['supabase_user_id'])
     cl.user_session.set('supabase_expires_at', datetime.fromisoformat(metadata['supabase_expires_at']))
-
-
-def _get_strava_user_id(user_id: str, client: Client) -> Optional[int]:
-    result = client.table('users').select('strava_user_id').eq('id', user_id).maybe_single().execute()
-    return result.data.get('strava_user_id') if result.data else None
 
 
 def _get_authenticated_client() -> Client:
