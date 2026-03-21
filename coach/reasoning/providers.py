@@ -1,3 +1,4 @@
+import os
 from enum import StrEnum
 from typing import Optional
 
@@ -14,6 +15,11 @@ class LLMProvider(StrEnum):
 
 
 def _get_api_key(provider: LLMProvider) -> str:
+    if provider == LLMProvider.GOOGLE:
+        env_key = os.environ.get('GOOGLE_AI_API_KEY')
+        if env_key:
+            return env_key
+
     store = CredentialsStore()
 
     if provider == LLMProvider.GOOGLE:
