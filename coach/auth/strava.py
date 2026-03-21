@@ -1,8 +1,6 @@
 import os
-from dataclasses import dataclass
 from datetime import UTC
 from datetime import datetime
-from typing import Optional
 
 import requests
 
@@ -10,12 +8,6 @@ from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
 from coach.auth.strava_tokens import StravaTokenRepository
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.utils import no_credentials_found_message
-
-
-@dataclass(slots=True)
-class StravaAccessToken:
-    token: str
-    expires_at: datetime
 
 
 class StravaAuth:
