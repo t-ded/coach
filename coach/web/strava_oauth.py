@@ -23,7 +23,7 @@ from coach.persistence.repositories.users import SupabaseUsersRepository
 
 router = APIRouter()
 
-_STRAVA_REDIRECT_URI = os.environ.get('STRAVA_REDIRECT_URI', 'http://localhost:8000/auth/strava/callback')
+_STRAVA_REDIRECT_URI = os.environ.get('STRAVA_REDIRECT_URI', 'http://localhost:8000/oauth/auth/strava/callback')
 _STATE_EXPIRY_MINUTES = 10
 
 
