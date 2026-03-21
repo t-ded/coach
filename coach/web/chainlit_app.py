@@ -53,7 +53,7 @@ async def on_chat_start() -> None:
     cl.user_session.set('supabase_expires_at', datetime.fromisoformat(metadata['supabase_expires_at']))
 
     first_name = raw_user_data['given_name'] if (raw_user_data := user.metadata.get('raw_user_data')) else user.identifier.split('@')[0]
-    await cl.Message(f'Ready, {first_name}. What would you like to work on today?').send()
+    await cl.Message(f'Hello, {first_name}. Coach is ready. What would you like to work on today?').send()
 
 
 def _get_authenticated_client() -> Client:

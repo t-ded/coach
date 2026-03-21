@@ -38,24 +38,12 @@ class TestSignInWithSupabase:
 
         self.client.auth.sign_in_with_id_token.assert_called_once_with({'provider': 'google', 'token': 'google-id-token'})
 
-    def test_returns_access_token(self) -> None:
-        access, _, _, _ = sign_in_with_supabase('token', self.client)
+    def test_returns_session_fields(self) -> None:
+        access, refresh, user_id, expires_at = sign_in_with_supabase('token', self.client)
 
         assert access == 'access-123'
-
-    def test_returns_refresh_token(self) -> None:
-        _, refresh, _, _ = sign_in_with_supabase('token', self.client)
-
         assert refresh == 'refresh-456'
-
-    def test_returns_user_id(self) -> None:
-        _, _, user_id, _ = sign_in_with_supabase('token', self.client)
-
         assert user_id == 'user-uuid-789'
-
-    def test_returns_expires_at_as_utc_datetime(self) -> None:
-        _, _, _, expires_at = sign_in_with_supabase('token', self.client)
-
         assert expires_at == _FIXED_EXPIRES_AT
         assert expires_at.tzinfo is UTC
 
@@ -67,11 +55,12 @@ class TestRefreshIfNeeded:
     def test_refreshes_when_near_expiry(self) -> None:
         near_expiry = datetime.now(UTC) + timedelta(minutes=3)
 
-        access, refresh, _ = refresh_if_needed('old-access', 'old-refresh', near_expiry, self.client)
+        access, refresh, expires_at = refresh_if_needed('old-access', 'old-refresh', near_expiry, self.client)
 
         self.client.auth.refresh_session.assert_called_once_with('old-refresh')
         assert access == 'new-access'
         assert refresh == 'new-refresh'
+        assert expires_at == _FIXED_EXPIRES_AT
 
     def test_does_not_refresh_when_token_is_fresh(self) -> None:
         fresh_expiry = datetime.now(UTC) + timedelta(hours=1)
@@ -82,13 +71,6 @@ class TestRefreshIfNeeded:
         assert access == 'old-access'
         assert refresh == 'old-refresh'
         assert expires_at == fresh_expiry
-
-    def test_returns_updated_expires_at_after_refresh(self) -> None:
-        near_expiry = datetime.now(UTC) + timedelta(minutes=3)
-
-        _, _, expires_at = refresh_if_needed('old-access', 'old-refresh', near_expiry, self.client)
-
-        assert expires_at == _FIXED_EXPIRES_AT
 
 
 class TestBuildAuthenticatedClient:
