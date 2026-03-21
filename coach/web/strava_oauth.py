@@ -13,14 +13,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.responses import RedirectResponse
 from supabase import Client
-from supabase import create_client
 
 from coach.auth.setup.strava import STRAVA_AUTHORIZE_URL
 from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
-from coach.persistence.database import SUPABASE_ANON_KEY
-from coach.persistence.database import SUPABASE_URL
+from coach.persistence.database import create_anon_client
+from coach.persistence.database import create_secret_client
 
 router = APIRouter()
 
@@ -29,12 +28,11 @@ _STATE_EXPIRY_MINUTES = 10
 
 
 def get_anon_client() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    return create_anon_client()
 
 
 def get_secret_client() -> Client:
-    secret_key = os.environ['SUPABASE_SECRET_KEY']
-    return create_client(SUPABASE_URL, secret_key)
+    return create_secret_client()
 
 
 def generate_strava_auth_url(user_id: str, secret_client: Client) -> str:

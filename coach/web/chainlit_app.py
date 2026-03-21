@@ -3,17 +3,15 @@ from typing import Optional
 
 import chainlit as cl
 from supabase import Client
-from supabase import create_client
 
-from coach.persistence.database import SUPABASE_ANON_KEY
-from coach.persistence.database import SUPABASE_URL
+from coach.persistence.database import create_anon_client
+from coach.persistence.database import create_secret_client
 from coach.web.app import create_app
 from coach.web.auth import build_authenticated_client
 from coach.web.auth import refresh_if_needed
 from coach.web.auth import sign_in_with_supabase
 from coach.web.google_oauth import install_patched_google_provider
 from coach.web.strava_oauth import generate_strava_auth_url
-from coach.web.strava_oauth import get_secret_client
 
 install_patched_google_provider()
 
@@ -37,7 +35,7 @@ async def oauth_callback(
     if id_token is None:
         return None
 
-    anon_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    anon_client = create_anon_client()
     access_token, refresh_token, user_id, expires_at = sign_in_with_supabase(id_token, anon_client)
 
     default_user.metadata['supabase_access_token'] = access_token
@@ -72,7 +70,7 @@ async def on_chat_start() -> None:
 @cl.action_callback('connect_strava')
 async def on_connect_strava(action: cl.Action) -> None:
     user_id: str = cl.user_session.get('supabase_user_id')
-    url = generate_strava_auth_url(user_id, get_secret_client())
+    url = generate_strava_auth_url(user_id, create_secret_client())
     await cl.Message(f'[Click here to connect Strava]({url})').send()
 
 
@@ -94,7 +92,7 @@ def _get_authenticated_client() -> Client:
     refresh_token: str = cl.user_session.get('supabase_refresh_token')
     expires_at: datetime = cl.user_session.get('supabase_expires_at')
 
-    anon_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    anon_client = create_anon_client()
     access_token, refresh_token, expires_at = refresh_if_needed(access_token, refresh_token, expires_at, anon_client)
 
     cl.user_session.set('supabase_access_token', access_token)

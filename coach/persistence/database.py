@@ -13,9 +13,18 @@ SUPABASE_ANON_KEY = os.environ.get(
 )
 
 
+def create_anon_client() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+
+def create_secret_client() -> Client:
+    secret_key = os.environ['SUPABASE_SECRET_KEY']
+    return create_client(SUPABASE_URL, secret_key)
+
+
 class SupabaseDatabase:
     def __init__(self) -> None:
-        self._client: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        self._client: Client = create_anon_client()
 
     def client(self) -> Client:
         return self._client
