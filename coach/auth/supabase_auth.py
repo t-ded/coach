@@ -8,11 +8,9 @@ from urllib.parse import parse_qs
 from urllib.parse import urlencode
 from urllib.parse import urlparse
 
-from supabase import create_client
-
 from coach.config.credentials import CredentialsStore
-from coach.persistence.database import SUPABASE_ANON_KEY
 from coach.persistence.database import SUPABASE_URL
+from coach.persistence.database import create_anon_client
 from coach.persistence.repositories.users import SupabaseUsersRepository
 
 _CALLBACK_PORT = 8585
@@ -21,7 +19,7 @@ _REDIRECT_URI = f'http://localhost:{_CALLBACK_PORT}{_CALLBACK_PATH}'
 
 
 def setup_supabase_login() -> None:
-    client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    client = create_anon_client()
 
     code_verifier, code_challenge = _generate_pkce_pair()
     auth_url = _build_auth_url(SUPABASE_URL, code_challenge)
@@ -68,7 +66,7 @@ def _build_auth_url(supabase_url: str, code_challenge: str) -> str:
             'code_challenge': code_challenge,
             'code_challenge_method': 'S256',
             'response_type': 'code',
-        }
+        },
     )
     return f'{supabase_url}/auth/v1/authorize?{params}'
 
