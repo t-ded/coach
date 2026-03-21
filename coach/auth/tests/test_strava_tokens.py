@@ -3,8 +3,6 @@ from datetime import UTC
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from coach.auth.strava_tokens import CredentialsStoreStravaTokenRepository
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository

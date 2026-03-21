@@ -1,9 +1,32 @@
 from datetime import UTC
 from datetime import datetime
+from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
+
+_DEFAULT_START = datetime(2025, 1, 1, tzinfo=UTC)
+
+
+def make_activity(
+    *,
+    id: int = 1,  # noqa: A002
+    sport_type: SportType = SportType.RUN,
+    start_time_utc: datetime = _DEFAULT_START,
+    pbs: Optional[list[BestEffort]] = None,
+) -> Activity:
+    return Activity(
+        id=id,
+        sport_type=sport_type,
+        name=None,
+        start_time_utc=start_time_utc,
+        elapsed_time_seconds=3_600,
+        is_manual=False,
+        is_race=False,
+        pbs=pbs or [],
+    )
+
 
 SAMPLE_RUN = Activity(
     id=1,

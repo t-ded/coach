@@ -3,6 +3,7 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
+from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
@@ -15,9 +16,6 @@ from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
-from coach.domain.activity import Activity
-from coach.domain.activity import BestEffort
-from coach.domain.activity import SportType as ActivitySportType
 from coach.reasoning.coach.context import build_coach_context
 from coach.reasoning.coach.context import render_activity_summary
 from coach.reasoning.coach.context import render_activity_volume
@@ -27,6 +25,7 @@ from coach.reasoning.coach.context import render_running_pbs
 from coach.reasoning.coach.context import render_training_goal
 from coach.reasoning.coach.context import render_weekly_activities
 from coach.reasoning.coach.context import render_weekly_summary
+from coach.tests.utils_for_tests import make_activity
 
 
 def test_render_running_pbs() -> None:
@@ -406,26 +405,6 @@ def test_render_profile_with_goals() -> None:
     assert '(not set)' not in result.split('--- Goals ---')[1]
 
 
-def _run_with_pbs(id: int, pbs: list[BestEffort]) -> Activity:
-    return Activity(
-        id=id,
-        sport_type=ActivitySportType.RUN,
-        name=None,
-        description=None,
-        notes=None,
-        start_time_utc=_FIXED_NOW,
-        elapsed_time_seconds=3_600,
-        moving_time_seconds=None,
-        distance_meters=None,
-        elevation_gain_meters=None,
-        average_heart_rate=None,
-        max_heart_rate=None,
-        is_manual=False,
-        is_race=False,
-        pbs=pbs,
-    )
-
-
 class TestBuildCoachContext:
     def test_profile_section_present_when_profile_is_set(self) -> None:
         profile = UserProfile(training_preferences='Run lots of easy miles.')
@@ -439,7 +418,7 @@ class TestBuildCoachContext:
         assert 'User profile:' not in result
 
     def test_pbs_flow_through_from_activities(self) -> None:
-        activity = _run_with_pbs(1, pbs=[BestEffort(name='5K', moving_time_seconds=1200)])
+        activity = make_activity(id=1, pbs=[BestEffort(name='5K', moving_time_seconds=1200)], start_time_utc=_FIXED_NOW)
         result = build_coach_context(profile=None, activities=[activity], num_history_weeks=4, generated_at=_FIXED_NOW)
         assert result is not None
         assert '5K' in result
