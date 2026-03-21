@@ -64,7 +64,6 @@ def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:
 
 
 def _validate_and_consume_state(state: str, secret_client: Client) -> str:
-    """Validate the CSRF state token, delete it, and return the associated user_id."""
     query_result = secret_client.table('strava_oauth_state').select('user_id, expires_at').eq('state', state).execute()
     rows = cast(list[dict[str, Any]], query_result.data)
 
