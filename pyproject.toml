@@ -35,6 +35,10 @@ no_warn_return_any = true
 disallow_any_generics = false
 mypy_path = ["src"]
 
+[[tool.mypy.overrides]]
+module = "coach.web.chainlit_app"
+disallow_untyped_calls = false
+
 [tool.ruff]
 exclude = [
     ".git",
