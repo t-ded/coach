@@ -11,8 +11,6 @@ import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from supabase import Client
 from supabase import create_client
@@ -39,15 +37,24 @@ def get_secret_client() -> Client:
     return create_client(SUPABASE_URL, secret_key)
 
 
-def get_current_user_id(request: Request, anon_client: Client = Depends(get_anon_client)) -> str:
-    auth_header = request.headers.get('Authorization', '')
-    if not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Missing authorization header')
-    jwt = auth_header[len('Bearer '):]
-    auth_response = anon_client.auth.get_user(jwt)
-    if not auth_response or not auth_response.user:
-        raise HTTPException(status_code=401, detail='Invalid session')
-    return str(auth_response.user.id)
+def generate_strava_auth_url(user_id: str, secret_client: Client) -> str:
+    """Insert a CSRF state row and return the Strava authorization URL."""
+    state = secrets.token_urlsafe(32)
+    expires_at = datetime.now(UTC) + timedelta(minutes=_STATE_EXPIRY_MINUTES)
+
+    secret_client.table('strava_oauth_state').insert({
+        'user_id': user_id,
+        'state': state,
+        'expires_at': expires_at.isoformat(),
+    }).execute()
+
+    return f'{STRAVA_AUTHORIZE_URL}?{urlencode({
+        "client_id": os.environ["STRAVA_CLIENT_ID"],
+        "redirect_uri": _STRAVA_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "activity:read_all",
+        "state": state,
+    })}'
 
 
 def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:
@@ -66,37 +73,12 @@ def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:
     return response.json()
 
 
-@router.get('/auth/strava')
-def initiate_strava_oauth(
-    user_id: str = Depends(get_current_user_id),
-    secret_client: Client = Depends(get_secret_client),
-) -> RedirectResponse:
-    state = secrets.token_urlsafe(32)
-    expires_at = datetime.now(UTC) + timedelta(minutes=_STATE_EXPIRY_MINUTES)
-
-    secret_client.table('strava_oauth_state').insert({
-        'user_id': user_id,
-        'state': state,
-        'expires_at': expires_at.isoformat(),
-    }).execute()
-
-    auth_url = f'{STRAVA_AUTHORIZE_URL}?{urlencode({
-        "client_id": os.environ["STRAVA_CLIENT_ID"],
-        "redirect_uri": _STRAVA_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "activity:read_all",
-        "state": state,
-    })}'
-
-    return RedirectResponse(auth_url)
-
-
 @router.get('/auth/strava/callback')
 def strava_oauth_callback(
     code: str,
     state: str,
     secret_client: Client = Depends(get_secret_client),
-) -> HTMLResponse:
+) -> RedirectResponse:
     query_result = secret_client.table('strava_oauth_state').select('*').eq('state', state).execute()
     rows = cast(list[dict[str, Any]], query_result.data)
 
@@ -125,13 +107,5 @@ def strava_oauth_callback(
     strava_athlete_id: int = token_data['athlete']['id']
     secret_client.table('users').update({'strava_user_id': strava_athlete_id}).eq('id', user_id).execute()
 
-    # TODO: redirect to Chainlit chat URL once available
-    return HTMLResponse(content=_success_html())
-
-
-def _success_html() -> str:
-    return '''<!DOCTYPE html>
-<html><body>
-<h1>Strava Connected!</h1>
-<p>Your Strava account has been successfully connected. You can close this window.</p>
-</body></html>'''
+    chainlit_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
+    return RedirectResponse(chainlit_url)

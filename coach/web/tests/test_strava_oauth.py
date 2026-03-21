@@ -9,7 +9,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from coach.web.app import create_app
-from coach.web.strava_oauth import get_current_user_id
+from coach.web.strava_oauth import generate_strava_auth_url
 from coach.web.strava_oauth import get_secret_client
 
 _VALID_TOKEN_DATA: dict[str, Any] = {
@@ -48,14 +48,15 @@ class TestStravaOAuthCallback:
 
         assert response.status_code == 400
 
-    def test_happy_path_returns_success_page(self) -> None:
+    def test_happy_path_redirects_to_chainlit(self) -> None:
         self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
 
         with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
-            response = self._client.get('/auth/strava/callback?code=abc&state=valid-state')
+            with patch.dict(os.environ, {'CHAINLIT_URL': 'http://localhost:9000'}):
+                response = self._client.get('/auth/strava/callback?code=abc&state=valid-state', follow_redirects=False)
 
-        assert response.status_code == 200
-        assert 'Strava' in response.text
+        assert response.status_code in (302, 307)
+        assert response.headers['location'] == 'http://localhost:9000'
 
     def test_happy_path_stores_tokens(self) -> None:
         self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
@@ -74,36 +75,25 @@ class TestStravaOAuthCallback:
         self._secret_client.table.return_value.update.assert_called_once_with({'strava_user_id': 42})
 
 
-class TestStravaOAuthInitiate:
+class TestGenerateStravaAuthUrl:
     def setup_method(self) -> None:
         self._secret_client = MagicMock()
-        app = create_app()
-        app.dependency_overrides[get_secret_client] = lambda: self._secret_client
-        app.dependency_overrides[get_current_user_id] = lambda: 'user-123'
-        self._client = TestClient(app, raise_server_exceptions=False, follow_redirects=False)
-
-    def test_redirects_to_strava(self) -> None:
-        with patch.dict(os.environ, {'STRAVA_CLIENT_ID': 'test-client-id'}):
-            response = self._client.get('/auth/strava')
-
-        assert response.status_code in (302, 307)
-        assert 'strava.com' in response.headers['location']
-
-    def test_redirect_includes_required_oauth_params(self) -> None:
-        with patch.dict(os.environ, {'STRAVA_CLIENT_ID': 'test-client-id'}):
-            response = self._client.get('/auth/strava')
-
-        location = response.headers['location']
-        assert 'client_id=test-client-id' in location
-        assert 'redirect_uri=' in location
-        assert 'scope=activity%3Aread_all' in location
-        assert 'state=' in location
 
     def test_inserts_state_row_for_user(self) -> None:
         with patch.dict(os.environ, {'STRAVA_CLIENT_ID': 'test-client-id'}):
-            self._client.get('/auth/strava')
+            generate_strava_auth_url('user-123', self._secret_client)
 
         insert_call = self._secret_client.table.return_value.insert.call_args[0][0]
         assert insert_call['user_id'] == 'user-123'
         assert 'state' in insert_call
         assert 'expires_at' in insert_call
+
+    def test_url_contains_required_oauth_params(self) -> None:
+        with patch.dict(os.environ, {'STRAVA_CLIENT_ID': 'test-client-id', 'STRAVA_REDIRECT_URI': 'http://localhost:8000/auth/strava/callback'}):
+            url = generate_strava_auth_url('user-123', self._secret_client)
+
+        assert 'strava.com' in url
+        assert 'client_id=test-client-id' in url
+        assert 'redirect_uri=' in url
+        assert 'scope=activity%3Aread_all' in url
+        assert 'state=' in url
