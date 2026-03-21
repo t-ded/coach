@@ -73,12 +73,8 @@ def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:
     return response.json()
 
 
-@router.get('/auth/strava/callback')
-def strava_oauth_callback(
-    code: str,
-    state: str,
-    secret_client: Client = Depends(get_secret_client),
-) -> RedirectResponse:
+def _validate_and_consume_state(state: str, secret_client: Client) -> str:
+    """Validate the CSRF state token, delete it, and return the associated user_id."""
     query_result = secret_client.table('strava_oauth_state').select('*').eq('state', state).execute()
     rows = cast(list[dict[str, Any]], query_result.data)
 
@@ -94,7 +90,16 @@ def strava_oauth_callback(
 
     user_id: str = row['user_id']
     secret_client.table('strava_oauth_state').delete().eq('state', state).execute()
+    return user_id
 
+
+@router.get('/auth/strava/callback')
+def strava_oauth_callback(
+    code: str,
+    state: str,
+    secret_client: Client = Depends(get_secret_client),
+) -> RedirectResponse:
+    user_id = _validate_and_consume_state(state, secret_client)
     token_data = _exchange_code_for_tokens(code, _STRAVA_REDIRECT_URI)
 
     tokens = StravaTokens(
