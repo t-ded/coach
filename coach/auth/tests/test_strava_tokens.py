@@ -1,3 +1,4 @@
+import tempfile
 from datetime import UTC
 from datetime import datetime
 from pathlib import Path
@@ -56,9 +57,9 @@ class TestSupabaseStravaTokenRepositorySaveTokens:
 
 
 class TestCredentialsStoreStravaTokenRepository:
-    @pytest.fixture(autouse=True)
-    def setup(self, tmp_path: Path) -> None:
-        self.store = CredentialsStore(config_dir=tmp_path)
+    def setup_method(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.store = CredentialsStore(config_dir=Path(self._tmp.name))
         self.repo = CredentialsStoreStravaTokenRepository(self.store)
 
     def test_returns_none_when_no_credentials_stored(self) -> None:

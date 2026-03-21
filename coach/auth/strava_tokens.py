@@ -1,9 +1,10 @@
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import UTC
 from datetime import datetime
 from typing import Any
 from typing import Optional
-from typing import Protocol
 from typing import cast
 
 from supabase import Client
@@ -18,12 +19,15 @@ class StravaTokens:
     expires_at: datetime
 
 
-class StravaTokenRepository(Protocol):
+class StravaTokenRepository(ABC):
+    @abstractmethod
     def get_tokens(self, user_id: str) -> Optional[StravaTokens]: ...
+
+    @abstractmethod
     def save_tokens(self, user_id: str, tokens: StravaTokens) -> None: ...
 
 
-class SupabaseStravaTokenRepository:
+class SupabaseStravaTokenRepository(StravaTokenRepository):
     def __init__(self, client: Client) -> None:
         self._client = client
 
@@ -48,7 +52,7 @@ class SupabaseStravaTokenRepository:
         }).execute()
 
 
-class CredentialsStoreStravaTokenRepository:
+class CredentialsStoreStravaTokenRepository(StravaTokenRepository):
     def __init__(self, store: Optional[CredentialsStore] = None) -> None:
         self._store = store or CredentialsStore()
 

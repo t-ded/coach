@@ -107,9 +107,9 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Create `public.delete_strava_tokens(p_user_id)` — SECURITY DEFINER, removes Vault secrets + table row
 
 **Code steps:**
-- [ ] `coach/ingestion/strava/tokens.py` — `StravaTokens` dataclass + `StravaTokenRepository` Protocol + `SupabaseStravaTokenRepository` (calls RPC functions with secret key)
-- [ ] Refactor `StravaAuth` to accept `user_id` + `StravaTokenRepository` (CLI path keeps `CredentialsStore`-backed implementation)
-- [ ] Refactor `StravaClient` to accept `user_id` + `StravaTokenRepository`
+- [x] `coach/auth/strava_tokens.py` — `StravaTokens` dataclass + `StravaTokenRepository` Protocol + `SupabaseStravaTokenRepository` (calls RPC functions with secret key) + `CredentialsStoreStravaTokenRepository` (CLI path)
+- [x] Refactor `StravaAuth` to accept `user_id` + `StravaTokenRepository`; reads `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` from env for refresh
+- [x] Refactor `StravaClient` to accept `user_id` + `StravaTokenRepository`
 - [ ] `coach/ingestion/strava/sync.py` — `sync_strava_for_user(user_id, strava_client, activity_repo)` pure callable; CLI `sync strava` becomes a thin wrapper
 - [ ] `coach/web/app.py` + `coach/web/strava_oauth.py` — FastAPI app with `GET /auth/strava` (initiates OAuth) and `GET /auth/strava/callback` (exchanges code, stores tokens, returns success page); runnable standalone via `uvicorn`
 - [ ] RLS policies on all `public` tables enforcing per-user data isolation
@@ -141,4 +141,6 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - All functions must be fully typed; `Optional[]` preferred over `X | None`
 - Single-quote strings enforced by ruff (`Q001`)
 - Imports are force-single-line (isort setting)
+- Prefer `ABC` + `@abstractmethod` over `Protocol` for interfaces — explicit inheritance and runtime enforcement are preferred over structural subtyping
+- Use `setup_method` for shared test setup; avoid `@pytest.fixture(autouse=True)` inside test classes
 - Avoid docstrings and comments that restate what the code already says; only add a comment when the intent cannot be made clear through naming, structure, or a well-named helper method
