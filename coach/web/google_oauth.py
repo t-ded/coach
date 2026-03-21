@@ -34,7 +34,6 @@ class ChainlitGoogleOAuthProvider(GoogleOAuthProvider):
 
 
 def install_patched_google_provider() -> None:
-    """Replace Chainlit's Google OAuth provider instance with the patched version."""
     providers = _chainlit_providers.providers
     for i, provider in enumerate(providers):
         if provider.id == 'google':

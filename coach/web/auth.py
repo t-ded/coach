@@ -7,6 +7,10 @@ from supabase import Client
 _REFRESH_THRESHOLD_MINUTES = 5
 
 
+def _parse_expires_at(unix_timestamp: int) -> datetime:
+    return datetime.fromtimestamp(unix_timestamp, tz=UTC)
+
+
 def sign_in_with_supabase(id_token: str, client: Client) -> tuple[str, str, str, datetime]:
     """Exchange a Google ID token for a Supabase session.
 
@@ -21,7 +25,7 @@ def sign_in_with_supabase(id_token: str, client: Client) -> tuple[str, str, str,
         session.access_token,
         session.refresh_token,
         str(user.id),
-        datetime.fromtimestamp(session.expires_at or 0, tz=UTC),
+        _parse_expires_at(session.expires_at or 0),
     )
 
 
@@ -40,7 +44,7 @@ def refresh_if_needed(access_token: str, refresh_token: str, expires_at: datetim
     return (
         session.access_token,
         session.refresh_token,
-        datetime.fromtimestamp(session.expires_at or 0, tz=UTC),
+        _parse_expires_at(session.expires_at or 0),
     )
 
 
