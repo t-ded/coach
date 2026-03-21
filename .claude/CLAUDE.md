@@ -90,14 +90,14 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Supabase Auth: Google OAuth via PKCE → `user_id` derived from session; stored tokens in `~/.coach/credentials.json`
 - [x] Drop SQLite
 
-### Phase 2 — Multi-user foundation (Strava + Supabase integration)
+### Phase 2 — Multi-user foundation (Strava + Supabase integration) ✅
 
 **Architecture decisions:**
 - Operator-owned Strava API app (single `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` as server env vars — users never touch the Strava developer portal)
 - Per-user tokens stored in `private.strava_tokens` (Vault-backed: `access_token_vault_id`, `refresh_token_vault_id` UUIDs) — never exposed via Data API
 - Vault reads/writes go through `SECURITY DEFINER` Postgres functions in `public` schema, called via `supabase.rpc()` with the **secret key** (server-side only; **publishable key** used everywhere else)
 - `public.strava_oauth_state` table (RLS-protected) for CSRF state during OAuth dance
-- Incremental Strava sync triggered on chat start (not background/webhook)
+- Incremental Strava sync triggered on chat start (not background/webhook); 2-week lookback buffer on `sync_cursor()` to catch backdated or edited activities
 - Core sync logic extracted into a callable function usable by both CLI and web
 
 **Supabase steps (Dashboard → SQL Editor):**
@@ -105,14 +105,14 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Create `public.upsert_strava_tokens(p_user_id, p_access_token, p_refresh_token, p_expires_at)` — SECURITY DEFINER, writes to Vault + `private.strava_tokens`
 - [x] Create `public.get_strava_tokens(p_user_id)` — SECURITY DEFINER, returns decrypted tokens from Vault
 - [x] Create `public.delete_strava_tokens(p_user_id)` — SECURITY DEFINER, removes Vault secrets + table row
+- [x] RLS policies on all `public` tables enforcing per-user data isolation
 
 **Code steps:**
-- [x] `coach/auth/strava_tokens.py` — `StravaTokens` dataclass + `StravaTokenRepository` Protocol + `SupabaseStravaTokenRepository` (calls RPC functions with secret key) + `CredentialsStoreStravaTokenRepository` (CLI path)
+- [x] `coach/auth/strava_tokens.py` — `StravaTokens` dataclass + `StravaTokenRepository` ABC + `SupabaseStravaTokenRepository` (calls RPC functions with secret key) + `CredentialsStoreStravaTokenRepository` (CLI path)
 - [x] Refactor `StravaAuth` to accept `user_id` + `StravaTokenRepository`; reads `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` from env for refresh
 - [x] Refactor `StravaClient` to accept `user_id` + `StravaTokenRepository`
-- [ ] `coach/ingestion/strava/sync.py` — `sync_strava_for_user(user_id, strava_client, activity_repo)` pure callable; CLI `sync strava` becomes a thin wrapper
-- [ ] `coach/web/app.py` + `coach/web/strava_oauth.py` — FastAPI app with `GET /auth/strava` (initiates OAuth) and `GET /auth/strava/callback` (exchanges code, stores tokens, returns success page); runnable standalone via `uvicorn`
-- [ ] RLS policies on all `public` tables enforcing per-user data isolation
+- [x] `coach/ingestion/strava/sync.py` — `sync_strava_for_user(strava_client, activity_repo, *, fresh=False) -> int` pure callable; CLI `sync strava` is a thin wrapper
+- [x] `coach/web/app.py` + `coach/web/strava_oauth.py` — FastAPI app with `GET /auth/strava` (initiates OAuth) and `GET /auth/strava/callback` (exchanges code, stores tokens, returns success page); runnable standalone via `uvicorn coach.web.app:app`
 
 ### Phase 3 — Chainlit web app
 - [ ] Basic Chainlit app with the same coaching chat loop
@@ -130,8 +130,9 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 ## Testing conventions
 
 - Test class name mirrors the class under test: `TestRecentTrainingHistoryBuilder` tests `RecentTrainingHistoryBuilder`
-- Use `setup_method` (or `@pytest.fixture`) to share common setup and avoid duplication across tests
+- Use `setup_method` to share common setup and set sensible defaults; individual tests override only what is specific to them
 - Only test public methods/attributes — do not reach into private internals
+- Always cover unhappy paths and edge cases (missing data, expired state, invalid input, None returns) alongside the happy path
 - Focus on simple, focused unit tests; avoid complex integration tests unless necessary
 - Tests live in a `tests/` subdirectory next to the module they test (e.g. `coach/builders/tests/`)
 
@@ -144,3 +145,5 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - Prefer `ABC` + `@abstractmethod` over `Protocol` for interfaces — explicit inheritance and runtime enforcement are preferred over structural subtyping
 - Use `setup_method` for shared test setup; avoid `@pytest.fixture(autouse=True)` inside test classes
 - Avoid docstrings and comments that restate what the code already says; only add a comment when the intent cannot be made clear through naming, structure, or a well-named helper method
+- Prefer intermediate variable assignments over deeply nested calls — clarity beats brevity. Example: `raw = client.fetch(); result = process(raw)` is preferable to `result = process(client.fetch())`
+- After making any change, review the affected code for simplification opportunities, duplication, and best-practice violations before considering the task done
