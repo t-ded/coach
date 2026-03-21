@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -12,6 +13,7 @@ from coach.web.auth import build_authenticated_client
 from coach.web.auth import refresh_if_needed
 from coach.web.auth import sign_in_with_supabase
 from coach.web.google_oauth import install_patched_google_provider
+from coach.web.strava_oauth import generate_strava_auth_url
 
 install_patched_google_provider()
 
@@ -59,8 +61,31 @@ async def on_chat_start() -> None:
     cl.user_session.set('supabase_user_id', metadata['supabase_user_id'])
     cl.user_session.set('supabase_expires_at', datetime.fromisoformat(metadata['supabase_expires_at']))
 
+    authenticated_client = _get_authenticated_client()
+    user_id: str = cl.user_session.get('supabase_user_id')
+    strava_result = authenticated_client.table('users').select('strava_user_id').eq('id', user_id).maybe_single().execute()
+    strava_user_id = strava_result.data.get('strava_user_id') if strava_result.data else None
+
+    if not strava_user_id:
+        actions = [cl.Action(name='connect_strava', value='connect_strava', label='Connect Strava')]
+        await cl.Message('To get started, please connect your Strava account.', actions=actions).send()
+        return
+
     first_name = raw_user_data['given_name'] if (raw_user_data := user.metadata.get('raw_user_data')) else user.identifier.split('@')[0]
     await cl.Message(f'Hello, {first_name}. Coach is ready. What would you like to work on today?').send()
+
+
+@cl.action_callback('connect_strava')
+async def on_connect_strava(action: cl.Action) -> None:
+    user_id: str = cl.user_session.get('supabase_user_id')
+    secret_client = _get_secret_client()
+    url = generate_strava_auth_url(user_id, secret_client)
+    await cl.Message(f'[Click here to connect Strava]({url})').send()
+
+
+def _get_secret_client() -> Client:
+    secret_key = os.environ['SUPABASE_SECRET_KEY']
+    return create_client(SUPABASE_URL, secret_key)
 
 
 def _get_authenticated_client() -> Client:
