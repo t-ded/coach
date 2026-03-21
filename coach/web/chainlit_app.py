@@ -11,6 +11,9 @@ from coach.web.app import create_app
 from coach.web.auth import build_authenticated_client
 from coach.web.auth import refresh_if_needed
 from coach.web.auth import sign_in_with_supabase
+from coach.web.google_oauth import install_patched_google_provider
+
+install_patched_google_provider()
 
 # Mount the FastAPI OAuth callback on Chainlit's Starlette server
 _fastapi_app = create_app()
@@ -23,9 +26,13 @@ async def oauth_callback(
     token: str,
     raw_user_data: dict[str, str],
     default_user: cl.User,
-    id_token: Optional[str] = None,
+    id_token: Optional[str] = None,  # never passed by Chainlit; we read from raw_user_data instead
 ) -> Optional[cl.User]:
-    if provider_id != 'google' or id_token is None:
+    if provider_id != 'google':
+        return None
+
+    id_token = raw_user_data.get('id_token')  # noqa: S105
+    if id_token is None:
         return None
 
     anon_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
