@@ -36,6 +36,13 @@ coach chat             # Start coaching chat (Google AI default)
 coach chat --provider openai --model gpt-4o --num-history-weeks 4
 ```
 
+**Run the web app (Strava OAuth):**
+```bash
+SUPABASE_SECRET_KEY=... STRAVA_CLIENT_ID=... STRAVA_CLIENT_SECRET=... uvicorn coach.web.app:app
+# Routes: GET /auth/strava (initiate), GET /auth/strava/callback
+# STRAVA_REDIRECT_URI defaults to http://localhost:8000/auth/strava/callback
+```
+
 ## Architecture
 
 The app is a CLI tool (entry point: `coach/cli/app.py`) that syncs Strava activities to Supabase and then runs LLM-powered coaching conversations.
@@ -58,6 +65,13 @@ The app is a CLI tool (entry point: `coach/cli/app.py`) that syncs Strava activi
 - `coach/persistence/repositories/` — `SupabaseActivityRepository` and `SupabaseUserProfileRepository`
 - `coach/persistence/database.py` — builds the `supabase.Client` using the anon key (embedded as a default; overridable via `SUPABASE_URL` / `SUPABASE_ANON_KEY` env vars)
 - `coach/persistence/session.py` — `UserSession` dataclass + `load_session()`: restores the stored Google OAuth session from `~/.coach/credentials.json`, calls `refresh_session()` to get a fresh token, derives `user_id` from the authenticated user
+
+**Web app** (`coach/web/`):
+- `coach/web/app.py` — FastAPI app factory (`create_app()`); runnable via `uvicorn coach.web.app:app`
+- `coach/web/strava_oauth.py` — `GET /auth/strava` (initiates OAuth, inserts CSRF state) + `GET /auth/strava/callback` (verifies state, exchanges code, stores tokens in Vault, updates `users.strava_user_id`); designed to be mounted on Chainlit's Starlette app in Phase 3 without modification
+- Uses the Supabase **secret key** (`SUPABASE_SECRET_KEY`) for all Vault RPC calls; uses anon key + user JWT to verify caller identity
+- Testing: inject mock client via `app.dependency_overrides[get_secret_client] = lambda: mock`; mock Supabase fluent chain as `mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [...]`
+- `FastAPI TestClient` requires `httpx` as a dev dependency
 
 **User personalization:**
 - Profile stored as structured fields in the Supabase `profiles` table per user (`coach/persistence/repositories/profiles.py`)
@@ -147,3 +161,10 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - Avoid docstrings and comments that restate what the code already says; only add a comment when the intent cannot be made clear through naming, structure, or a well-named helper method
 - Prefer intermediate variable assignments over deeply nested calls — clarity beats brevity. Example: `raw = client.fetch(); result = process(raw)` is preferable to `result = process(client.fetch())`
 - After making any change, review the affected code for simplification opportunities, duplication, and best-practice violations before considering the task done
+
+## GitHub workflow
+
+- Always prefer **rebase merge** (`gh pr merge --rebase`) over squash or merge commits to keep a clean linear history
+- `gh issue close` accepts one issue at a time — use a loop: `for i in 1 2 3; do gh issue close $i; done`
+- `gh issue view` emits a GraphQL deprecation warning to stderr; use `--json title,body` to suppress it
+- `.claude/CLAUDE.md` is tracked by git (`.claude/*` is ignored except `CLAUDE.md`); no stashing needed for commits, but `gh pr merge` with an open worktree may still require care
