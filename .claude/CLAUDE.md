@@ -165,6 +165,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 ## GitHub workflow
 
+- Group commits into logical units — each commit should represent one coherent, independently buildable change (e.g. one refactor, one feature, one fix). Never mix unrelated changes in a single commit.
 - Always prefer **rebase merge** (`gh pr merge --rebase`) over squash or merge commits to keep a clean linear history
 - `gh issue close` accepts one issue at a time — use a loop: `for i in 1 2 3; do gh issue close $i; done`
 - `gh issue view` emits a GraphQL deprecation warning to stderr; use `--json title,body` to suppress it
