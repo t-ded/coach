@@ -12,20 +12,23 @@ class SupabaseUsersRepository:
         self._db = client
         self._user_id = user_id
 
-    def get_display_name(self) -> Optional[str]:
-        response = self._db.table(self.TABLE).select('display_name').eq('id', self._user_id).maybe_single().execute()
+    def _get_field(self, column: str) -> Optional[Any]:
+        response = self._db.table(self.TABLE).select(column).eq('id', self._user_id).maybe_single().execute()
         if not response or not response.data:
             return None
-        return cast(dict[str, Any], response.data).get('display_name')
+        return cast(dict[str, Any], response.data).get(column)
+
+    def _set_field(self, column: str, value: Any) -> None:
+        self._db.table(self.TABLE).update({column: value}).eq('id', self._user_id).execute()
+
+    def get_display_name(self) -> Optional[str]:
+        return cast(Optional[str], self._get_field('display_name'))
 
     def set_display_name(self, display_name: str) -> None:
-        self._db.table(self.TABLE).update({'display_name': display_name}).eq('id', self._user_id).execute()
+        self._set_field('display_name', display_name)
 
     def get_strava_user_id(self) -> Optional[int]:
-        response = self._db.table(self.TABLE).select('strava_user_id').eq('id', self._user_id).maybe_single().execute()
-        if not response or not response.data:
-            return None
-        return cast(dict[str, Any], response.data).get('strava_user_id')
+        return cast(Optional[int], self._get_field('strava_user_id'))
 
     def set_strava_user_id(self, strava_user_id: int) -> None:
-        self._db.table(self.TABLE).update({'strava_user_id': strava_user_id}).eq('id', self._user_id).execute()
+        self._set_field('strava_user_id', strava_user_id)

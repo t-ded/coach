@@ -65,29 +65,27 @@ def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:
 
 def _validate_and_consume_state(state: str, secret_client: Client) -> str:
     """Validate the CSRF state token, delete it, and return the associated user_id."""
-    query_result = secret_client.table('strava_oauth_state').select('*').eq('state', state).execute()
+    query_result = secret_client.table('strava_oauth_state').select('user_id, expires_at').eq('state', state).execute()
     rows = cast(list[dict[str, Any]], query_result.data)
 
     if not rows:
         raise HTTPException(status_code=400, detail='Invalid or missing state')
 
     row = rows[0]
-    expires_at = datetime.fromisoformat(row['expires_at'])
+    secret_client.table('strava_oauth_state').delete().eq('state', state).execute()
 
+    expires_at = datetime.fromisoformat(row['expires_at'])
     if datetime.now(UTC) > expires_at:
-        secret_client.table('strava_oauth_state').delete().eq('state', state).execute()
         raise HTTPException(status_code=400, detail='State has expired')
 
-    user_id: str = row['user_id']
-    secret_client.table('strava_oauth_state').delete().eq('state', state).execute()
-    return user_id
+    return cast(str, row['user_id'])
 
 
 @router.get('/auth/strava/callback')
 def strava_oauth_callback(
     code: str,
     state: str,
-    secret_client: Client = Depends(create_secret_client),
+    secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> RedirectResponse:
     user_id = _validate_and_consume_state(state, secret_client)
     token_data = _exchange_code_for_tokens(code, _STRAVA_REDIRECT_URI)
