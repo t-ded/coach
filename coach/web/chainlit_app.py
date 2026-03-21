@@ -62,14 +62,15 @@ async def on_chat_start() -> None:
     _init_user_session(user)
 
     user_id: str = cl.user_session.get(_SESSION_USER_ID)
-    strava_user_id = SupabaseUsersRepository(_get_authenticated_client(), user_id).get_strava_user_id()
+    users_repo = SupabaseUsersRepository(_get_authenticated_client(), user_id)
 
-    if not strava_user_id:
+    if not users_repo.get_strava_user_id():
         actions = [cl.Action(name='connect_strava', value='connect_strava', label='Connect Strava')]
         await cl.Message('To get started, please connect your Strava account.', actions=actions).send()
         return
 
-    first_name = raw_user_data['given_name'] if (raw_user_data := user.metadata.get('raw_user_data')) else user.identifier.split('@')[0]
+    display_name = users_repo.get_display_name()
+    first_name = display_name.split()[0] if display_name else user.identifier.split('@')[0]
     await cl.Message(f'Hello, {first_name}. Coach is ready. What would you like to work on today?').send()
 
 
