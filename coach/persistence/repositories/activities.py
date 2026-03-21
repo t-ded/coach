@@ -62,6 +62,16 @@ class SupabaseActivityRepository(Repository[Activity]):
         row = cast(ActivityRow, response.data[0])
         return int(datetime.fromisoformat(cast(str, row['start_time_utc'])).timestamp())
 
+    # Re-fetch a 2-week window before the last known activity to catch backdated
+    # or edited activities added since the previous sync.
+    _SYNC_LOOKBACK_SECONDS = 2 * 7 * 24 * 60 * 60
+
+    def sync_cursor(self) -> int:
+        last = self.last_activity_timestamp()
+        if last is None or last < self._SYNC_LOOKBACK_SECONDS:
+            return 0
+        return last - self._SYNC_LOOKBACK_SECONDS
+
     def reset_table(self) -> None:
         self._table().delete().eq(column='user_id', value=self._user_id).execute()
 

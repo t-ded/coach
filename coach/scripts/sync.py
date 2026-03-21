@@ -1,11 +1,8 @@
-from datetime import UTC
-from datetime import datetime
-
 import typer
 
 from coach.auth.strava_tokens import CredentialsStoreStravaTokenRepository
 from coach.ingestion.strava.client import StravaClient
-from coach.ingestion.strava.mapper import StravaMapper
+from coach.ingestion.strava.sync import sync_strava_for_user
 from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.session import load_session
 
@@ -17,19 +14,9 @@ def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) ->
     session = load_session()
     token_repo = CredentialsStoreStravaTokenRepository()
     client = StravaClient(user_id=session.user_id, token_repo=token_repo)
-    mapper = StravaMapper()
     activity_repo = SupabaseActivityRepository(session.client, session.user_id)
     if fresh:
-        typer.echo('Dropping activities table...')
-        activity_repo.reset_table()
-    last_synced_activity_ts = activity_repo.last_activity_timestamp() or 0
-    last_synced_date = datetime.fromtimestamp(last_synced_activity_ts, tz=UTC).date()
-
-    typer.echo(f'Fetching activities from Strava from {last_synced_date} (last synced date) onwards...')
-    raw_unsynced_activities = list(client.list_activities(detailed=True, after=last_synced_activity_ts))
-    unsynced_activities = mapper.map_activities(raw_unsynced_activities)
-
-    typer.echo(f'Saving {len(unsynced_activities)} new activities to database...')
-    activity_repo.save_many(unsynced_activities)
-
-    typer.echo(f'{activity_repo.count()} total activities stored in the database.')
+        typer.echo('Resetting activity history...')
+    typer.echo('Syncing activities from Strava...')
+    synced = sync_strava_for_user(client, activity_repo, fresh=fresh)
+    typer.echo(f'Done. {synced} activities synced, {activity_repo.count()} total stored.')
