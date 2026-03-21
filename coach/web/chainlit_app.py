@@ -65,7 +65,7 @@ async def on_chat_start() -> None:
     users_repo = SupabaseUsersRepository(_get_authenticated_client(), user_id)
 
     if not users_repo.get_strava_user_id():
-        actions = [cl.Action(name='connect_strava', value='connect_strava', label='Connect Strava')]
+        actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
         await cl.Message('To get started, please connect your Strava account.', actions=actions).send()
         return
 
