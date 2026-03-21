@@ -3,6 +3,7 @@ from datetime import datetime
 
 import typer
 
+from coach.auth.strava_tokens import CredentialsStoreStravaTokenRepository
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.mapper import StravaMapper
 from coach.persistence.repositories.activities import SupabaseActivityRepository
@@ -13,10 +14,10 @@ sync_app = typer.Typer(help='Data ingestion commands')
 
 @sync_app.command('strava')
 def sync_strava(fresh: bool = typer.Option(False, help='Force a fresh sync')) -> None:
-    client = StravaClient()
-    mapper = StravaMapper()
-
     session = load_session()
+    token_repo = CredentialsStoreStravaTokenRepository()
+    client = StravaClient(user_id=session.user_id, token_repo=token_repo)
+    mapper = StravaMapper()
     activity_repo = SupabaseActivityRepository(session.client, session.user_id)
     if fresh:
         typer.echo('Dropping activities table...')
