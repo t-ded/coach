@@ -214,3 +214,6 @@ __marimo__/
 # Claude Code — track CLAUDE.md but ignore everything else
 .claude/*
 !.claude/CLAUDE.md
+
+# Chainlit — track config.toml and translations, ignore runtime-generated uploads
+.chainlit/.files/
