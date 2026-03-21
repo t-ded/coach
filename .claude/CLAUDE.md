@@ -142,6 +142,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 ### Phase 4 — Launch
 - [ ] Deployment (e.g. Fly.io, Railway, or similar)
+- [ ] Enable `pg_cron` extension in Supabase and schedule periodic cleanup of expired `strava_oauth_state` rows
 - [ ] User-supplied API keys (for users who want to bring their own)
 - [ ] Activity feed / history view in the UI
 
