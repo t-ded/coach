@@ -8,9 +8,9 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from coach.persistence.database import create_secret_client
 from coach.web.app import create_app
 from coach.web.strava_oauth import generate_strava_auth_url
-from coach.web.strava_oauth import get_secret_client
 
 _VALID_TOKEN_DATA: dict[str, Any] = {
     'access_token': 'access-abc',
@@ -24,7 +24,7 @@ class TestStravaOAuthCallback:
     def setup_method(self) -> None:
         self._secret_client = MagicMock()
         app = create_app()
-        app.dependency_overrides[get_secret_client] = lambda: self._secret_client
+        app.dependency_overrides[create_secret_client] = lambda: self._secret_client
         self._client = TestClient(app, raise_server_exceptions=False)
 
     def _setup_state_row(self, expires_at: datetime) -> None:
@@ -51,9 +51,8 @@ class TestStravaOAuthCallback:
     def test_happy_path_redirects_to_chainlit(self) -> None:
         self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
 
-        with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
-            with patch.dict(os.environ, {'CHAINLIT_URL': 'http://localhost:9000'}):
-                response = self._client.get('/auth/strava/callback?code=abc&state=valid-state', follow_redirects=False)
+        with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA), patch.dict(os.environ, {'CHAINLIT_URL': 'http://localhost:9000'}):
+            response = self._client.get('/auth/strava/callback?code=abc&state=valid-state', follow_redirects=False)
 
         assert response.status_code in (302, 307)
         assert response.headers['location'] == 'http://localhost:9000'

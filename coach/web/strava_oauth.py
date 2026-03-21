@@ -18,7 +18,6 @@ from coach.auth.setup.strava import STRAVA_AUTHORIZE_URL
 from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
-from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.users import SupabaseUsersRepository
 
@@ -26,14 +25,6 @@ router = APIRouter()
 
 _STRAVA_REDIRECT_URI = os.environ.get('STRAVA_REDIRECT_URI', 'http://localhost:8000/auth/strava/callback')
 _STATE_EXPIRY_MINUTES = 10
-
-
-def get_anon_client() -> Client:
-    return create_anon_client()
-
-
-def get_secret_client() -> Client:
-    return create_secret_client()
 
 
 def generate_strava_auth_url(user_id: str, secret_client: Client) -> str:
@@ -96,7 +87,7 @@ def _validate_and_consume_state(state: str, secret_client: Client) -> str:
 def strava_oauth_callback(
     code: str,
     state: str,
-    secret_client: Client = Depends(get_secret_client),
+    secret_client: Client = Depends(create_secret_client),
 ) -> RedirectResponse:
     user_id = _validate_and_consume_state(state, secret_client)
     token_data = _exchange_code_for_tokens(code, _STRAVA_REDIRECT_URI)
