@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 import chainlit as cl
+from starlette.routing import Mount
 from supabase import Client
 
 from coach.persistence.database import create_anon_client
@@ -21,9 +22,9 @@ _SESSION_REFRESH_TOKEN = 'supabase_refresh_token'  # noqa: S105
 _SESSION_USER_ID = 'supabase_user_id'
 _SESSION_EXPIRES_AT = 'supabase_expires_at'
 
-# Mount the FastAPI OAuth callback on Chainlit's Starlette server
+# Insert before Chainlit's routes so the SPA catch-all doesn't intercept it
 _fastapi_app = create_app()
-cl.server.app.mount('/oauth', _fastapi_app)
+cl.server.app.router.routes.insert(0, Mount('/oauth', app=_fastapi_app))
 
 
 @cl.oauth_callback
