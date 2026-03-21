@@ -72,10 +72,16 @@ The app is a CLI tool (entry point: `coach/cli/app.py`) that syncs Strava activi
 
 **Web app** (`coach/web/`):
 - `coach/web/app.py` — FastAPI app factory (`create_app()`); runnable via `uvicorn coach.web.app:app`
-- `coach/web/strava_oauth.py` — `GET /auth/strava` (initiates OAuth, inserts CSRF state) + `GET /auth/strava/callback` (verifies state, exchanges code, stores tokens in Vault, updates `users.strava_user_id`); designed to be mounted on Chainlit's Starlette app in Phase 3 without modification
+- `coach/web/strava_oauth.py` — `generate_strava_auth_url(user_id, secret_client)` inserts CSRF state + returns auth URL; `GET /auth/strava/callback` verifies state, exchanges code, stores tokens, redirects to `CHAINLIT_URL`; mounted at `/oauth` on Chainlit's Starlette server
+- `coach/web/chainlit_app.py` — Chainlit app; `@cl.oauth_callback` exchanges Google ID token for Supabase JWT; `on_chat_start` gates on `strava_user_id`, shows Connect Strava action if missing; FastAPI sub-app mounted via `cl.server.app.router.routes.insert(0, Mount('/oauth', app=...))` — **not** `cl.server.app.mount()`, which would append after Chainlit's SPA catch-all and never be reached
 - Uses the Supabase **secret key** (`SUPABASE_SECRET_KEY`) for all Vault RPC calls; uses anon key + user JWT to verify caller identity
-- Testing: inject mock client via `app.dependency_overrides[get_secret_client] = lambda: mock`; mock Supabase fluent chain as `mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [...]`
+- Testing: inject mock client via `app.dependency_overrides[create_secret_client] = lambda: mock` (import `create_secret_client` from `coach.persistence.database`); mock Supabase fluent chain as `mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [...]`
 - `FastAPI TestClient` requires `httpx` as a dev dependency
+
+**Chainlit quirks:**
+- `@cl.oauth_callback` signature must include `id_token: Optional[str] = None` even though Chainlit never passes it — mypy fails without it
+- `cl.Action` (Chainlit 2.x): use `payload={}` (a `dict`), not `value=...` (removed)
+- `cl.User.metadata` must be JSON-serializable — store `datetime` as `.isoformat()`, parse back with `datetime.fromisoformat()` in `_init_user_session`
 
 **User personalization:**
 - Profile stored as structured fields in the Supabase `profiles` table per user (`coach/persistence/repositories/profiles.py`)
@@ -134,8 +140,8 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 ### Phase 3 — Chainlit web app
 - [ ] Basic Chainlit app with the same coaching chat loop
-- [ ] Google OAuth login via Supabase Auth (no CLI auth needed)
-- [ ] Strava connect flow in the web UI: detect missing `strava_user_id` on `chat_start`, show "Connect Strava" action button; mount `coach/web/` FastAPI app on Chainlit's underlying Starlette app
+- [x] Google OAuth login via Supabase Auth (no CLI auth needed)
+- [x] Strava connect flow in the web UI: detect missing `strava_user_id` on `chat_start`, show "Connect Strava" action button; mount `coach/web/` FastAPI app on Chainlit's underlying Starlette app
 - [ ] Incremental Strava sync on `chat_start` (calls `sync_strava_for_user`)
 - [ ] Per-user profile editing in the web UI
 - [ ] Operator-provided Google AI Studio key (no user configuration needed)
@@ -172,6 +178,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 - Group commits into logical units — each commit should represent one coherent, independently buildable change (e.g. one refactor, one feature, one fix). Never mix unrelated changes in a single commit.
 - Always prefer **rebase merge** (`gh pr merge --rebase`) over squash or merge commits to keep a clean linear history
+- **Always `git push` before `gh pr merge --rebase`** — the command merges the remote branch; local-only commits not yet pushed will be silently left behind
 - `gh issue close` accepts one issue at a time — use a loop: `for i in 1 2 3; do gh issue close $i; done`
 - `gh issue view` emits a GraphQL deprecation warning to stderr; use `--json title,body` to suppress it
 - `.claude/CLAUDE.md` is tracked by git (`.claude/*` is ignored except `CLAUDE.md`); no stashing needed for commits, but `gh pr merge` with an open worktree may still require care
