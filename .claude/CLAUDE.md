@@ -36,11 +36,15 @@ coach chat             # Start coaching chat (Google AI default)
 coach chat --provider openai --model gpt-4o --num-history-weeks 4
 ```
 
-**Run the web app (Strava OAuth):**
+**Run the Chainlit app:**
 ```bash
-SUPABASE_SECRET_KEY=... STRAVA_CLIENT_ID=... STRAVA_CLIENT_SECRET=... uvicorn coach.web.app:app
-# Routes: GET /auth/strava (initiate), GET /auth/strava/callback
-# STRAVA_REDIRECT_URI defaults to http://localhost:8000/auth/strava/callback
+chainlit run coach/web/chainlit_app.py
+# Required env vars: SUPABASE_SECRET_KEY, STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET,
+#   OAUTH_GOOGLE_CLIENT_ID, OAUTH_GOOGLE_CLIENT_SECRET, CHAINLIT_AUTH_SECRET
+# CHAINLIT_APP_ROOT must point to the repo root (set in .env)
+# STRAVA_REDIRECT_URI must be http://localhost:8000/oauth/auth/strava/callback
+#   (the FastAPI callback app is mounted at /oauth on Chainlit's Starlette server)
+# CHAINLIT_URL defaults to http://localhost:8000 — Strava callback redirects here after success
 ```
 
 ## Architecture
