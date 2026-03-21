@@ -147,6 +147,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - Use `setup_method` to share common setup and set sensible defaults; individual tests override only what is specific to them
 - Only test public methods/attributes — do not reach into private internals
 - Always cover unhappy paths and edge cases (missing data, expired state, invalid input, None returns) alongside the happy path
+- Prefer **fakes** over **mocks** for your own abstractions: write a minimal in-memory implementation of the ABC (e.g. `FakeStravaTokenRepository` storing tokens in a dict) rather than a `MagicMock`. Fakes are readable, catch interface changes, and have no magic. Reserve `MagicMock`/`patch` for genuinely external things you cannot control: Supabase `Client`, HTTP calls (`requests.post`), time.
 - Focus on simple, focused unit tests; avoid complex integration tests unless necessary
 - Tests live in a `tests/` subdirectory next to the module they test (e.g. `coach/builders/tests/`)
 
