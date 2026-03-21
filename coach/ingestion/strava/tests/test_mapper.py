@@ -4,7 +4,9 @@ from typing import Any
 
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
-from coach.ingestion.strava.mapper import StravaMapper
+from coach.ingestion.strava.mapper import map_activities
+from coach.ingestion.strava.mapper import map_pbs
+from coach.ingestion.strava.mapper import map_strava_activity
 
 
 def _base_payload(**overrides: Any) -> dict[str, Any]:
@@ -19,18 +21,15 @@ def _base_payload(**overrides: Any) -> dict[str, Any]:
 
 
 class TestStravaMapperMapActivity:
-    def setup_method(self) -> None:
-        self._mapper = StravaMapper()
-
     def test_maps_required_fields(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload())
+        activity = map_strava_activity(_base_payload())
         assert activity.id == 123
         assert activity.sport_type == SportType.RUN
         assert activity.start_time_utc == datetime(2024, 1, 1, 7, 0, 0, tzinfo=UTC)
         assert activity.elapsed_time_seconds == 3_600
 
     def test_optional_fields_are_none_when_absent(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload())
+        activity = map_strava_activity(_base_payload())
         assert activity.name is None
         assert activity.description is None
         assert activity.notes is None
@@ -51,7 +50,7 @@ class TestStravaMapperMapActivity:
             average_heartrate=145.0,
             max_heartrate=165.0,
         )
-        activity = self._mapper.map_strava_activity(payload)
+        activity = map_strava_activity(payload)
         assert activity.name == 'Morning Run'
         assert activity.description == 'Easy pace'
         assert activity.notes == '$felt good$'
@@ -62,53 +61,47 @@ class TestStravaMapperMapActivity:
         assert activity.max_heart_rate == 165.0
 
     def test_is_race_when_workout_type_is_1(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload(workout_type=1))
+        activity = map_strava_activity(_base_payload(workout_type=1))
         assert activity.is_race is True
 
     def test_is_not_race_for_other_workout_types(self) -> None:
-        assert self._mapper.map_strava_activity(_base_payload(workout_type=0)).is_race is False
-        assert self._mapper.map_strava_activity(_base_payload(workout_type=2)).is_race is False
-        assert self._mapper.map_strava_activity(_base_payload()).is_race is False
+        assert map_strava_activity(_base_payload(workout_type=0)).is_race is False
+        assert map_strava_activity(_base_payload(workout_type=2)).is_race is False
+        assert map_strava_activity(_base_payload()).is_race is False
 
     def test_is_manual_true(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload(manual=True))
+        activity = map_strava_activity(_base_payload(manual=True))
         assert activity.is_manual is True
 
     def test_is_manual_false_by_default(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload())
+        activity = map_strava_activity(_base_payload())
         assert activity.is_manual is False
 
 
 class TestStravaMapperSportType:
-    def setup_method(self) -> None:
-        self._mapper = StravaMapper()
-
     def test_maps_known_sport_type(self) -> None:
-        assert self._mapper.map_strava_activity(_base_payload(sport_type='Run')).sport_type == SportType.RUN
-        assert self._mapper.map_strava_activity(_base_payload(sport_type='Ride')).sport_type == SportType.RIDE
+        assert map_strava_activity(_base_payload(sport_type='Run')).sport_type == SportType.RUN
+        assert map_strava_activity(_base_payload(sport_type='Ride')).sport_type == SportType.RIDE
 
     def test_falls_back_to_type_field_when_sport_type_absent(self) -> None:
         payload = _base_payload()
         del payload['sport_type']
         payload['type'] = 'Run'
-        activity = self._mapper.map_strava_activity(payload)
-        assert activity.sport_type == SportType.RUN
+        assert map_strava_activity(payload).sport_type == SportType.RUN
 
     def test_falls_back_to_other_for_unknown_sport_type(self) -> None:
-        activity = self._mapper.map_strava_activity(_base_payload(sport_type='Kayaking'))
-        assert activity.sport_type == SportType.OTHER
+        assert map_strava_activity(_base_payload(sport_type='Kayaking')).sport_type == SportType.OTHER
 
     def test_falls_back_to_other_when_both_fields_absent(self) -> None:
         payload = _base_payload()
         del payload['sport_type']
-        activity = self._mapper.map_strava_activity(payload)
-        assert activity.sport_type == SportType.OTHER
+        assert map_strava_activity(payload).sport_type == SportType.OTHER
 
 
 class TestStravaMapperMapPbs:
     def test_returns_empty_list_when_no_best_efforts(self) -> None:
-        assert StravaMapper.map_pbs(None) == []
-        assert StravaMapper.map_pbs([]) == []
+        assert map_pbs(None) == []
+        assert map_pbs([]) == []
 
     def test_only_includes_rank_1_efforts(self) -> None:
         efforts = [
@@ -116,31 +109,27 @@ class TestStravaMapperMapPbs:
             {'name': '10K', 'moving_time': 2500, 'pr_rank': 2},
             {'name': '1K', 'moving_time': 240, 'pr_rank': None},
         ]
-        pbs = StravaMapper.map_pbs(efforts)
-        assert pbs == [BestEffort(name='5K', moving_time_seconds=1200)]
+        assert map_pbs(efforts) == [BestEffort(name='5K', moving_time_seconds=1200)]
 
     def test_maps_multiple_rank_1_efforts(self) -> None:
         efforts = [
             {'name': '5K', 'moving_time': 1200, 'pr_rank': 1},
             {'name': '10K', 'moving_time': 2500, 'pr_rank': 1},
         ]
-        pbs = StravaMapper.map_pbs(efforts)
-        assert len(pbs) == 2
+        assert len(map_pbs(efforts)) == 2
 
     def test_pbs_available_on_mapped_activity(self) -> None:
         payload = _base_payload(best_efforts=[
             {'name': '5K', 'moving_time': 1200, 'pr_rank': 1},
         ])
-        activity = StravaMapper().map_strava_activity(payload)
-        assert activity.pbs == [BestEffort(name='5K', moving_time_seconds=1200)]
+        assert map_strava_activity(payload).pbs == [BestEffort(name='5K', moving_time_seconds=1200)]
 
 
 class TestStravaMapperMapActivities:
     def test_maps_batch(self) -> None:
-        payloads = [_base_payload(id=i) for i in range(3)]
-        activities = StravaMapper().map_activities(payloads)
+        activities = map_activities([_base_payload(id=i) for i in range(3)])
         assert len(activities) == 3
         assert [a.id for a in activities] == [0, 1, 2]
 
     def test_empty_batch(self) -> None:
-        assert StravaMapper().map_activities([]) == []
+        assert map_activities([]) == []

@@ -103,9 +103,10 @@ class ProfileAssistant(Assistant):
         ]
         return '\n\n'.join(p for p in parts if p) or None
 
-    def setup_profile(self) -> UserProfile:
-        typer.echo("\nWelcome to Coach! Let's set up your profile so I can give you tailored guidance.\n")
-        typer.echo('For each section, answer the prompt and continue the conversation. Press Enter on an empty line to move to the next section.\n')
+    def setup_profile(self, first_name: Optional[str] = None) -> UserProfile:
+        greeting = f'Welcome, {first_name}!' if first_name else 'Welcome to Coach!'
+        typer.echo(f"\n{greeting} Let's set up your profile so I can give you tailored guidance.\n")
+        typer.echo('For each section, answer the prompt and continue the conversation. Press Enter twice on an empty line to move to the next section.\n')
 
         self._collected_sections = {}
         chat_preferences = self._collect_text(ProfileParts.CHAT_PREFERENCES)
@@ -165,20 +166,30 @@ class ProfileAssistant(Assistant):
             typer.echo('Thank you for your input!')
 
             response = self._get_response(user_input)
-            if response.strip().upper() == 'DONE':
+            if re.search(r'(?i)\bDONE[.!]?\s*$', response.strip()):
+                visible = re.sub(r'(?i)\bDONE[.!]?\s*$', '', response).strip()
+                if visible:
+                    typer.echo(f'\nAssistant:\n{visible}\n')
                 return
 
             typer.echo(f'\nAssistant:\n{response}\n')
 
     @staticmethod
     def _read_input() -> str:
-        typer.echo('Your answer: ', nl=False)
+        typer.echo('Your answer (press Enter twice when done): ', nl=False)
         lines: list[str] = []
+        consecutive_empty = 0
         while True:
             line = input()
             if not line:
-                break
-            lines.append(line)
+                if not lines:
+                    break
+                consecutive_empty += 1
+                if consecutive_empty >= 2:
+                    break
+            else:
+                consecutive_empty = 0
+                lines.append(line)
         return '\n'.join(lines)
 
     def _summarize(self, section: ProfileParts) -> Optional[str]:

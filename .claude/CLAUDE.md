@@ -90,24 +90,42 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Supabase Auth: Google OAuth via PKCE → `user_id` derived from session; stored tokens in `~/.coach/credentials.json`
 - [x] Drop SQLite
 
-### Phase 2 — Multi-user foundation
-- [ ] RLS policies on all tables enforcing per-user data isolation
-- [ ] Strava OAuth token stored per-user in Supabase (not in `~/.coach/credentials.json`)
-- [ ] Background activity sync (scheduled or webhook-triggered) per user
-- [ ] User profile stored in Supabase `profiles` table (free-text fields replacing `coach.md`)
+### Phase 2 — Multi-user foundation (Strava + Supabase integration)
+
+**Architecture decisions:**
+- Operator-owned Strava API app (single `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` as server env vars — users never touch the Strava developer portal)
+- Per-user tokens stored in `private.strava_tokens` (Vault-backed: `access_token_vault_id`, `refresh_token_vault_id` UUIDs) — never exposed via Data API
+- Vault reads/writes go through `SECURITY DEFINER` Postgres functions in `public` schema, called via `supabase.rpc()` with the **secret key** (server-side only; **publishable key** used everywhere else)
+- `public.strava_oauth_state` table (RLS-protected) for CSRF state during OAuth dance
+- Incremental Strava sync triggered on chat start (not background/webhook)
+- Core sync logic extracted into a callable function usable by both CLI and web
+
+**Supabase steps (Dashboard → SQL Editor):**
+- [x] Create `public.strava_oauth_state` table with RLS (`auth.uid() = user_id`)
+- [x] Create `public.upsert_strava_tokens(p_user_id, p_access_token, p_refresh_token, p_expires_at)` — SECURITY DEFINER, writes to Vault + `private.strava_tokens`
+- [x] Create `public.get_strava_tokens(p_user_id)` — SECURITY DEFINER, returns decrypted tokens from Vault
+- [x] Create `public.delete_strava_tokens(p_user_id)` — SECURITY DEFINER, removes Vault secrets + table row
+
+**Code steps:**
+- [x] `coach/auth/strava_tokens.py` — `StravaTokens` dataclass + `StravaTokenRepository` Protocol + `SupabaseStravaTokenRepository` (calls RPC functions with secret key) + `CredentialsStoreStravaTokenRepository` (CLI path)
+- [x] Refactor `StravaAuth` to accept `user_id` + `StravaTokenRepository`; reads `STRAVA_CLIENT_ID`/`STRAVA_CLIENT_SECRET` from env for refresh
+- [x] Refactor `StravaClient` to accept `user_id` + `StravaTokenRepository`
+- [ ] `coach/ingestion/strava/sync.py` — `sync_strava_for_user(user_id, strava_client, activity_repo)` pure callable; CLI `sync strava` becomes a thin wrapper
+- [ ] `coach/web/app.py` + `coach/web/strava_oauth.py` — FastAPI app with `GET /auth/strava` (initiates OAuth) and `GET /auth/strava/callback` (exchanges code, stores tokens, returns success page); runnable standalone via `uvicorn`
+- [ ] RLS policies on all `public` tables enforcing per-user data isolation
 
 ### Phase 3 — Chainlit web app
 - [ ] Basic Chainlit app with the same coaching chat loop
 - [ ] Google OAuth login via Supabase Auth (no CLI auth needed)
-- [ ] Strava connect flow in the web UI
+- [ ] Strava connect flow in the web UI: detect missing `strava_user_id` on `chat_start`, show "Connect Strava" action button; mount `coach/web/` FastAPI app on Chainlit's underlying Starlette app
+- [ ] Incremental Strava sync on `chat_start` (calls `sync_strava_for_user`)
 - [ ] Per-user profile editing in the web UI
 - [ ] Operator-provided Google AI Studio key (no user configuration needed)
 
-### Phase 4 — Polish and scale
-- [ ] Automatic Strava sync (webhook or periodic background job)
+### Phase 4 — Launch
+- [ ] Deployment (e.g. Fly.io, Railway, or similar)
 - [ ] User-supplied API keys (for users who want to bring their own)
 - [ ] Activity feed / history view in the UI
-- [ ] Deployment (e.g. Fly.io, Railway, or similar)
 
 ## Testing conventions
 
@@ -123,4 +141,6 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - All functions must be fully typed; `Optional[]` preferred over `X | None`
 - Single-quote strings enforced by ruff (`Q001`)
 - Imports are force-single-line (isort setting)
+- Prefer `ABC` + `@abstractmethod` over `Protocol` for interfaces — explicit inheritance and runtime enforcement are preferred over structural subtyping
+- Use `setup_method` for shared test setup; avoid `@pytest.fixture(autouse=True)` inside test classes
 - Avoid docstrings and comments that restate what the code already says; only add a comment when the intent cannot be made clear through naming, structure, or a well-named helper method

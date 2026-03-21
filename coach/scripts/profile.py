@@ -29,12 +29,13 @@ def setup_profile(
     provider: str = typer.Option(default='google', help='LLM provider (google or openai)'),
     model: Optional[str] = typer.Option(default=None, help='Model name (uses provider default if omitted)'),
 ) -> None:
-    repo = _get_repo(load_session())
+    session = load_session()
+    repo = _get_repo(session)
 
     if repo.load() is not None:
         typer.confirm('A profile already exists. Overwrite it?', abort=True)
 
-    profile = _get_assistant(provider, model).setup_profile()
+    profile = _get_assistant(provider, model).setup_profile(first_name=session.first_name)
     repo.save(profile)
     typer.echo('Profile saved.')
 

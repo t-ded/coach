@@ -13,6 +13,7 @@ from supabase import create_client
 from coach.config.credentials import CredentialsStore
 from coach.persistence.database import SUPABASE_ANON_KEY
 from coach.persistence.database import SUPABASE_URL
+from coach.persistence.repositories.users import SupabaseUsersRepository
 
 _CALLBACK_PORT = 8585
 _CALLBACK_PATH = '/callback'
@@ -42,6 +43,10 @@ def setup_supabase_login() -> None:
         refresh_token=response.session.refresh_token,
     )
 
+    full_name: str = (response.user.user_metadata or {}).get('full_name') or ''
+    if full_name:
+        SupabaseUsersRepository(client, response.user.id).set_display_name(full_name)
+
     email = response.user.email or 'unknown'
     print(f'\n✓ Logged in as {email}')
     print('Session stored securely in ~/.coach/credentials.json')
@@ -56,13 +61,15 @@ def _generate_pkce_pair() -> tuple[str, str]:
 
 
 def _build_auth_url(supabase_url: str, code_challenge: str) -> str:
-    params = urlencode({
-        'provider': 'google',
-        'redirect_to': _REDIRECT_URI,
-        'code_challenge': code_challenge,
-        'code_challenge_method': 'S256',
-        'response_type': 'code',
-    })
+    params = urlencode(
+        {
+            'provider': 'google',
+            'redirect_to': _REDIRECT_URI,
+            'code_challenge': code_challenge,
+            'code_challenge_method': 'S256',
+            'response_type': 'code',
+        }
+    )
     return f'{supabase_url}/auth/v1/authorize?{params}'
 
 

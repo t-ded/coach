@@ -6,6 +6,7 @@ from typing import Any
 import requests
 
 from coach.auth.strava import StravaAuth
+from coach.auth.strava_tokens import StravaTokenRepository
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class StravaClient:
     _MAX_RETRIES = 3
     _FIFTEEN_MINUTES = 15 * 60
 
-    def __init__(self) -> None:
-        self._auth = StravaAuth()
+    def __init__(self, user_id: str, token_repo: StravaTokenRepository) -> None:
+        self._auth = StravaAuth(user_id=user_id, token_repo=token_repo)
 
     def _headers(self) -> dict[str, str]:
         return {
