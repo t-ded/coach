@@ -21,14 +21,23 @@ SESSION_MODE = 'mode'
 SESSION_ACTIVITIES = 'activities'
 SESSION_DISPLAY_NAME = 'display_name'
 SESSION_CURRENT_PROFILE = 'current_profile'
+SESSION_LLM_PROVIDER = 'llm_provider'
+SESSION_LLM_API_KEY = 'llm_api_key'
 MODE_COACH = 'coach'
 MODE_PROFILE = 'profile'
 
 _NUM_HISTORY_WEEKS = 8
 
 
+def get_llm_config() -> tuple[LLMProvider, str]:
+    provider: LLMProvider = cl.user_session.get(SESSION_LLM_PROVIDER, default=LLMProvider.GOOGLE)
+    api_key: str = cl.user_session.get(SESSION_LLM_API_KEY, default='')
+    return provider, api_key
+
+
 def init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
-    coach = Coach(provider=LLMProvider.GOOGLE, model=None, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
+    provider, api_key = get_llm_config()
+    coach = Coach(provider=provider, model=None, api_key=api_key, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
     cl.user_session.set(SESSION_COACH, coach)
     cl.user_session.set(SESSION_MODE, MODE_COACH)
 

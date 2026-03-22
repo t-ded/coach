@@ -30,8 +30,8 @@ def build_assistant_prompt(
 
 
 class Assistant(ABC):
-    def __init__(self, provider: LLMProvider, model: Optional[str], max_history_turns: int = 10) -> None:
-        self._llm_client = create_llm_client(provider=provider, model=model)
+    def __init__(self, provider: LLMProvider, model: Optional[str], api_key: Optional[str] = None, max_history_turns: int = 10) -> None:
+        self._llm_client = create_llm_client(provider=provider, model=model, api_key=api_key)
         self._history = ChatHistory(max_turns=max_history_turns)
 
     @abstractmethod

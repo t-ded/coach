@@ -107,8 +107,8 @@ def apply_section_text(profile: Optional[UserProfile], section: ProfileParts, te
 
 
 class ProfileAssistant(Assistant):
-    def __init__(self, provider: LLMProvider, model: Optional[str]) -> None:
-        super().__init__(provider=provider, model=model)
+    def __init__(self, provider: LLMProvider, model: Optional[str], api_key: Optional[str] = None) -> None:
+        super().__init__(provider=provider, model=model, api_key=api_key)
         self._current_section: ProfileParts = ProfileParts.CHAT_PREFERENCES
         self._collected_sections: dict[ProfileParts, Optional[str]] = {}
 
