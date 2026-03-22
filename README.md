@@ -13,7 +13,7 @@
 
 Coach is a personalized AI coaching assistant that lives in your browser. It reads your recent Strava activities, personal bests, and training profile — and gives you thoughtful, data-grounded advice in a natural chat.
 
-No setup, no CLI, no CSV exports. Just log in and start coaching.
+> **Note:** Coach is not yet publicly hosted — for now you run it on your own computer by following the steps below. A hosted version (no installation required) is on the roadmap.
 
 ---
 
@@ -30,107 +30,129 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
-## ⚡ Quick start
+## ⚡ Getting started
 
-### What you need
+Follow these steps once and you'll be chatting with your coach in about 10 minutes.
 
-- A **Google account** — free, used for login
-- A **Strava account** — free; even the basic account works
-- Access to a **running deployment** of Coach (see [Self-hosting](#-self-hosting) below if you want to run your own)
+---
 
-### First time
+### Step 1 — Install Python
 
-**1. Sign in** — open the app and click **Continue with Google**. No registration form, no password.
+Coach requires **Python 3.13 or newer**.
 
-**2. Connect Strava** — click the **Connect Strava** button and authorize the app. One-time step; your activities sync automatically every session after this.
+- **Check if you already have it:** open a terminal (on Mac: *Terminal*, on Windows: *Command Prompt*) and type `python --version`. If it shows 3.13 or higher, skip to Step 2.
+- **Install it:** download the installer from [python.org/downloads](https://www.python.org/downloads/) and run it. On Windows, tick **"Add Python to PATH"** during installation.
 
-**3. Set up your profile** *(optional but recommended)* — after connecting Strava you'll be offered a short guided setup covering your goals, training preferences, and constraints. Each section is a brief conversation: describe yourself in plain language and the AI captures the key points. Skip any section or come back to edit later via **Edit Profile**.
+---
 
-**4. Start coaching** — ask anything:
+### Step 2 — Download Coach
+
+[Download this repository as a ZIP](../../archive/refs/heads/master.zip), unzip it somewhere convenient (e.g. your Documents folder), and note the folder path — you will need it in Step 4.
+
+Alternatively, if you have git: `git clone https://github.com/t-ded/coach.git`
+
+---
+
+### Step 3 — Get a Google AI Studio API key
+
+Coach uses Google's AI models to power the chat. Getting a key is free and takes about 30 seconds:
+
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Sign in with your Google account
+3. Click **"Create API key"**
+4. Copy the key (it looks like `AIzaSy...`) — you will need it in the next step
+
+---
+
+### Step 4 — Set up the configuration file
+
+1. In the Coach folder, find the file called **`.env.example`** and make a copy of it in the same folder named **`.env`** (just remove the `.example` part).
+
+   > On Windows, `.env` files can be tricky to create — open `.env.example` in Notepad, make your edits, and use *Save As* → type `.env` as the filename and choose *All files* as the file type.
+
+2. Open `.env` in a text editor (Notepad on Windows, TextEdit on Mac).
+
+3. **Paste your Google AI Studio key** on the line that says `GOOGLE_AI_API_KEY=` — paste it right after the `=` sign, no spaces or quotes needed:
+   ```
+   GOOGLE_AI_API_KEY=AIzaSyYourKeyHere
+   ```
+
+4. **Set your project path** on the line that says `CHAINLIT_APP_ROOT=` — paste the full path to the Coach folder:
+   ```
+   # Windows example:
+   CHAINLIT_APP_ROOT=C:\Users\YourName\Documents\coach
+
+   # Mac/Linux example:
+   CHAINLIT_APP_ROOT=/Users/yourname/Documents/coach
+   ```
+
+5. **Fill in the private credentials** on the four blank lines — you will have received these from the person who shared Coach with you:
+   ```
+   OAUTH_GOOGLE_CLIENT_SECRET=...
+   STRAVA_CLIENT_SECRET=...
+   SUPABASE_SECRET_KEY=...
+   CHAINLIT_AUTH_SECRET=...
+   ```
+
+6. Save and close the file.
+
+---
+
+### Step 5 — Install dependencies
+
+Open a terminal, navigate to the Coach folder, and run:
+
+```bash
+pip install -e .
+```
+
+This installs everything Coach needs. It may take a minute or two.
+
+---
+
+### Step 6 — Run Coach
+
+In the same terminal, run:
+
+```bash
+chainlit run coach/web/chainlit_app.py
+```
+
+Your browser will open automatically. If it doesn't, open it and go to [http://localhost:8000](http://localhost:8000).
+
+---
+
+### Step 7 — First-time setup (in the browser)
+
+**1. Sign in with Google** — click *Continue with Google* and sign in with your Google account. No new account or password needed.
+
+**2. Connect Strava** — click the *Connect Strava* button and authorize the app. This is a one-time step; your activities will sync automatically from then on.
+
+**3. Set up your profile** *(optional but recommended)* — you'll be guided through 5 short sections: chat preferences, training style, personal background, constraints (available days, etc.), and goals. For each one, just describe yourself in plain language — the AI captures the key points. You can skip any section or come back to edit later via the *Edit Profile* button.
+
+**4. Start coaching** — the coach is ready. Ask anything:
 
 > *"How is my training going?"*
 > *"Give me a plan for next week."*
 > *"Why am I not improving my 5K time?"*
 
-The coach always answers from your actual Strava data.
-
 ---
 
 ## 📸 Screenshots
 
-<table>
-  <tr>
-    <td align="center"><b>Login</b></td>
-    <td align="center"><b>Strava connect</b></td>
-  </tr>
-  <tr>
-    <td><img src="public/screenshots/login.png" alt="Login screen" /></td>
-    <td><img src="public/screenshots/strava_connect.png" alt="Strava connect" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Profile setup</b></td>
-    <td align="center"><b>Coaching chat</b></td>
-  </tr>
-  <tr>
-    <td><img src="public/screenshots/profile_setup.png" alt="Profile setup" /></td>
-    <td><img src="public/screenshots/coaching_chat.png" alt="Coaching chat" /></td>
-  </tr>
-</table>
+> Screenshots coming soon.
 
 ---
 
 ## 📝 Private notes
 
-You can give the coach extra context that doesn't fit neatly into your profile by annotating individual Strava activities. Add anything coaching-relevant to the activity's **private notes** field on Strava, wrapped in `$...$`:
+You can give the coach extra context about specific sessions by adding notes to any Strava activity's **private notes** field. Wrap the coaching-relevant part in `$...$`:
 
 ```
 $5x1km VO2max session @4:30 — felt very hard, knee a bit sore on the last rep$
 ```
 
-The coach picks this up automatically. Anything outside the delimiters is ignored, so your personal notes stay personal.
-
----
-
-## 🖥 Self-hosting
-
-Running your own instance requires a few external services, all of which have free tiers:
-
-| Service | What it's used for | Free tier |
-|---|---|---|
-| [Supabase](https://supabase.com) | Database, auth, and secret storage | ✅ |
-| [Strava API app](https://www.strava.com/settings/api) | OAuth access to user activities | ✅ |
-| [Google Cloud OAuth](https://console.cloud.google.com) | Google login for users | ✅ |
-| [Google AI Studio](https://aistudio.google.com/apikey) | LLM API key | ✅ free quota |
-
-### Environment variables
-
-**Required:**
-
-| Variable | Description |
-|---|---|
-| `SUPABASE_SECRET_KEY` | Supabase service role key (for Vault RPC calls) |
-| `STRAVA_CLIENT_ID` | Strava API application client ID |
-| `STRAVA_CLIENT_SECRET` | Strava API application client secret |
-| `OAUTH_GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `OAUTH_GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `CHAINLIT_AUTH_SECRET` | Random secret for Chainlit session signing (any long random string) |
-| `GOOGLE_AI_API_KEY` | Operator-provided Google AI Studio key |
-
-**Optional / local overrides:**
-
-| Variable | Default | Description |
-|---|---|---|
-| `SUPABASE_URL` | project default | Supabase project URL |
-| `SUPABASE_ANON_KEY` | project default | Supabase anonymous key |
-| `STRAVA_REDIRECT_URI` | `http://localhost:8000/oauth/auth/strava/callback` | Strava OAuth callback URL |
-| `CHAINLIT_URL` | `http://localhost:8000` | Base URL Strava redirects to after OAuth |
-| `CHAINLIT_APP_ROOT` | — | Path to repo root (set in `.env`) |
-
-### Start
-
-```bash
-chainlit run coach/web/chainlit_app.py
-```
+The coach picks this up automatically. Anything outside the `$...$` markers is ignored, so your personal notes stay private.
 
 ---
 
