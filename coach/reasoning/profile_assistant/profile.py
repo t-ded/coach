@@ -86,6 +86,10 @@ def _build_context_note(collected: dict[ProfileParts, Optional[str]]) -> str:
     return '\n'.join(lines)
 
 
+def collected_from_profile(profile: UserProfile) -> dict[ProfileParts, Optional[str]]:
+    return {section: _section_text(profile, section) for section in ProfileParts}
+
+
 def apply_section_text(profile: Optional[UserProfile], section: ProfileParts, text: Optional[str]) -> UserProfile:
     base = profile or UserProfile()
     match section:

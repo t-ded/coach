@@ -4,6 +4,7 @@ from unittest.mock import patch
 from coach.domain.profile import UserProfile
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.profile import apply_section_text
+from coach.reasoning.profile_assistant.profile import collected_from_profile
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
@@ -107,3 +108,31 @@ class TestProfileAssistantSummarize:
         self._mock_client.complete.reset_mock()
         self._assistant.summarize()
         self._mock_client.complete.assert_called_once()
+
+
+class TestCollectedFromProfile:
+    def test_maps_all_sections_from_profile(self) -> None:
+        profile = UserProfile(
+            chat_preferences='Be brief',
+            training_preferences='Run daily',
+            personal_information='Age 30',
+            constraints='No weekends',
+            goals=None,
+        )
+        result = collected_from_profile(profile)
+        assert result[ProfileParts.CHAT_PREFERENCES] == 'Be brief'
+        assert result[ProfileParts.TRAINING_PREFERENCES] == 'Run daily'
+        assert result[ProfileParts.PERSONAL_INFORMATION] == 'Age 30'
+        assert result[ProfileParts.CONSTRAINTS] == 'No weekends'
+        assert result[ProfileParts.GOALS] is None
+
+    def test_none_fields_map_to_none(self) -> None:
+        profile = UserProfile()
+        result = collected_from_profile(profile)
+        for section in ProfileParts:
+            assert result[section] is None
+
+    def test_all_profile_parts_present(self) -> None:
+        profile = UserProfile()
+        result = collected_from_profile(profile)
+        assert set(result.keys()) == set(ProfileParts)
