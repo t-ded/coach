@@ -86,6 +86,21 @@ def _build_context_note(collected: dict[ProfileParts, Optional[str]]) -> str:
     return '\n'.join(lines)
 
 
+def apply_section_text(profile: Optional[UserProfile], section: ProfileParts, text: Optional[str]) -> UserProfile:
+    base = profile or UserProfile()
+    match section:
+        case ProfileParts.CHAT_PREFERENCES:
+            return dataclasses.replace(base, chat_preferences=text)
+        case ProfileParts.TRAINING_PREFERENCES:
+            return dataclasses.replace(base, training_preferences=text)
+        case ProfileParts.PERSONAL_INFORMATION:
+            return dataclasses.replace(base, personal_information=text)
+        case ProfileParts.CONSTRAINTS:
+            return dataclasses.replace(base, constraints=text)
+        case ProfileParts.GOALS:
+            return dataclasses.replace(base, goals=_parse_goals(text))
+
+
 class ProfileAssistant(Assistant):
     def __init__(self, provider: LLMProvider, model: Optional[str]) -> None:
         super().__init__(provider=provider, model=model)
@@ -136,17 +151,7 @@ class ProfileAssistant(Assistant):
     def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
         self._collected_sections = {part: _section_text(profile, part) for part in ProfileParts}
         new_text = self._collect_text(section)
-        match section:
-            case ProfileParts.CHAT_PREFERENCES:
-                return dataclasses.replace(profile, chat_preferences=new_text)
-            case ProfileParts.TRAINING_PREFERENCES:
-                return dataclasses.replace(profile, training_preferences=new_text)
-            case ProfileParts.PERSONAL_INFORMATION:
-                return dataclasses.replace(profile, personal_information=new_text)
-            case ProfileParts.CONSTRAINTS:
-                return dataclasses.replace(profile, constraints=new_text)
-            case ProfileParts.GOALS:
-                return dataclasses.replace(profile, goals=_parse_goals(new_text))
+        return apply_section_text(profile, section, new_text)
 
     def start_section(self, section: ProfileParts, collected: Mapping[ProfileParts, Optional[str]]) -> str:
         self._history.clear()
