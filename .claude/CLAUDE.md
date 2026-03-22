@@ -139,12 +139,12 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] `coach/web/app.py` + `coach/web/strava_oauth.py` — FastAPI app with `GET /auth/strava` (initiates OAuth) and `GET /auth/strava/callback` (exchanges code, stores tokens, returns success page); runnable standalone via `uvicorn coach.web.app:app`
 
 ### Phase 3 — Chainlit web app
-- [ ] Basic Chainlit app with the same coaching chat loop
+- [x] Basic Chainlit app with the same coaching chat loop
 - [x] Google OAuth login via Supabase Auth (no CLI auth needed)
 - [x] Strava connect flow in the web UI: detect missing `strava_user_id` on `chat_start`, show "Connect Strava" action button; mount `coach/web/` FastAPI app on Chainlit's underlying Starlette app
-- [ ] Incremental Strava sync on `chat_start` (calls `sync_strava_for_user`)
+- [x] Incremental Strava sync on `chat_start` (calls `sync_strava_for_user`)
 - [ ] Per-user profile editing in the web UI
-- [ ] Operator-provided Google AI Studio key (no user configuration needed)
+- [x] Operator-provided Google AI Studio key (no user configuration needed)
 
 ### Phase 4 — Launch
 - [ ] Deployment (e.g. Fly.io, Railway, or similar)
@@ -156,11 +156,14 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 - Test class name mirrors the class under test: `TestRecentTrainingHistoryBuilder` tests `RecentTrainingHistoryBuilder`
 - Use `setup_method` to share common setup and set sensible defaults; individual tests override only what is specific to them
-- Only test public methods/attributes — do not reach into private internals
+- When all tests in a class share the same function call, make that call in `setup_method` and store the result; individual tests then assert on a single aspect (e.g. `assert self._profile is ...`)
+- Prefer testing through public interfaces. Private helpers may be tested directly when (a) the public interface is not unit-testable (e.g. Chainlit handlers) and (b) the helper has meaningful standalone logic worth specifying. Do not create a separate module just to make a private helper importable — test it directly from the module it lives in.
 - Always cover unhappy paths and edge cases (missing data, expired state, invalid input, None returns) alongside the happy path
 - Prefer **fakes** over **mocks** for your own abstractions: write a minimal in-memory implementation of the ABC (e.g. `FakeStravaTokenRepository` storing tokens in a dict) rather than a `MagicMock`. Fakes are readable, catch interface changes, and have no magic. Reserve `MagicMock`/`patch` for genuinely external things you cannot control: Supabase `Client`, HTTP calls (`requests.post`), time.
+- Use `setup_method`/`teardown_method` for class-scoped patches (start patcher in `setup_method`, stop in `teardown_method`); avoid `@pytest.fixture(autouse=True)` inside test classes
 - Focus on simple, focused unit tests; avoid complex integration tests unless necessary
 - Tests live in a `tests/` subdirectory next to the module they test (e.g. `coach/builders/tests/`)
+- Importing private helpers from a Chainlit app file in tests requires stubbing `chainlit.server.server` before import — do this in a `conftest.py` in the same `tests/` directory (see `coach/web/tests/conftest.py`)
 
 ## Code conventions
 
@@ -172,6 +175,8 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - Use `setup_method` for shared test setup; avoid `@pytest.fixture(autouse=True)` inside test classes
 - Avoid docstrings and comments that restate what the code already says; only add a comment when the intent cannot be made clear through naming, structure, or a well-named helper method
 - Prefer intermediate variable assignments over deeply nested calls — clarity beats brevity. Example: `raw = client.fetch(); result = process(raw)` is preferable to `result = process(client.fetch())`
+- Prefer private helpers within a module over extracting a separate helper module for logic tightly coupled to a single caller — a new module is only warranted when logic is genuinely reused or completely independent. The same applies to wrapper functions: a one-liner that only adds a fixed set of arguments to another constructor or function call is not worth naming.
+- Functions should have a single, non-overlapping responsibility. Avoid "halfway abstractions" where a function takes pre-constructed dependencies but also owns loading/fetching internally — that halfway position makes the function hard to test and unclear to read. Either own the full setup (construct deps + do the work) or accept pre-loaded data and act on it.
 - After making any change, review the affected code for simplification opportunities, duplication, and best-practice violations before considering the task done
 
 ## GitHub workflow
