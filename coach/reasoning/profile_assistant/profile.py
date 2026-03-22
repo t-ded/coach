@@ -1,5 +1,6 @@
 import dataclasses
 import re
+from collections.abc import Mapping
 from typing import Optional
 
 import typer
@@ -147,10 +148,23 @@ class ProfileAssistant(Assistant):
             case ProfileParts.GOALS:
                 return dataclasses.replace(profile, goals=_parse_goals(new_text))
 
+    def start_section(self, section: ProfileParts, collected: Mapping[ProfileParts, Optional[str]]) -> str:
+        self._history.clear()
+        self._current_section = section
+        self._collected_sections = dict(collected)
+        return SECTION_INTROS[section]
+
+    def summarize(self) -> Optional[str]:
+        if self._history.has_no_assistant_response():
+            return None
+
+        prompt = self._summarize_goals_prompt if self._current_section == ProfileParts.GOALS else self._summarize_text_prompt
+        return self._llm_client.complete(prompt)
+
     def _collect_text(self, section: ProfileParts) -> Optional[str]:
         try:
             self._run_conversation_loop(section)
-            return self._summarize(section)
+            return self.summarize()
         except (RuntimeError, ValueError) as e:
             typer.echo(f'Error: {e} when collecting section {section.value}')
             return None
@@ -191,13 +205,6 @@ class ProfileAssistant(Assistant):
                 consecutive_empty = 0
                 lines.append(line)
         return '\n'.join(lines)
-
-    def _summarize(self, section: ProfileParts) -> Optional[str]:
-        if self._history.has_no_assistant_response():
-            return None
-
-        prompt = self._summarize_goals_prompt if section == ProfileParts.GOALS else self._summarize_text_prompt
-        return self._llm_client.complete(prompt)
 
     @property
     def _summarize_text_prompt(self) -> str:
