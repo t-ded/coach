@@ -41,7 +41,7 @@ class Coach(Assistant):
                 typer.echo('\nGoodbye.')
                 break
             typer.echo('\nCoach:\n')
-            typer.echo(self._get_response(user_input))
+            typer.echo(self.get_response(user_input))
             typer.echo('')
 
     def _user_system_prompt(self) -> Optional[str]:
