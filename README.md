@@ -7,156 +7,132 @@
 
   *Sign in with Google · Connect Strava · Chat with your coach*
 
+  **[Open Coach →](https://coach-production-e0b4.up.railway.app/)**
+
 </div>
 
 ---
 
-Coach is a personalized AI coaching assistant that lives in your browser. It reads your recent Strava activities, personal bests, and training profile — and gives you thoughtful, data-grounded advice in a natural chat.
-
-> **Note:** Coach is not yet publicly hosted — for now you run it on your own computer by following the steps below. A hosted version (no installation required) is on the roadmap.
-
----
-
-## ✨ Features
-
-| | |
-|---|---|
-| 🔗 **Strava sync** | Activities sync automatically each session — free Strava account supported |
-| 💬 **AI chat** | Multi-turn coaching conversations with your full training context always in view |
-| 👤 **Personalized profile** | Guided setup for goals, constraints, training preferences, and communication style |
-| 🔐 **Google login** | No account creation — sign in with your existing Google account |
-| 📝 **Private notes** | Annotate Strava activities with coaching context using `$...$` delimiters |
-| 🔑 **Bring your own key** | Optionally supply a Google AI or OpenAI API key; falls back to the operator key silently |
+Coach is a personalized AI coaching assistant that lives in your browser. It reads your recent Strava activities, personal bests, and training profile — and gives you thoughtful, data-grounded advice in a natural chat. No installation, no configuration. Just sign in.
 
 ---
 
 ## ⚡ Getting started
 
-Follow these steps once and you'll be chatting with your coach in about 10 minutes.
-
----
-
-### Step 1 — Install Python
-
-Coach requires **Python 3.13 or newer**.
-
-- **Check if you already have it:** open a terminal (on Mac: *Terminal*, on Windows: *Command Prompt*) and type `python --version`. If it shows 3.13 or higher, skip to Step 2.
-- **Install it:** download the installer from [python.org/downloads](https://www.python.org/downloads/) and run it. On Windows, tick **"Add Python to PATH"** during installation.
-
----
-
-### Step 2 — Download Coach
-
-[Download this repository as a ZIP](../../archive/refs/heads/master.zip), unzip it somewhere convenient (e.g. your Documents folder), and note the folder path — you will need it in Step 4.
-
-Alternatively, if you have git: `git clone https://github.com/t-ded/coach.git`
-
----
-
-### Step 3 — Get a Google AI Studio API key
-
-Coach uses Google's AI models to power the chat. Getting a key is free and takes about 30 seconds:
-
-1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. Open **[coach-production-e0b4.up.railway.app](https://coach-production-e0b4.up.railway.app/)**
 2. Sign in with your Google account
-3. Click **"Create API key"**
-4. Copy the key (it looks like `AIzaSy...`) — you will need it in the next step
+3. Connect your Strava account — this is a one-time step
+4. Set up your profile *(optional but recommended — takes about 5 minutes)*
+5. Start chatting
+
+Your activities sync automatically at the start of each session, so the coach always has your latest training in view.
 
 ---
 
-### Step 4 — Set up the configuration file
+## ✨ What Coach can do
 
-1. In the Coach folder, find the file called **`.env.example`** and make a copy of it in the same folder named **`.env`** (just remove the `.example` part).
-
-   > On Windows, `.env` files can be tricky to create — open `.env.example` in Notepad, make your edits, and use *Save As* → type `.env` as the filename and choose *All files* as the file type.
-
-2. Open `.env` in a text editor (Notepad on Windows, TextEdit on Mac).
-
-3. **Paste your Google AI Studio key** on the line that says `GOOGLE_AI_API_KEY=` — paste it right after the `=` sign, no spaces or quotes needed:
-   ```
-   GOOGLE_AI_API_KEY=AIzaSyYourKeyHere
-   ```
-
-4. **Set your project path** on the line that says `CHAINLIT_APP_ROOT=` — paste the full path to the Coach folder:
-   ```
-   # Windows example:
-   CHAINLIT_APP_ROOT=C:\Users\YourName\Documents\coach
-
-   # Mac/Linux example:
-   CHAINLIT_APP_ROOT=/Users/yourname/Documents/coach
-   ```
-
-5. **Fill in the private credentials** on the four blank lines — you will have received these from the person who shared Coach with you:
-   ```
-   OAUTH_GOOGLE_CLIENT_SECRET=...
-   STRAVA_CLIENT_SECRET=...
-   SUPABASE_SECRET_KEY=...
-   CHAINLIT_AUTH_SECRET=...
-   ```
-
-6. Save and close the file.
+| | |
+|---|---|
+| 🔗 **Strava sync** | Activities sync automatically each session — free Strava account supported |
+| 💬 **AI chat** | Multi-turn coaching conversations with your full training context always in view |
+| 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
+| 🔐 **Google login** | No account creation — sign in with your existing Google account |
+| 📝 **Private notes** | Annotate Strava activities with coaching context that only the AI sees |
 
 ---
 
-### Step 5 — Install dependencies
+## 👤 Your profile
 
-Open a terminal, navigate to the Coach folder, and run:
+Your profile is what makes coaching genuinely personal rather than generic. After connecting Strava, you'll be guided through five short sections. Fill in as many or as few as you like — you can skip anything, and come back to edit it all later via the **Edit Profile** button.
 
-```bash
-pip install -e .
-```
+### 💬 Chat preferences
+How you want the coach to talk to you. Prefer concise and direct? Want it to be motivational and warm? Happy to read in another language? This is the place to say so.
 
-This installs everything Coach needs. It may take a minute or two.
+### 🏃 Training preferences
+What you actually enjoy — and what you can't stand — in training. Workout types, formats, recovery habits. This isn't about structuring your plan (the coach figures that out); it's about making sure advice lands in a way that suits how you like to train.
 
----
+### 🧍 Personal background
+Who you are as an athlete. Fitness history, sports background, current activity level, occupation or lifestyle factors that affect how much energy you have. Any health context you're comfortable sharing.
 
-### Step 6 — Run Coach
+### 📅 Constraints
+Your hard limits. How many days a week you can train, preferred time of day, any scheduling restrictions. The coach treats these as non-negotiable when suggesting sessions or weekly structure.
 
-In the same terminal, run:
-
-```bash
-chainlit run coach/web/chainlit_app.py
-```
-
-Your browser will open automatically. If it doesn't, open it and go to [http://localhost:8000](http://localhost:8000).
-
----
-
-### Step 7 — First-time setup (in the browser)
-
-**1. Sign in with Google** — click *Continue with Google* and sign in with your Google account. No new account or password needed.
-
-**2. Connect Strava** — click the *Connect Strava* button and authorize the app. This is a one-time step; your activities will sync automatically from then on.
-
-**3. Set up your profile** *(optional but recommended)* — you'll be guided through 5 short sections: chat preferences, training style, personal background, constraints (available days, etc.), and goals. For each one, just describe yourself in plain language — the AI captures the key points. You can skip any section or come back to edit later via the *Edit Profile* button.
-
-**4. Start coaching** — the coach is ready. Ask anything:
-
-> *"How is my training going?"*
-> *"Give me a plan for next week."*
-> *"Why am I not improving my 5K time?"*
-
----
-
-## 📸 Screenshots
-
-> Screenshots coming soon.
+### 🎯 Goals
+What you're actually working toward. For each goal, you'll describe the sport, the target (a time, a distance, a race), when you want to hit it, and how much it matters relative to everything else. Goals are parsed into structured data so the coach can reason about them precisely.
 
 ---
 
 ## 📝 Private notes
 
-You can give the coach extra context about specific sessions by adding notes to any Strava activity's **private notes** field. Wrap the coaching-relevant part in `$...$`:
+You can give the coach extra context about any session by adding a note to the **private notes** field on a Strava activity. Wrap the coaching-relevant part in `$...$`:
 
 ```
-$5x1km VO2max session @4:30 — felt very hard, knee a bit sore on the last rep$
+$5×1km VO2max session at 4:30 — felt very hard, knee slightly sore on the last rep$
 ```
 
-The coach picks this up automatically. Anything outside the `$...$` markers is ignored, so your personal notes stay private.
+The coach picks this up automatically. Anything outside the `$...$` markers is ignored, so your personal notes stay yours.
 
 ---
 
-## 🧑‍💻 Development
+## 🎬 In action
+
+<details>
+<summary>Login &amp; onboarding &nbsp;— TODO</summary>
+
+> Screenshots coming soon.
+
+</details>
+
+<details>
+<summary>Profile setup &nbsp;— TODO</summary>
+
+> Screenshots coming soon.
+
+</details>
+
+<details>
+<summary>Coaching chat &nbsp;— TODO</summary>
+
+> Screenshots coming soon.
+
+</details>
+
+<details>
+<summary>Editing your profile &nbsp;— TODO</summary>
+
+> Screenshots coming soon.
+
+</details>
+
+---
+
+---
+
+## 🛠 For developers
+
+> This section is for people who want to run their own instance or contribute to the codebase. If you're just here to use Coach, everything above is all you need.
+
+### Prerequisites
+
+- Python 3.13+
+- A Supabase project with the required schema (see CLAUDE.md for SQL steps)
+- A Strava API app (strava.com/settings/api)
+- A Google Cloud OAuth client
+- A Google AI Studio or OpenAI API key
+
+### Running locally
+
+```bash
+git clone https://github.com/t-ded/coach.git
+cd coach
+pip install -e .
+cp .env.example .env   # fill in your credentials
+chainlit run coach/web/chainlit_app.py
+```
+
+Open [http://localhost:8000](http://localhost:8000).
+
+### Development commands
 
 ```bash
 uv sync --group dev   # install with dev dependencies
@@ -165,3 +141,9 @@ ruff check .          # lint
 ruff format .         # format
 mypy .                # type-check
 ```
+
+### Deploying to Railway
+
+The repository includes a `Dockerfile` and `railway.toml`. Connect the repo in Railway, set the required environment variables (see `.env.example`), and Railway builds and deploys automatically on every push to `master`.
+
+Key env vars to set: `STRAVA_REDIRECT_URI`, `CHAINLIT_URL`, `OAUTH_GOOGLE_CLIENT_SECRET`, `STRAVA_CLIENT_SECRET`, `SUPABASE_SECRET_KEY`, `CHAINLIT_AUTH_SECRET`.

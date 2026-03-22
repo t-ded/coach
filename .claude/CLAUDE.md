@@ -140,10 +140,22 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Coach icon branding (`public/coach_icon.png`, configured in `.chainlit/config.toml`)
 - [x] CLI removal: `coach/cli/`, `coach/scripts/`, CLI auth flows, `CredentialsStore` deleted; `typer` removed from deps
 
-### Phase 4 — Launch
-- [ ] Deployment (e.g. Fly.io, Railway, or similar)
+### Phase 4 — Launch ✅
+- [x] Deployment on Railway (Dockerfile-based, GitHub-connected, live at https://coach-production-e0b4.up.railway.app/)
+- [x] README rewritten for hosted app (no installation required for end users)
 - [ ] Enable `pg_cron` extension in Supabase and schedule periodic cleanup of expired `strava_oauth_state` rows
 - [ ] Activity feed / history view in the UI
+
+### Phase 5 — User API key management
+- [ ] Per-user API key storage in Supabase Vault, keyed by `(user_id, provider)`; same Vault pattern as Strava tokens (SECURITY DEFINER RPCs, secret key only)
+- [ ] Load stored key at chat start; fallback chain: user Vault key → operator env key
+- [ ] UI flow: detect missing key, prompt user to enter one, save to Vault; allow removal
+- [ ] Support both `google` and `openai` providers
+
+### Phase 6 — Chat persistence
+- [ ] Store chat threads and messages in Supabase (new `threads` / `messages` tables with RLS)
+- [ ] Load the most recent thread on chat start; restore `ChatHistory` from it
+- [ ] Thread list / history view in the UI sidebar
 
 ## Testing conventions
 
@@ -174,6 +186,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 
 ## GitHub workflow
 
+- `master` is a protected branch — never push directly to it. All changes go through a PR.
 - Group commits into logical units — each commit should represent one coherent, independently buildable change (e.g. one refactor, one feature, one fix). Never mix unrelated changes in a single commit.
 - Always prefer **rebase merge** (`gh pr merge --rebase`) over squash or merge commits to keep a clean linear history
 - **Always `git push` before `gh pr merge --rebase`** — the command merges the remote branch; local-only commits not yet pushed will be silently left behind
