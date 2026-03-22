@@ -3,8 +3,6 @@ import re
 from collections.abc import Mapping
 from typing import Optional
 
-import typer
-
 from coach.builders.utils import compute_distance_duration_pace
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
@@ -128,40 +126,6 @@ class ProfileAssistant(Assistant):
         ]
         return '\n\n'.join(p for p in parts if p) or None
 
-    def setup_profile(self, first_name: Optional[str] = None) -> UserProfile:
-        greeting = f'Welcome, {first_name}!' if first_name else 'Welcome to Coach!'
-        typer.echo(f"\n{greeting} Let's set up your profile so I can give you tailored guidance.\n")
-        typer.echo('For each section, answer the prompt and continue the conversation. Press Enter twice on an empty line to move to the next section.\n')
-
-        self._collected_sections = {}
-        chat_preferences = self._collect_text(ProfileParts.CHAT_PREFERENCES)
-        self._collected_sections[ProfileParts.CHAT_PREFERENCES] = chat_preferences
-
-        training_preferences = self._collect_text(ProfileParts.TRAINING_PREFERENCES)
-        self._collected_sections[ProfileParts.TRAINING_PREFERENCES] = training_preferences
-
-        personal_information = self._collect_text(ProfileParts.PERSONAL_INFORMATION)
-        self._collected_sections[ProfileParts.PERSONAL_INFORMATION] = personal_information
-
-        constraints = self._collect_text(ProfileParts.CONSTRAINTS)
-        self._collected_sections[ProfileParts.CONSTRAINTS] = constraints
-
-        goals_text = self._collect_text(ProfileParts.GOALS)
-
-        typer.echo('\nProfile setup complete! Coach can now provide tailored guidance.\n')
-        return UserProfile(
-            chat_preferences=chat_preferences,
-            training_preferences=training_preferences,
-            personal_information=personal_information,
-            constraints=constraints,
-            goals=_parse_goals(goals_text),
-        )
-
-    def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
-        self._collected_sections = dict(collected_from_profile(profile))
-        new_text = self._collect_text(section)
-        return apply_section_text(profile, section, new_text)
-
     def start_section(self, section: ProfileParts, collected: Mapping[ProfileParts, Optional[str]]) -> str:
         self._history.clear()
         self._current_section = section
@@ -174,51 +138,6 @@ class ProfileAssistant(Assistant):
 
         prompt = self._summarize_goals_prompt if self._current_section == ProfileParts.GOALS else self._summarize_text_prompt
         return self._llm_client.complete(prompt)
-
-    def _collect_text(self, section: ProfileParts) -> Optional[str]:
-        try:
-            self._run_conversation_loop(section)
-            return self.summarize()
-        except (RuntimeError, ValueError) as e:
-            typer.echo(f'Error: {e} when collecting section {section.value}')
-            return None
-
-    def _run_conversation_loop(self, section: ProfileParts) -> None:
-        self._history.clear()
-        self._current_section = section
-        typer.echo(f'\n{SECTION_INTROS[section]}\n')
-        while True:
-            user_input = self._read_input()
-            if not user_input.strip():
-                return
-            typer.echo('Thank you for your input!')
-
-            response = self.get_response(user_input)
-            if re.search(r'(?i)\bDONE[.!]?\s*$', response.strip()):
-                visible = re.sub(r'(?i)\bDONE[.!]?\s*$', '', response).strip()
-                if visible:
-                    typer.echo(f'\nAssistant:\n{visible}\n')
-                return
-
-            typer.echo(f'\nAssistant:\n{response}\n')
-
-    @staticmethod
-    def _read_input() -> str:
-        typer.echo('Your answer (press Enter twice when done): ', nl=False)
-        lines: list[str] = []
-        consecutive_empty = 0
-        while True:
-            line = input()
-            if not line:
-                if not lines:
-                    break
-                consecutive_empty += 1
-                if consecutive_empty >= 2:
-                    break
-            else:
-                consecutive_empty = 0
-                lines.append(line)
-        return '\n'.join(lines)
 
     _GOALS_OUTPUT_FORMAT = """Output one block per goal, separated by blank lines. Each block must contain exactly these labeled lines (leave the value empty if not applicable):
 

@@ -1,4 +1,3 @@
-from coach.domain.goals import Priority
 import re
 import typing
 from collections import defaultdict
@@ -7,10 +6,12 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
-from typing import Optional, NamedTuple
+from typing import NamedTuple
+from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
+from coach.domain.goals import Priority
 from coach.domain.training_summaries import ActivitySummary
 from coach.domain.training_summaries import ActivityVolume
 from coach.domain.training_summaries import WeeklyActivities
