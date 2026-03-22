@@ -5,9 +5,18 @@ import chainlit as cl
 from starlette.routing import Mount
 from supabase import Client
 
+from coach.auth.strava_tokens import SupabaseStravaTokenRepository
+from coach.domain.activity import Activity
+from coach.domain.profile import UserProfile
+from coach.ingestion.strava.client import StravaClient
+from coach.ingestion.strava.sync import sync_strava_for_user
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
+from coach.persistence.repositories.activities import SupabaseActivityRepository
+from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
+from coach.reasoning.coach.coach import Coach
+from coach.reasoning.providers import LLMProvider
 from coach.web.app import create_app
 from coach.web.auth import build_authenticated_client
 from coach.web.auth import refresh_if_needed
@@ -25,6 +34,10 @@ _SESSION_EXPIRES_AT = 'supabase_expires_at'
 # Insert before Chainlit's routes so the SPA catch-all doesn't intercept it
 _fastapi_app = create_app()
 cl.server.app.router.routes.insert(0, Mount('/oauth', app=_fastapi_app))
+
+
+_SESSION_COACH = 'coach'
+_NUM_HISTORY_WEEKS = 8
 
 
 @cl.oauth_callback
@@ -63,16 +76,35 @@ async def on_chat_start() -> None:
     _init_user_session(user)
 
     user_id: str = cl.user_session.get(_SESSION_USER_ID)
-    users_repo = SupabaseUsersRepository(_get_authenticated_client(), user_id)
+    authenticated_client = _get_authenticated_client()
+    users_repo = SupabaseUsersRepository(authenticated_client, user_id)
 
     if not users_repo.get_strava_user_id():
-        actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
-        await cl.Message('To get started, please connect your Strava account.', actions=actions).send()
+        await _connect_strava_user_prompt().send()
         return
 
-    display_name = users_repo.get_display_name()
-    first_name = display_name.split()[0] if display_name else user.identifier.split('@')[0]
-    await cl.Message(f'Hello, {first_name}. Coach is ready. What would you like to work on today?').send()
+    display_name = _get_display_name(users_repo, user.identifier)
+    profile, activities = _load_coaching_data(user_id, authenticated_client)
+    coach = Coach(provider=LLMProvider.GOOGLE, model=None, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
+    cl.user_session.set(_SESSION_COACH, coach)
+
+    await cl.Message(f'Hello, {display_name}. Coach is ready. What would you like to work on today?').send()
+
+
+@cl.on_message
+async def on_message(message: cl.Message) -> None:
+    _ = _get_authenticated_client()  # side-effect: refresh JWT in session if near expiry
+    coach = cl.user_session.get(_SESSION_COACH)
+    if coach is None:
+        await cl.Message('Coach is not initialised — please refresh and reconnect Strava.').send()
+        return
+    reply = coach.get_response(message.content)
+    await cl.Message(reply).send()
+
+
+def _connect_strava_user_prompt() -> cl.Message:
+    actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
+    return cl.Message('To get started, please connect your Strava account.', actions=actions)
 
 
 @cl.action_callback('connect_strava')
@@ -80,6 +112,23 @@ async def on_connect_strava(action: cl.Action) -> None:
     user_id: str = cl.user_session.get(_SESSION_USER_ID)
     url = generate_strava_auth_url(user_id, create_secret_client())
     await cl.Message(f'[Click here to connect Strava]({url})').send()
+
+
+def _get_display_name(users_repo: SupabaseUsersRepository, user_identifier: str) -> str:
+    display_name = users_repo.get_display_name()
+    return display_name.split()[0] if display_name else user_identifier.split('@')[0]
+
+
+def _load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Optional[UserProfile], list[Activity]]:
+    strava_client = StravaClient(user_id, SupabaseStravaTokenRepository(create_secret_client()))
+    activity_repo = SupabaseActivityRepository(authenticated_client, user_id)
+    profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
+
+    sync_strava_for_user(strava_client, activity_repo)
+    profile = profile_repo.load()
+    activities = activity_repo.list_all()
+
+    return profile, activities
 
 
 def _init_user_session(user: cl.User) -> None:
