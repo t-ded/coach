@@ -1,6 +1,7 @@
 [project]
 # List of environment variables to be provided by each user to use the app.
-user_env = ["GOOGLE_AI_API_KEY", "OPENAI_API_KEY"]
+# user_env = ["GOOGLE_AI_API_KEY"]
+user_env = []
 
 # Duration (in seconds) during which the session is saved when the connection is lost
 session_timeout = 3600

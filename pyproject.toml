@@ -21,6 +21,9 @@ dependencies = [
 [tool.uv]
 package = true
 
+[tool.setuptools.packages.find]
+include = ["coach*"]
+
 [tool.mypy]
 no_implicit_reexport = true
 no_error_summary = true
