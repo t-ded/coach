@@ -17,20 +17,6 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
-## ⚡ Quick start
-
-> Already have access to a running deployment? You're three steps away from your first coaching session.
-
-**1. Sign in** — open the app and click **Continue with Google**. No registration form, no password.
-
-**2. Connect Strava** — click the **Connect Strava** button and authorize the app. This is a one-time step; your activities will sync automatically from then on.
-
-**3. Set up your profile** *(optional but recommended)* — the app will offer a short guided setup for your goals, training preferences, and constraints. Each section is a brief conversation — just describe yourself in plain language and the AI captures the key points. You can skip any section or come back to edit later via **Edit Profile**.
-
-**That's it.** Ask your coach anything — *"How is my training going?"*, *"Give me a plan for next week"*, *"Why am I not improving my 5K time?"* — and it will answer based on your actual Strava data.
-
----
-
 ## ✨ Features
 
 | | |
@@ -44,12 +30,29 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
-## 🚀 How it works
+## ⚡ Quick start
 
-1. **Sign in with Google** — one click, no passwords
-2. **Connect Strava** — authorize once; activities sync at the start of every session
-3. **Set up your profile** — a 5-section guided flow (chat style, training preferences, background, constraints, and goals); each section is a short AI-powered conversation
-4. **Start coaching** — ask about your week, request a training plan, or dig into your progress
+### What you need
+
+- A **Google account** — free, used for login
+- A **Strava account** — free; even the basic account works
+- Access to a **running deployment** of Coach (see [Self-hosting](#-self-hosting) below if you want to run your own)
+
+### First time
+
+**1. Sign in** — open the app and click **Continue with Google**. No registration form, no password.
+
+**2. Connect Strava** — click the **Connect Strava** button and authorize the app. One-time step; your activities sync automatically every session after this.
+
+**3. Set up your profile** *(optional but recommended)* — after connecting Strava you'll be offered a short guided setup covering your goals, training preferences, and constraints. Each section is a brief conversation: describe yourself in plain language and the AI captures the key points. Skip any section or come back to edit later via **Edit Profile**.
+
+**4. Start coaching** — ask anything:
+
+> *"How is my training going?"*
+> *"Give me a plan for next week."*
+> *"Why am I not improving my 5K time?"*
+
+The coach always answers from your actual Strava data.
 
 ---
 
@@ -76,7 +79,28 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
-## 🛠 Running the app
+## 📝 Private notes
+
+You can give the coach extra context that doesn't fit neatly into your profile by annotating individual Strava activities. Add anything coaching-relevant to the activity's **private notes** field on Strava, wrapped in `$...$`:
+
+```
+$5x1km VO2max session @4:30 — felt very hard, knee a bit sore on the last rep$
+```
+
+The coach picks this up automatically. Anything outside the delimiters is ignored, so your personal notes stay personal.
+
+---
+
+## 🖥 Self-hosting
+
+Running your own instance requires a few external services, all of which have free tiers:
+
+| Service | What it's used for | Free tier |
+|---|---|---|
+| [Supabase](https://supabase.com) | Database, auth, and secret storage | ✅ |
+| [Strava API app](https://www.strava.com/settings/api) | OAuth access to user activities | ✅ |
+| [Google Cloud OAuth](https://console.cloud.google.com) | Google login for users | ✅ |
+| [Google AI Studio](https://aistudio.google.com/apikey) | LLM API key | ✅ free quota |
 
 ### Environment variables
 
@@ -84,12 +108,12 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 | Variable | Description |
 |---|---|
-| `SUPABASE_SECRET_KEY` | Supabase service role key (used for Vault RPC calls) |
+| `SUPABASE_SECRET_KEY` | Supabase service role key (for Vault RPC calls) |
 | `STRAVA_CLIENT_ID` | Strava API application client ID |
 | `STRAVA_CLIENT_SECRET` | Strava API application client secret |
 | `OAUTH_GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `OAUTH_GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `CHAINLIT_AUTH_SECRET` | Random secret for Chainlit session signing |
+| `CHAINLIT_AUTH_SECRET` | Random secret for Chainlit session signing (any long random string) |
 | `GOOGLE_AI_API_KEY` | Operator-provided Google AI Studio key |
 
 **Optional / local overrides:**
@@ -107,18 +131,6 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 ```bash
 chainlit run coach/web/chainlit_app.py
 ```
-
----
-
-## 📝 Private notes
-
-Add coaching-relevant context to any Strava activity's private notes using `$...$` delimiters:
-
-```
-$5x1km VO2max session @4:30 — felt very hard, knee a bit sore on the last rep$
-```
-
-The coach extracts and uses this information when analysing your training. Anything outside the delimiters is ignored, so you can keep personal notes alongside coaching notes in the same field.
 
 ---
 
