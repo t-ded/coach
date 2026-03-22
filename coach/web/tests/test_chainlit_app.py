@@ -5,7 +5,40 @@ from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.web.chainlit_app import _get_display_name
+from coach.web.chainlit_app import _is_done
 from coach.web.chainlit_app import _load_coaching_data
+from coach.web.chainlit_app import _strip_done
+
+
+class TestIsDone:
+    def test_returns_true_for_done_at_end(self) -> None:
+        assert _is_done('Nice work. DONE') is True
+
+    def test_returns_true_with_punctuation(self) -> None:
+        assert _is_done('Great session! DONE.') is True
+
+    def test_returns_true_case_insensitive(self) -> None:
+        assert _is_done('done') is True
+
+    def test_returns_false_when_done_not_at_end(self) -> None:
+        assert _is_done('DONE but there is more') is False
+
+    def test_returns_false_for_regular_message(self) -> None:
+        assert _is_done('Keep up the good work!') is False
+
+
+class TestStripDone:
+    def test_strips_done_from_end(self) -> None:
+        assert _strip_done('Nice work. DONE') == 'Nice work.'
+
+    def test_strips_done_with_exclamation(self) -> None:
+        assert _strip_done('Great session! DONE!') == 'Great session!'
+
+    def test_no_change_when_no_done(self) -> None:
+        assert _strip_done('Keep it up!') == 'Keep it up!'
+
+    def test_strips_done_leaving_empty_string(self) -> None:
+        assert _strip_done('DONE') == ''
 
 
 class TestGetDisplayName:
