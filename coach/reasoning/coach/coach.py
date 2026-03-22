@@ -19,11 +19,11 @@ class Coach(Assistant):
         profile: Optional[UserProfile],
         activities: list[Activity],
         num_history_weeks: int,
-        first_name: Optional[str] = None,
+        user_display_name: Optional[str] = None,
     ) -> None:
         super().__init__(provider=provider, model=model)
         self._profile = profile
-        self._first_name = first_name
+        self._first_name = user_display_name or 'Athlete'
         self._additional_context_attr = build_coach_context(
             profile=profile,
             activities=activities,
@@ -32,7 +32,7 @@ class Coach(Assistant):
         )
 
     def run_chat_loop(self) -> None:
-        greeting = f'Ready, {self._first_name}.' if self._first_name else 'Coach ready.'
+        greeting = f'Hello, {self._first_name}. Coach ready.'
         typer.echo(f'{greeting} Type your question (Ctrl+C to exit).\n')
         while True:
             try:

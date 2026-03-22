@@ -25,14 +25,7 @@ def chat_callback(
     profile = SupabaseUserProfileRepository(session.client, session.user_id).load()
     activities = SupabaseActivityRepository(session.client, session.user_id).list_all()
 
-    coach = Coach(
-        provider=LLMProvider(provider.lower()),
-        model=model,
-        profile=profile,
-        activities=activities,
-        num_history_weeks=num_history_weeks,
-        first_name=session.first_name,
-    )
+    coach = Coach(provider=LLMProvider(provider.lower()), model=model, profile=profile, activities=activities, num_history_weeks=num_history_weeks, user_display_name=session.first_name)
     ctx.obj = coach
 
     if ctx.invoked_subcommand is None:
