@@ -17,6 +17,20 @@ No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
+## ⚡ Quick start
+
+> Already have access to a running deployment? You're three steps away from your first coaching session.
+
+**1. Sign in** — open the app and click **Continue with Google**. No registration form, no password.
+
+**2. Connect Strava** — click the **Connect Strava** button and authorize the app. This is a one-time step; your activities will sync automatically from then on.
+
+**3. Set up your profile** *(optional but recommended)* — the app will offer a short guided setup for your goals, training preferences, and constraints. Each section is a brief conversation — just describe yourself in plain language and the AI captures the key points. You can skip any section or come back to edit later via **Edit Profile**.
+
+**That's it.** Ask your coach anything — *"How is my training going?"*, *"Give me a plan for next week"*, *"Why am I not improving my 5K time?"* — and it will answer based on your actual Strava data.
+
+---
+
 ## ✨ Features
 
 | | |
