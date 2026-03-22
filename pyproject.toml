@@ -36,7 +36,7 @@ disallow_any_generics = false
 mypy_path = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["coach.web.chainlit_app", "coach.web.google_oauth"]
+module = ["coach.web.chainlit_app", "coach.web.coaching", "coach.web.google_oauth", "coach.web.profile_flow", "coach.web.session"]
 disallow_untyped_calls = false
 
 [tool.ruff]

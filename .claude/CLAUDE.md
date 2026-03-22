@@ -73,7 +73,10 @@ The app is a CLI tool (entry point: `coach/cli/app.py`) that syncs Strava activi
 **Web app** (`coach/web/`):
 - `coach/web/app.py` — FastAPI app factory (`create_app()`); runnable via `uvicorn coach.web.app:app`
 - `coach/web/strava_oauth.py` — `generate_strava_auth_url(user_id, secret_client)` inserts CSRF state + returns auth URL; `GET /auth/strava/callback` verifies state, exchanges code, stores tokens, redirects to `CHAINLIT_URL`; mounted at `/oauth` on Chainlit's Starlette server
-- `coach/web/chainlit_app.py` — Chainlit app; `@cl.oauth_callback` exchanges Google ID token for Supabase JWT; `on_chat_start` gates on `strava_user_id`, shows Connect Strava action if missing; FastAPI sub-app mounted via `cl.server.app.router.routes.insert(0, Mount('/oauth', app=...))` — **not** `cl.server.app.mount()`, which would append after Chainlit's SPA catch-all and never be reached
+- `coach/web/session.py` — auth session helpers (`init_user_session`, `get_authenticated_client`, `get_user_id`) + shared session key constants for auth tokens; imported by `chainlit_app.py` and `profile_flow.py`
+- `coach/web/coaching.py` — coach setup (`init_coach_session`), data loading (`load_coaching_data`), `get_display_name`; owns shared session key constants (`SESSION_ACTIVITIES`, `SESSION_DISPLAY_NAME`, `SESSION_CURRENT_PROFILE`, `SESSION_COACH`, `SESSION_MODE`, `MODE_COACH`, `MODE_PROFILE`) imported by `profile_flow.py` and `chainlit_app.py`
+- `coach/web/profile_flow.py` — profile setup/editing flow: `handle_profile_message`, `handle_start_profile_setup`, `handle_skip_to_coaching`, `handle_skip_section`, `handle_edit_profile`, `handle_edit_section`; `prompt_profile_setup`; pure helpers `is_done`, `strip_done`, `setup_progress_message`; deduplication via `_advance_profile_flow(profile, done_message)`
+- `coach/web/chainlit_app.py` — thin Chainlit wiring only: `@cl.oauth_callback`, `@cl.on_chat_start`, `@cl.on_message`, and `@cl.action_callback` stubs that delegate to `session`/`coaching`/`profile_flow`; FastAPI sub-app mounted via `cl.server.app.router.routes.insert(0, Mount('/oauth', app=...))` — **not** `cl.server.app.mount()`, which would append after Chainlit's SPA catch-all and never be reached
 - Uses the Supabase **secret key** (`SUPABASE_SECRET_KEY`) for all Vault RPC calls; uses anon key + user JWT to verify caller identity
 - Testing: inject mock client via `app.dependency_overrides[create_secret_client] = lambda: mock` (import `create_secret_client` from `coach.persistence.database`); mock Supabase fluent chain as `mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [...]`
 - `FastAPI TestClient` requires `httpx` as a dev dependency
@@ -143,7 +146,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [x] Google OAuth login via Supabase Auth (no CLI auth needed)
 - [x] Strava connect flow in the web UI: detect missing `strava_user_id` on `chat_start`, show "Connect Strava" action button; mount `coach/web/` FastAPI app on Chainlit's underlying Starlette app
 - [x] Incremental Strava sync on `chat_start` (calls `sync_strava_for_user`)
-- [ ] Per-user profile editing in the web UI
+- [x] Per-user profile editing in the web UI
 - [x] Operator-provided Google AI Studio key (no user configuration needed)
 
 ### Phase 4 — Launch
