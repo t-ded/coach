@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -16,6 +17,9 @@ from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
+from coach.reasoning.profile_assistant.profile import ProfileAssistant
+from coach.reasoning.profile_assistant.profile import apply_section_text
+from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
 from coach.web.app import create_app
 from coach.web.auth import build_authenticated_client
@@ -37,6 +41,17 @@ cl.server.app.router.routes.insert(0, Mount('/oauth', app=_fastapi_app))
 
 
 _SESSION_COACH = 'coach'
+_SESSION_MODE = 'mode'
+_SESSION_PROFILE_ASSISTANT = 'profile_assistant'
+_SESSION_COLLECTED_SECTIONS = 'collected_sections'
+_SESSION_CURRENT_SECTION = 'current_section'
+_SESSION_CURRENT_PROFILE = 'current_profile'
+_SESSION_ACTIVITIES = 'activities'
+_SESSION_DISPLAY_NAME = 'display_name'
+
+_MODE_COACH = 'coach'
+_MODE_PROFILE = 'profile'
+
 _NUM_HISTORY_WEEKS = 8
 
 
@@ -85,21 +100,82 @@ async def on_chat_start() -> None:
 
     display_name = _get_display_name(users_repo, user.identifier)
     profile, activities = _load_coaching_data(user_id, authenticated_client)
-    coach = Coach(provider=LLMProvider.GOOGLE, model=None, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
-    cl.user_session.set(_SESSION_COACH, coach)
 
+    cl.user_session.set(_SESSION_DISPLAY_NAME, display_name)
+    cl.user_session.set(_SESSION_ACTIVITIES, activities)
+    cl.user_session.set(_SESSION_CURRENT_PROFILE, profile)
+
+    _init_coach_session(profile, activities, display_name)
     await cl.Message(f'Hello, {display_name}. Coach is ready. What would you like to work on today?').send()
 
 
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
     _ = _get_authenticated_client()  # side-effect: refresh JWT in session if near expiry
-    coach = cl.user_session.get(_SESSION_COACH)
-    if coach is None:
-        await cl.Message('Coach is not initialised — please refresh and reconnect Strava.').send()
-        return
-    reply = coach.get_response(message.content)
-    await cl.Message(reply).send()
+    mode = cl.user_session.get(_SESSION_MODE)
+
+    if mode == _MODE_PROFILE:
+        await _handle_profile_message(message.content)
+    else:
+        coach = cl.user_session.get(_SESSION_COACH)
+        if coach is None:
+            await cl.Message('Coach is not initialised — please refresh and reconnect Strava.').send()
+            return
+        reply = coach.get_response(message.content)
+        await cl.Message(reply).send()
+
+
+async def _handle_profile_message(user_input: str) -> None:
+    profile_assistant: ProfileAssistant = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
+    response = profile_assistant.get_response(user_input)
+
+    if _is_done(response):
+        visible = _strip_done(response)
+        if visible:
+            await cl.Message(visible).send()
+        await _complete_current_section()
+    else:
+        await cl.Message(response).send()
+
+
+async def _complete_current_section() -> None:
+    profile_assistant: ProfileAssistant = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
+    current_section: ProfileParts = cl.user_session.get(_SESSION_CURRENT_SECTION)
+    collected: dict[ProfileParts, Optional[str]] = cl.user_session.get(_SESSION_COLLECTED_SECTIONS)
+
+    section_text = profile_assistant.summarize()
+    collected[current_section] = section_text
+    cl.user_session.set(_SESSION_COLLECTED_SECTIONS, collected)
+
+    current_profile: Optional[UserProfile] = cl.user_session.get(_SESSION_CURRENT_PROFILE)
+    updated_profile = apply_section_text(current_profile, current_section, section_text)
+    cl.user_session.set(_SESSION_CURRENT_PROFILE, updated_profile)
+
+    authenticated_client = _get_authenticated_client()
+    user_id: str = cl.user_session.get(_SESSION_USER_ID)
+    profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
+    profile_repo.save(updated_profile)
+
+    await cl.Message(f'✓ {current_section.title()} saved.').send()
+
+    activities: list[Activity] = cl.user_session.get(_SESSION_ACTIVITIES)
+    display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
+    _init_coach_session(updated_profile, activities, display_name)
+    await cl.Message('Profile updated — coach restarted with your latest profile.').send()
+
+
+def _init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
+    coach = Coach(provider=LLMProvider.GOOGLE, model=None, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
+    cl.user_session.set(_SESSION_COACH, coach)
+    cl.user_session.set(_SESSION_MODE, _MODE_COACH)
+
+
+def _is_done(response: str) -> bool:
+    return bool(re.search(r'(?i)\bDONE[.!]?\s*$', response.strip()))
+
+
+def _strip_done(response: str) -> str:
+    return re.sub(r'(?i)\bDONE[.!]?\s*$', '', response).strip()
 
 
 def _connect_strava_user_prompt() -> cl.Message:
