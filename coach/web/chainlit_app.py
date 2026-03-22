@@ -19,6 +19,7 @@ from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.profile import apply_section_text
+from coach.reasoning.profile_assistant.profile import collected_from_profile
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
 from coach.web.app import create_app
@@ -112,7 +113,8 @@ async def on_chat_start() -> None:
         return
 
     _init_coach_session(profile, activities, display_name)
-    await cl.Message(f'Hello, {display_name}. Coach is ready. What would you like to work on today?').send()
+    edit_action = cl.Action(name='edit_profile', payload={}, label='Edit Profile')
+    await cl.Message(f'Hello, {display_name}. Coach is ready. What would you like to work on today?', actions=[edit_action]).send()
 
 
 @cl.on_message
@@ -176,7 +178,8 @@ async def _complete_current_section() -> None:
             cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
             await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
         else:
-            await cl.Message('Profile updated — coach restarted with your latest profile.').send()
+            edit_action = cl.Action(name='edit_profile', payload={}, label='Edit Profile')
+            await cl.Message('Profile updated — coach restarted with your latest profile.', actions=[edit_action]).send()
 
 
 def _init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
@@ -248,8 +251,13 @@ async def on_skip_section(action: cl.Action) -> None:
         display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
         current_profile: Optional[UserProfile] = cl.user_session.get(_SESSION_CURRENT_PROFILE)
         _init_coach_session(current_profile, activities, display_name)
-        cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
-        await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
+        is_setup: bool = cl.user_session.get(_SESSION_IS_SETUP_MODE, default=False)
+        if is_setup:
+            cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
+            await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
+        else:
+            edit_action = cl.Action(name='edit_profile', payload={}, label='Edit Profile')
+            await cl.Message('Returned to coaching.', actions=[edit_action]).send()
 
 
 async def _enter_next_section() -> None:
@@ -269,6 +277,33 @@ async def _enter_next_section() -> None:
     actions = [cl.Action(name='skip_section', payload={}, label='Skip this section')]
     cl.user_session.set(_SESSION_MODE, _MODE_PROFILE)
     await cl.Message(f'{progress}\n\n{intro}', actions=actions).send()
+
+
+@cl.action_callback('edit_profile')
+async def on_edit_profile(action: cl.Action) -> None:
+    section_actions = [cl.Action(name='edit_section', payload={'section': section.value}, label=section.title()) for section in ProfileParts]
+    await cl.Message('Which section would you like to edit?', actions=section_actions).send()
+
+
+@cl.action_callback('edit_section')
+async def on_edit_section(action: cl.Action) -> None:
+    section = ProfileParts(action.payload['section'])
+    current_profile: Optional[UserProfile] = cl.user_session.get(_SESSION_CURRENT_PROFILE)
+
+    profile_assistant: Optional[ProfileAssistant] = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
+    if profile_assistant is None:
+        profile_assistant = ProfileAssistant(provider=LLMProvider.GOOGLE, model=None)
+        cl.user_session.set(_SESSION_PROFILE_ASSISTANT, profile_assistant)
+
+    collected = collected_from_profile(current_profile) if current_profile else {}
+    cl.user_session.set(_SESSION_COLLECTED_SECTIONS, collected)
+    cl.user_session.set(_SESSION_SECTIONS_QUEUE, [])
+    cl.user_session.set(_SESSION_CURRENT_SECTION, section)
+
+    intro = profile_assistant.start_section(section, collected)
+    skip_action = cl.Action(name='skip_section', payload={}, label='Skip this section')
+    cl.user_session.set(_SESSION_MODE, _MODE_PROFILE)
+    await cl.Message(intro, actions=[skip_action]).send()
 
 
 def _connect_strava_user_prompt() -> cl.Message:
