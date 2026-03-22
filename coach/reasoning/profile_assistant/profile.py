@@ -165,7 +165,7 @@ class ProfileAssistant(Assistant):
                 return
             typer.echo('Thank you for your input!')
 
-            response = self._get_response(user_input)
+            response = self.get_response(user_input)
             if re.search(r'(?i)\bDONE[.!]?\s*$', response.strip()):
                 visible = re.sub(r'(?i)\bDONE[.!]?\s*$', '', response).strip()
                 if visible:

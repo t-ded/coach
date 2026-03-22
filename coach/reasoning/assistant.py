@@ -44,7 +44,7 @@ class Assistant(ABC):
     def _additional_context(self) -> Optional[str]:
         return None
 
-    def _get_response(self, user_input: str) -> str:
+    def get_response(self, user_input: str) -> str:
         response = self._llm_client.complete(self._build_prompt(user_input))
         self._history.add(ChatTurn(role='user', content=user_input))
         self._history.add(ChatTurn(role='assistant', content=response))
