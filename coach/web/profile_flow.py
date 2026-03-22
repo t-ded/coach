@@ -9,6 +9,7 @@ from coach.persistence.repositories.profiles import SupabaseUserProfileRepositor
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.profile import apply_section_text
 from coach.reasoning.profile_assistant.profile import collected_from_profile
+from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
 from coach.web import coaching
@@ -59,6 +60,13 @@ async def handle_profile_message(user_input: str) -> None:
         await cl.Message(response).send()
 
 
+def _save_profile(profile: UserProfile) -> None:
+    authenticated_client = session.get_authenticated_client()
+    user_id = session.get_user_id()
+    profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
+    profile_repo.save(profile)
+
+
 async def _complete_current_section() -> None:
     profile_assistant: ProfileAssistant = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
     current_section: ProfileParts = cl.user_session.get(_SESSION_CURRENT_SECTION)
@@ -72,10 +80,7 @@ async def _complete_current_section() -> None:
     updated_profile = apply_section_text(current_profile, current_section, section_text)
     cl.user_session.set(coaching.SESSION_CURRENT_PROFILE, updated_profile)
 
-    authenticated_client = session.get_authenticated_client()
-    user_id = session.get_user_id()
-    profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
-    profile_repo.save(updated_profile)
+    _save_profile(updated_profile)
 
     await cl.Message(f'✓ {current_section.title()} saved.').send()
     await _advance_profile_flow(updated_profile, 'Profile updated — coach restarted with your latest profile.')
@@ -130,11 +135,42 @@ async def handle_edit_section(section: ProfileParts) -> None:
     cl.user_session.set(_SESSION_COLLECTED_SECTIONS, collected)
     cl.user_session.set(_SESSION_SECTIONS_QUEUE, [])
     cl.user_session.set(_SESSION_CURRENT_SECTION, section)
-
-    intro = profile_assistant.start_section(section, collected)
-    skip_action = cl.Action(name='skip_section', payload={}, label='Skip this section')
     cl.user_session.set(coaching.SESSION_MODE, coaching.MODE_PROFILE)
-    await cl.Message(intro, actions=[skip_action]).send()
+
+    profile_assistant.start_section(section, collected)
+    existing_text = collected.get(section)
+
+    if existing_text:
+        await cl.Message(
+            f'**Your current {section.title()}:**\n\n{existing_text}\n\nWhat would you like to change? '
+            'Type below, or use the buttons to keep or discard this section.',
+            actions=[
+                cl.Action(name='keep_section', payload={}, label='Keep as is'),
+                cl.Action(name='discard_section', payload={}, label='Discard section'),
+            ],
+        ).send()
+    else:
+        await cl.Message(SECTION_INTROS[section], actions=[cl.Action(name='skip_section', payload={}, label='Skip this section')]).send()
+
+
+async def handle_keep_section() -> None:
+    current_profile: Optional[UserProfile] = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
+    current_section: ProfileParts = cl.user_session.get(_SESSION_CURRENT_SECTION)
+    await cl.Message(f'{current_section.title()} kept as is.').send()
+    await _advance_profile_flow(current_profile, 'No changes made — coach still running with your current profile.')
+
+
+async def handle_discard_section() -> None:
+    current_section: ProfileParts = cl.user_session.get(_SESSION_CURRENT_SECTION)
+    current_profile: Optional[UserProfile] = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
+
+    discarded_profile = apply_section_text(current_profile, current_section, None)
+    cl.user_session.set(coaching.SESSION_CURRENT_PROFILE, discarded_profile)
+
+    _save_profile(discarded_profile)
+
+    await cl.Message(f'✓ {current_section.title()} discarded.').send()
+    await _advance_profile_flow(discarded_profile, 'Section discarded — coach restarted with your updated profile.')
 
 
 async def _enter_next_section() -> None:

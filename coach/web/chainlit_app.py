@@ -124,6 +124,16 @@ async def on_edit_section(action: cl.Action) -> None:
     await profile_flow.handle_edit_section(section)
 
 
+@cl.action_callback('keep_section')
+async def on_keep_section(action: cl.Action) -> None:
+    await profile_flow.handle_keep_section()
+
+
+@cl.action_callback('discard_section')
+async def on_discard_section(action: cl.Action) -> None:
+    await profile_flow.handle_discard_section()
+
+
 @cl.action_callback('connect_strava')
 async def on_connect_strava(action: cl.Action) -> None:
     user_id = session.get_user_id()

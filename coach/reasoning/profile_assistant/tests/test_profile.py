@@ -5,6 +5,7 @@ from coach.domain.profile import UserProfile
 from coach.reasoning.profile_assistant.profile import ProfileAssistant
 from coach.reasoning.profile_assistant.profile import apply_section_text
 from coach.reasoning.profile_assistant.profile import collected_from_profile
+from coach.reasoning.profile_assistant.system_prompts import EDIT_PROMPTS
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
@@ -108,6 +109,49 @@ class TestProfileAssistantSummarize:
         self._mock_client.complete.reset_mock()
         self._assistant.summarize()
         self._mock_client.complete.assert_called_once()
+
+    def test_edit_mode_summarize_includes_original_text(self) -> None:
+        collected = {ProfileParts.CHAT_PREFERENCES: '- Prefers short answers\n- No emojis'}
+        self._assistant.start_section(ProfileParts.CHAT_PREFERENCES, collected)
+        self._assistant.get_response('Actually I want longer answers now')
+        self._mock_client.complete.reset_mock()
+        self._assistant.summarize()
+        prompt = self._mock_client.complete.call_args[0][0]
+        assert '- Prefers short answers' in prompt
+        assert 'incorporating' in prompt.lower() or 'preserving' in prompt.lower() or 'unchanged' in prompt.lower()
+
+    def test_edit_mode_goals_summarize_includes_original_goals(self) -> None:
+        original_goals = 'Run a 5k (5.0km) in 25:00 by N/A (MEDIUM priority)'
+        collected = {ProfileParts.GOALS: original_goals}
+        self._assistant.start_section(ProfileParts.GOALS, collected)
+        self._assistant.get_response('Update the 5k target to 22 minutes')
+        self._mock_client.complete.reset_mock()
+        self._assistant.summarize()
+        prompt = self._mock_client.complete.call_args[0][0]
+        assert original_goals in prompt
+        assert 'ALL' in prompt or 'all' in prompt or 'unchanged' in prompt.lower()
+
+
+class TestProfileAssistantEditMode:
+    def setup_method(self) -> None:
+        self._mock_client = MagicMock()
+        self._mock_client.complete.return_value = 'Some response'
+        with patch('coach.reasoning.assistant.create_llm_client', return_value=self._mock_client):
+            self._assistant = ProfileAssistant(provider=LLMProvider.GOOGLE, model=None)
+
+    def test_edit_mode_uses_edit_prompt_when_section_has_existing_content(self) -> None:
+        collected = {ProfileParts.TRAINING_PREFERENCES: '- Runs 5x per week'}
+        self._assistant.start_section(ProfileParts.TRAINING_PREFERENCES, collected)
+        self._assistant.get_response('I want to add swimming')
+        prompt_used = self._mock_client.complete.call_args[0][0]
+        assert EDIT_PROMPTS[ProfileParts.TRAINING_PREFERENCES] in prompt_used
+
+    def test_collection_mode_uses_conversation_prompt_when_section_is_empty(self) -> None:
+        from coach.reasoning.profile_assistant.system_prompts import CONVERSATION_PROMPTS
+        self._assistant.start_section(ProfileParts.TRAINING_PREFERENCES, {})
+        self._assistant.get_response('I run 5 times a week')
+        prompt_used = self._mock_client.complete.call_args[0][0]
+        assert CONVERSATION_PROMPTS[ProfileParts.TRAINING_PREFERENCES] in prompt_used
 
 
 class TestCollectedFromProfile:

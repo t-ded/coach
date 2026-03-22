@@ -14,6 +14,7 @@ from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
 from coach.reasoning.coach.context import render_training_goal
 from coach.reasoning.profile_assistant.system_prompts import CONVERSATION_PROMPTS
+from coach.reasoning.profile_assistant.system_prompts import EDIT_PROMPTS
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
@@ -111,8 +112,12 @@ class ProfileAssistant(Assistant):
         self._current_section: ProfileParts = ProfileParts.CHAT_PREFERENCES
         self._collected_sections: dict[ProfileParts, Optional[str]] = {}
 
+    @property
+    def _is_editing(self) -> bool:
+        return bool(self._collected_sections.get(self._current_section))
+
     def _system_prompt(self) -> str:
-        return CONVERSATION_PROMPTS[self._current_section]
+        return EDIT_PROMPTS[self._current_section] if self._is_editing else CONVERSATION_PROMPTS[self._current_section]
 
     def _additional_context(self) -> Optional[str]:
         other_sections = self._collected_sections.copy()
@@ -153,7 +158,7 @@ class ProfileAssistant(Assistant):
         )
 
     def edit_section(self, section: ProfileParts, profile: UserProfile) -> UserProfile:
-        self._collected_sections = {part: _section_text(profile, part) for part in ProfileParts}
+        self._collected_sections = dict(collected_from_profile(profile))
         new_text = self._collect_text(section)
         return apply_section_text(profile, section, new_text)
 
@@ -215,8 +220,34 @@ class ProfileAssistant(Assistant):
                 lines.append(line)
         return '\n'.join(lines)
 
+    _GOALS_OUTPUT_FORMAT = """Output one block per goal, separated by blank lines. Each block must contain exactly these labeled lines (leave the value empty if not applicable):
+
+Name: <goal name>
+Sport: <Run | Ride | Swim | Walk | WeightTraining | Other>
+Date: <YYYY-MM-DD | N/A>
+Priority: <LOW | MEDIUM | HIGH | VERY HIGH>
+Distance: <distance in meters, or empty>
+Duration: <duration in seconds, or empty>
+Notes: <any additional notes, or empty>
+
+The formatting is absolutely crucial for automatic parsing. No other text, no headings, no numbering — just the labeled blocks."""
+
     @property
     def _summarize_text_prompt(self) -> str:
+        original = self._collected_sections.get(self._current_section)
+        if original:
+            return f"""Below is a conversation where a user described updates to their {self._current_section} for an AI coaching assistant.
+
+Original {self._current_section}:
+{original}
+
+Conversation about requested changes:
+{self._history.render()}
+
+Produce an updated {self._current_section} that incorporates the requested changes while preserving all other information unchanged.
+
+Updated {self._current_section} (bullet points only, no preamble):
+"""
         return f"""
 Below is a conversation where a user described their {self._current_section} for an AI coaching assistant.
 
@@ -231,21 +262,24 @@ Summary (bullet points only, no preamble):
 
     @property
     def _summarize_goals_prompt(self) -> str:
+        original = self._collected_sections.get(self._current_section)
+        if original:
+            return f"""Below is a conversation where a user described updates to their training goals for an AI coaching assistant.
+
+Current goals:
+{original}
+
+Conversation about requested changes:
+{self._history.render()}
+
+{self._GOALS_OUTPUT_FORMAT}
+
+Apply only the changes the user requested. Include ALL goals — both changed and unchanged — in the output.
+"""
         return f"""
 Below is a conversation where a user described their training goals for an AI coaching assistant.
 
-Output one block per goal, separated by blank lines. Each block must contain exactly these labeled lines (leave the value empty if not applicable):
-
-Name: <goal name>
-Sport: <Run | Ride | Swim | Walk | WeightTraining | Other>
-Date: <YYYY-MM-DD | N/A>
-Priority: <LOW | MEDIUM | HIGH | VERY HIGH>
-Distance: <distance in meters, or empty>
-Duration: <duration in seconds, or empty>
-Notes: <any additional notes, or empty>
-
-The formatting is absolutely crucial, so that the response can be automatically parsed.
-No other text, no headings, no numbering — just the labeled blocks.
+{self._GOALS_OUTPUT_FORMAT}
 
 Conversation:
 {self._history.render()}
