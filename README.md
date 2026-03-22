@@ -1,71 +1,94 @@
-![Coach](public/coach_icon.png)
+<div align="center">
+  <img src="public/coach_icon.png" alt="Coach" width="96" />
 
-# Coach
+  # Coach
 
-An AI-powered training coach that provides **personalized coaching advice** based on your Strava activity data. Sign in with Google, connect Strava once, and get an AI coach that knows your recent training history, personal bests, and goals — always up to date.
+  **An AI training coach that knows your Strava data**
 
----
+  *Sign in with Google · Connect Strava · Chat with your coach*
 
-## Features
-
-- **Strava integration**: Activities sync automatically from Strava (free account supported)
-- **AI coaching chat**: Interactive multi-turn conversations with context from your recent training
-- **Personalized profile**: Set your goals, constraints, training preferences, and communication style through a guided setup flow
-- **Private notes**: Add coaching-relevant context to Strava activity notes using `$...$` delimiters
-- **Google login**: No account creation — sign in with your existing Google account
-- **Bring your own key**: Optionally supply a Google AI or OpenAI API key; the app falls back to the operator-provided key when none is given
+</div>
 
 ---
 
-## How it works
+Coach is a personalized AI coaching assistant that lives in your browser. It reads your recent Strava activities, personal bests, and training profile — and gives you thoughtful, data-grounded advice in a natural chat.
 
-1. **Sign in with Google** — authentication is handled via Google OAuth through Supabase Auth
-2. **Connect Strava** — click the "Connect Strava" button; your activities sync automatically each session
-3. **Set up your profile** — a guided 5-section flow collects your chat preferences, training style, background, constraints, and goals; each section is a short AI-powered conversation
-4. **Start coaching** — ask about your training, request weekly plans, or explore your progress; the coach always has your latest Strava data in context
+No setup, no CLI, no CSV exports. Just log in and start coaching.
 
 ---
 
-## Screenshots
+## ✨ Features
 
-### Login
-
-![Login screen](public/screenshots/login.png)
-
-### Strava connect prompt
-
-![Strava connect](public/screenshots/strava_connect.png)
-
-### Profile setup
-
-![Profile setup](public/screenshots/profile_setup.png)
-
-### Coaching chat
-
-![Coaching chat](public/screenshots/coaching_chat.png)
+| | |
+|---|---|
+| 🔗 **Strava sync** | Activities sync automatically each session — free Strava account supported |
+| 💬 **AI chat** | Multi-turn coaching conversations with your full training context always in view |
+| 👤 **Personalized profile** | Guided setup for goals, constraints, training preferences, and communication style |
+| 🔐 **Google login** | No account creation — sign in with your existing Google account |
+| 📝 **Private notes** | Annotate Strava activities with coaching context using `$...$` delimiters |
+| 🔑 **Bring your own key** | Optionally supply a Google AI or OpenAI API key; falls back to the operator key silently |
 
 ---
 
-## Running the app
+## 🚀 How it works
 
-### Required environment variables
+1. **Sign in with Google** — one click, no passwords
+2. **Connect Strava** — authorize once; activities sync at the start of every session
+3. **Set up your profile** — a 5-section guided flow (chat style, training preferences, background, constraints, and goals); each section is a short AI-powered conversation
+4. **Start coaching** — ask about your week, request a training plan, or dig into your progress
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>Login</b></td>
+    <td align="center"><b>Strava connect</b></td>
+  </tr>
+  <tr>
+    <td><img src="public/screenshots/login.png" alt="Login screen" /></td>
+    <td><img src="public/screenshots/strava_connect.png" alt="Strava connect" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Profile setup</b></td>
+    <td align="center"><b>Coaching chat</b></td>
+  </tr>
+  <tr>
+    <td><img src="public/screenshots/profile_setup.png" alt="Profile setup" /></td>
+    <td><img src="public/screenshots/coaching_chat.png" alt="Coaching chat" /></td>
+  </tr>
+</table>
+
+---
+
+## 🛠 Running the app
+
+### Environment variables
+
+**Required:**
 
 | Variable | Description |
 |---|---|
-| `SUPABASE_URL` | Supabase project URL (optional — defaults to the project default) |
-| `SUPABASE_ANON_KEY` | Supabase anonymous key (optional — defaults to the project default) |
 | `SUPABASE_SECRET_KEY` | Supabase service role key (used for Vault RPC calls) |
 | `STRAVA_CLIENT_ID` | Strava API application client ID |
 | `STRAVA_CLIENT_SECRET` | Strava API application client secret |
-| `OAUTH_GOOGLE_CLIENT_ID` | Google OAuth client ID (for Chainlit login) |
+| `OAUTH_GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `OAUTH_GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `CHAINLIT_AUTH_SECRET` | Random secret for Chainlit session signing |
-| `GOOGLE_AI_API_KEY` | Operator-provided Google AI Studio key (users can override via the UI) |
-| `STRAVA_REDIRECT_URI` | Strava OAuth callback URL — must be `http://localhost:8000/oauth/auth/strava/callback` locally |
-| `CHAINLIT_URL` | Base URL Strava redirects to after OAuth — defaults to `http://localhost:8000` |
-| `CHAINLIT_APP_ROOT` | Path to the repo root (set in `.env`) |
+| `GOOGLE_AI_API_KEY` | Operator-provided Google AI Studio key |
 
-### Start the app
+**Optional / local overrides:**
+
+| Variable | Default | Description |
+|---|---|---|
+| `SUPABASE_URL` | project default | Supabase project URL |
+| `SUPABASE_ANON_KEY` | project default | Supabase anonymous key |
+| `STRAVA_REDIRECT_URI` | `http://localhost:8000/oauth/auth/strava/callback` | Strava OAuth callback URL |
+| `CHAINLIT_URL` | `http://localhost:8000` | Base URL Strava redirects to after OAuth |
+| `CHAINLIT_APP_ROOT` | — | Path to repo root (set in `.env`) |
+
+### Start
 
 ```bash
 chainlit run coach/web/chainlit_app.py
@@ -73,33 +96,24 @@ chainlit run coach/web/chainlit_app.py
 
 ---
 
-## Private notes
+## 📝 Private notes
 
 Add coaching-relevant context to any Strava activity's private notes using `$...$` delimiters:
 
 ```
-$VO2 max 5x1 @4:30 — felt very hard, knee a bit sore on last rep$
+$5x1km VO2max session @4:30 — felt very hard, knee a bit sore on the last rep$
 ```
 
-The coach extracts and uses this information when analysing your training. Content outside the delimiters is ignored.
+The coach extracts and uses this information when analysing your training. Anything outside the delimiters is ignored, so you can keep personal notes alongside coaching notes in the same field.
 
 ---
 
-## Development
+## 🧑‍💻 Development
 
-**Install with dev dependencies:**
 ```bash
-uv sync --group dev
-```
-
-**Run tests:**
-```bash
-pytest
-```
-
-**Lint and type-check:**
-```bash
-ruff check .
-ruff format .
-mypy .
+uv sync --group dev   # install with dev dependencies
+pytest                # run tests
+ruff check .          # lint
+ruff format .         # format
+mypy .                # type-check
 ```
