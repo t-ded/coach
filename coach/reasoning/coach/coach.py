@@ -20,8 +20,9 @@ class Coach(Assistant):
         activities: list[Activity],
         num_history_weeks: int,
         user_display_name: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> None:
-        super().__init__(provider=provider, model=model)
+        super().__init__(provider=provider, model=model, api_key=api_key)
         self._profile = profile
         self._first_name = user_display_name or 'Athlete'
         self._additional_context_attr = build_coach_context(

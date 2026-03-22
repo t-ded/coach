@@ -2,11 +2,14 @@ import os
 from enum import StrEnum
 from typing import Optional
 
-from coach.auth.utils import no_credentials_found_message
-from coach.config.credentials import CredentialsStore
 from coach.reasoning.clients import GoogleAILLMClient
 from coach.reasoning.clients import LLMClient
 from coach.reasoning.clients import OpenAILLMClient
+
+_ENV_KEYS: dict[str, str] = {
+    'google': 'GOOGLE_AI_API_KEY',
+    'openai': 'OPENAI_API_KEY',
+}
 
 
 class LLMProvider(StrEnum):
@@ -14,47 +17,35 @@ class LLMProvider(StrEnum):
     OPENAI = 'openai'
 
 
-def _get_api_key(provider: LLMProvider) -> str:
-    if provider == LLMProvider.GOOGLE:
-        env_key = os.environ.get('GOOGLE_AI_API_KEY')
-        if env_key:
-            return env_key
-
-    store = CredentialsStore()
-
-    if provider == LLMProvider.GOOGLE:
-        api_key = store.get_google_api_key()
-    elif provider == LLMProvider.OPENAI:
-        api_key = store.get_openai_api_key()
-    else:
-        msg = f'Unsupported provider: {provider}'
-        raise ValueError(msg)
-
-    if not api_key:
-        msg = no_credentials_found_message(provider.value)
-        raise ValueError(msg)
-
-    return api_key
+def resolve_provider_and_key(user_env: dict[str, str], operator_env: dict[str, str]) -> tuple[LLMProvider, str]:
+    """Resolve LLM provider and API key: user-supplied takes priority over operator env var."""
+    if key := user_env.get('GOOGLE_AI_API_KEY'):
+        return LLMProvider.GOOGLE, key
+    if key := user_env.get('OPENAI_API_KEY'):
+        return LLMProvider.OPENAI, key
+    if key := operator_env.get('GOOGLE_AI_API_KEY'):
+        return LLMProvider.GOOGLE, key
+    if key := operator_env.get('OPENAI_API_KEY'):
+        return LLMProvider.OPENAI, key
+    msg = 'No LLM API key found. Set GOOGLE_AI_API_KEY or OPENAI_API_KEY.'
+    raise ValueError(msg)
 
 
 def create_llm_client(
     provider: LLMProvider = LLMProvider.GOOGLE,
     model: Optional[str] = None,
+    api_key: Optional[str] = None,
     max_retries: int = 3,
 ) -> LLMClient:
-    api_key = _get_api_key(provider)
+    key = api_key or os.environ.get(_ENV_KEYS[provider])
+    if not key:
+        msg = f'No API key found for {provider}. Set {_ENV_KEYS[provider]} env var.'
+        raise ValueError(msg)
+
     if provider == LLMProvider.GOOGLE:
-        return GoogleAILLMClient(
-            api_key=api_key,
-            model=model or 'gemini-2.5-flash',
-            max_retries=max_retries,
-        )
+        return GoogleAILLMClient(api_key=key, model=model or 'gemini-2.5-flash', max_retries=max_retries)
 
     if provider == LLMProvider.OPENAI:
-        return OpenAILLMClient(
-            api_key=api_key,
-            model=model or 'gpt-5-nano',
-            max_retries=max_retries,
-        )
+        return OpenAILLMClient(api_key=key, model=model or 'gpt-5-nano', max_retries=max_retries)
 
     raise ValueError(f'Unsupported provider: {provider}')

@@ -11,7 +11,6 @@ from coach.reasoning.profile_assistant.profile import apply_section_text
 from coach.reasoning.profile_assistant.profile import collected_from_profile
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
-from coach.reasoning.providers import LLMProvider
 from coach.web import coaching
 from coach.web import session
 
@@ -88,7 +87,8 @@ async def _complete_current_section() -> None:
 
 async def handle_start_profile_setup() -> None:
     sections_queue = list(ProfileParts)
-    profile_assistant = ProfileAssistant(provider=LLMProvider.GOOGLE, model=None)
+    provider, api_key = coaching.get_llm_config()
+    profile_assistant = ProfileAssistant(provider=provider, model=None, api_key=api_key)
     collected: dict[ProfileParts, Optional[str]] = {}
 
     cl.user_session.set(_SESSION_PROFILE_ASSISTANT, profile_assistant)
@@ -128,7 +128,8 @@ async def handle_edit_section(section: ProfileParts) -> None:
 
     profile_assistant: Optional[ProfileAssistant] = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
     if profile_assistant is None:
-        profile_assistant = ProfileAssistant(provider=LLMProvider.GOOGLE, model=None)
+        provider, api_key = coaching.get_llm_config()
+        profile_assistant = ProfileAssistant(provider=provider, model=None, api_key=api_key)
         cl.user_session.set(_SESSION_PROFILE_ASSISTANT, profile_assistant)
 
     collected = collected_from_profile(current_profile) if current_profile else {}

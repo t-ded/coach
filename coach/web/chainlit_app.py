@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import chainlit as cl
@@ -8,6 +9,7 @@ from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
+from coach.reasoning.providers import resolve_provider_and_key
 from coach.web import coaching
 from coach.web import profile_flow
 from coach.web import session
@@ -57,6 +59,15 @@ async def on_chat_start() -> None:
         return
 
     session.init_user_session(user)
+
+    user_env: dict[str, str] = cl.user_session.get('env') or {}
+    try:
+        provider, api_key = resolve_provider_and_key(user_env, dict(os.environ))
+    except ValueError:
+        await cl.Message('No LLM API key found. Please provide GOOGLE_AI_API_KEY or OPENAI_API_KEY.').send()
+        return
+    cl.user_session.set(coaching.SESSION_LLM_PROVIDER, provider)
+    cl.user_session.set(coaching.SESSION_LLM_API_KEY, api_key)
 
     user_id = session.get_user_id()
     authenticated_client = session.get_authenticated_client()
