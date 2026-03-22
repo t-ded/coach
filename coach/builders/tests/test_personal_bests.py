@@ -41,17 +41,19 @@ class TestBuildRunningPersonalBestsSummary:
         later = make_activity(id=2, pbs=[BestEffort(name='5K', moving_time_seconds=1100)], start_time_utc=datetime(2025, 6, 1, tzinfo=UTC))
         result = build_running_personal_bests_summary([earlier, later])
         assert result.PB_5K is not None
-        assert result.PB_5K.DATE == later.start_time_utc.date()  # noqa: SIM300
+        assert result.PB_5K.achieved_on == later.start_time_utc.date()
 
     def test_all_known_distances_are_populated(self) -> None:
-        run = make_activity(pbs=[
-            BestEffort(name='1K', moving_time_seconds=240),
-            BestEffort(name='5K', moving_time_seconds=1200),
-            BestEffort(name='10K', moving_time_seconds=2500),
-            BestEffort(name='15K', moving_time_seconds=3900),
-            BestEffort(name='Half-Marathon', moving_time_seconds=5400),
-            BestEffort(name='Marathon', moving_time_seconds=11000),
-        ])
+        run = make_activity(
+            pbs=[
+                BestEffort(name='1K', moving_time_seconds=240),
+                BestEffort(name='5K', moving_time_seconds=1200),
+                BestEffort(name='10K', moving_time_seconds=2500),
+                BestEffort(name='15K', moving_time_seconds=3900),
+                BestEffort(name='Half-Marathon', moving_time_seconds=5400),
+                BestEffort(name='Marathon', moving_time_seconds=11000),
+            ],
+        )
         result = build_running_personal_bests_summary([run])
         assert result.PB_1K is not None
         assert result.PB_5K is not None
@@ -65,14 +67,14 @@ class TestBuildRunningPersonalBestsSummary:
         run = make_activity(pbs=[BestEffort(name='10K', moving_time_seconds=2500)], start_time_utc=start)
         result = build_running_personal_bests_summary([run])
         assert result.PB_10K is not None
-        assert result.PB_10K.DATE == start.date()  # noqa: SIM300
+        assert result.PB_10K.achieved_on == start.date()
 
 
 class TestRunningPersonalBestFromBestEffort:
     def test_computes_pace(self) -> None:
         effort = BestEffort(name='5K', moving_time_seconds=1200)
         pb = RunningPersonalBest.from_running_best_effort(effort, activity_date=datetime(2025, 1, 1, tzinfo=UTC).date())
-        assert '4:00' in pb.PACE_STR  # 1200s / 5km = 4:00/km
+        assert '4:00' in pb.pace_str  # 1200s / 5km = 4:00/km
 
     def test_raises_for_unknown_name(self) -> None:
         with pytest.raises(ValueError, match='not valid running best effort'):

@@ -54,7 +54,6 @@ class ActivitySummary:
             start_time_utc=activity.start_time_utc,
             sport_type=activity.sport_type,
             description=parse_private_notes_activity_summary(activity.notes),
-
             duration_seconds=activity.moving_time_seconds or activity.elapsed_time_seconds,
             distance_meters=activity.distance_meters,
             elevation_gain_meters=activity.elevation_gain_meters,

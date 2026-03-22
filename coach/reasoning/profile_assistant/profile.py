@@ -43,7 +43,11 @@ def _goal_from_fields(fields: dict[str, str]) -> Optional[TrainingGoal]:
         try:
             ddp = compute_distance_duration_pace(float(distance_str), int(duration_str), None)
             return DistanceActivityTrainingGoal(
-                name=name, sport_type=sport_type, goal_date=goal_date, priority=priority, notes=notes,
+                name=name,
+                sport_type=sport_type,
+                goal_date=goal_date,
+                priority=priority,
+                notes=notes,
                 goal_distance_meters=ddp.distance_meters,
                 goal_duration_seconds=int(ddp.duration_seconds),
                 goal_pace=ddp.pace_str,

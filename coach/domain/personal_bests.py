@@ -19,8 +19,8 @@ RUNNING_PBS_METERS_MAPPING: dict[str, float] = {
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class RunningPersonalBest:
-    DATE: date
-    PACE_STR: str
+    achieved_on: date
+    pace_str: str
 
     @classmethod
     def from_running_best_effort(cls, running_best_effort: BestEffort, *, activity_date: date) -> RunningPersonalBest:
@@ -30,8 +30,8 @@ class RunningPersonalBest:
         distance_meters = RUNNING_PBS_METERS_MAPPING[running_best_effort.name]
         pace_str = compute_distance_duration_pace(distance_meters=distance_meters, duration_seconds=running_best_effort.moving_time_seconds, pace_str=None).pace_str
         return cls(
-            DATE=activity_date,
-            PACE_STR=pace_str,
+            achieved_on=activity_date,
+            pace_str=pace_str,
         )
 
 

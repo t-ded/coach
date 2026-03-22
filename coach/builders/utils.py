@@ -6,8 +6,10 @@ from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
+from typing import Literal
 from typing import NamedTuple
 from typing import Optional
+from typing import cast
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
@@ -36,22 +38,25 @@ def get_activities_between_dates(
 
 def create_empty_weekly_activities() -> WeeklyActivities:
     return {
-        "Monday": [],
-        "Tuesday": [],
-        "Wednesday": [],
-        "Thursday": [],
-        "Friday": [],
-        "Saturday": [],
-        "Sunday": [],
+        'Monday': [],
+        'Tuesday': [],
+        'Wednesday': [],
+        'Thursday': [],
+        'Friday': [],
+        'Saturday': [],
+        'Sunday': [],
     }
+
+
+_Weekday = Literal['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
 def bucket_activities_by_weekday(activities: Iterable[Activity]) -> WeeklyActivities:
     buckets: WeeklyActivities = create_empty_weekly_activities()
 
     for activity in activities:
-        activity_weekday = activity.start_time_utc.strftime("%A")
-        buckets[activity_weekday].append(ActivitySummary.from_activity(activity))  # type: ignore[literal-required]
+        weekday = cast(_Weekday, activity.start_time_utc.strftime('%A'))
+        buckets[weekday].append(ActivitySummary.from_activity(activity))
 
     return buckets
 
@@ -218,8 +223,7 @@ def _validate_pace_distance_duration(distance_meters: float, duration_seconds: i
     if abs(computed_duration - duration_seconds) / duration_seconds > tolerance:
         print(computed_duration, duration_seconds)
         raise ValueError(
-            f'Inconsistent values: distance={distance_meters}m, '
-            f'duration={duration_seconds}s, pace={pace_str}',
+            f'Inconsistent values: distance={distance_meters}m, duration={duration_seconds}s, pace={pace_str}',
         )
 
 

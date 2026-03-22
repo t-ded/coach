@@ -31,11 +31,11 @@ from coach.tests.utils_for_tests import make_activity
 def test_render_running_pbs() -> None:
     today = datetime.now(tz=UTC).date()
     pbs = RunningPersonalBestsSummary(
-        PB_1K=RunningPersonalBest(DATE=today - timedelta(days=1), PACE_STR='3:30/km'),
-        PB_5K=RunningPersonalBest(DATE=today - timedelta(days=365), PACE_STR='4:00/km'),
+        PB_1K=RunningPersonalBest(achieved_on=today - timedelta(days=1), pace_str='3:30/km'),
+        PB_5K=RunningPersonalBest(achieved_on=today - timedelta(days=365), pace_str='4:00/km'),
         PB_10K=None,
         PB_15K=None,
-        PB_HALF_MARATHON=RunningPersonalBest(DATE=today - timedelta(days=30), PACE_STR='4:31/km'),
+        PB_HALF_MARATHON=RunningPersonalBest(achieved_on=today - timedelta(days=30), pace_str='4:31/km'),
         PB_MARATHON=None,
     )
 
@@ -77,7 +77,6 @@ def test_render_activity_summary() -> None:
         start_time_utc=datetime(2024, 1, 1, 12, tzinfo=UTC),
         sport_type=SportType.RUN,
         description='VO2 Max 5x1 @4:30, 1:30 in between',
-
         duration_seconds=1_805,
         distance_meters=5_000,
         elevation_gain_meters=5.0,

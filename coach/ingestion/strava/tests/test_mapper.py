@@ -119,9 +119,11 @@ class TestStravaMapperMapPbs:
         assert len(map_pbs(efforts)) == 2
 
     def test_pbs_available_on_mapped_activity(self) -> None:
-        payload = _base_payload(best_efforts=[
-            {'name': '5K', 'moving_time': 1200, 'pr_rank': 1},
-        ])
+        payload = _base_payload(
+            best_efforts=[
+                {'name': '5K', 'moving_time': 1200, 'pr_rank': 1},
+            ],
+        )
         assert map_strava_activity(payload).pbs == [BestEffort(name='5K', moving_time_seconds=1200)]
 
 

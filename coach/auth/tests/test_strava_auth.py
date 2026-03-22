@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from coach.auth.strava import StravaAuth
 from coach.auth.strava_tokens import StravaTokenRepository
 from coach.auth.strava_tokens import StravaTokens
 
@@ -32,7 +33,6 @@ class FakeStravaTokenRepository(StravaTokenRepository):
 
 class TestStravaAuth:
     def setup_method(self) -> None:
-        from coach.auth.strava import StravaAuth
         self.repo = FakeStravaTokenRepository()
         self.auth = StravaAuth(user_id='user-123', token_repo=self.repo)
 

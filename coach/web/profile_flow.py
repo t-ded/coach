@@ -143,8 +143,7 @@ async def handle_edit_section(section: ProfileParts) -> None:
 
     if existing_text:
         await cl.Message(
-            f'**Your current {section.title()}:**\n\n{existing_text}\n\nWhat would you like to change? '
-            'Type below, or use the buttons to keep or discard this section.',
+            f'**Your current {section.title()}:**\n\n{existing_text}\n\nWhat would you like to change? Type below, or use the buttons to keep or discard this section.',
             actions=[
                 cl.Action(name='keep_section', payload={}, label='Keep as is'),
                 cl.Action(name='discard_section', payload={}, label='Discard section'),

@@ -73,31 +73,22 @@ def deserialize_goal(raw: dict[str, Any]) -> TrainingGoal:
 
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:
-    pbs = [
-        BestEffort(name=pb['name'], moving_time_seconds=pb['moving_time_seconds'])
-        for pb in serialized['pbs']
-    ]
+    pbs = [BestEffort(name=pb['name'], moving_time_seconds=pb['moving_time_seconds']) for pb in serialized['pbs']]
 
     return Activity(
         id=serialized['id'],
-
         sport_type=SportType(serialized['sport_type']),
         name=serialized['name'],
         description=serialized['description'],
         notes=serialized['notes'],
-
         start_time_utc=datetime.fromisoformat(serialized['start_time_utc']),
         elapsed_time_seconds=serialized['elapsed_time_seconds'],
         moving_time_seconds=serialized['moving_time_seconds'],
-
         distance_meters=serialized['distance_meters'],
         elevation_gain_meters=serialized['elevation_gain_meters'],
-
         average_heart_rate=serialized['average_heart_rate'],
         max_heart_rate=serialized['max_heart_rate'],
-
         is_manual=bool(serialized['is_manual']),
         is_race=bool(serialized['is_race']),
-
         pbs=pbs,
     )

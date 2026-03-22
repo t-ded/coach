@@ -41,9 +41,9 @@ def render_running_pbs(running_pbs: RunningPersonalBestsSummary) -> str:
     lines: list[str] = ['-' * 40, 'Running personal bests:']
     for label, pb in pb_fields:
         if pb is not None:
-            num_days_ago = days_ago(pb.DATE)
+            num_days_ago = days_ago(pb.achieved_on)
             days_ago_suffix = f' ({num_days_ago} day{"" if num_days_ago == 1 else "s"} ago)'
-            lines.append(f'- {label}: {pb.PACE_STR} on {pb.DATE}{days_ago_suffix}')
+            lines.append(f'- {label}: {pb.pace_str} on {pb.achieved_on}{days_ago_suffix}')
         else:
             lines.append(f'- {label}: No PB recorded')
 
@@ -102,12 +102,12 @@ def render_recent_training_history(recent_training_history: RecentTrainingHistor
     num_history_weeks = len(recent_training_history.history_weekly_summaries)
     for i, summary in enumerate(reversed(recent_training_history.history_weekly_summaries)):
         weeks_before = num_history_weeks - i
-        lines.append(f"{weeks_before} week{'' if weeks_before == 1 else 's'} before current week:")
+        lines.append(f'{weeks_before} week{"" if weeks_before == 1 else "s"} before current week:')
         lines.append(render_weekly_summary(summary))
 
     lines.append('-' * 40)
     lines.append('')
-    lines.append(f'Current week summary (today is {recent_training_history.generated_at.strftime('%A')}):')
+    lines.append(f'Current week summary (today is {recent_training_history.generated_at.strftime("%A")}):')
     lines.append(render_weekly_summary(recent_training_history.current_week_summary))
 
     return '\n'.join(lines)
@@ -155,11 +155,13 @@ def build_coach_context(
     rendered_pbs = render_running_pbs(pb_summary).strip()
     rendered_history = render_recent_training_history(recent_training_history).strip()
 
-    parts = combine_sections([
-        ('User profile:', rendered_profile),
-        ('Recent weeks training context:', rendered_history),
-        ('Running PBs:', rendered_pbs),
-    ])
+    parts = combine_sections(
+        [
+            ('User profile:', rendered_profile),
+            ('Recent weeks training context:', rendered_history),
+            ('Running PBs:', rendered_pbs),
+        ],
+    )
     return '\n'.join(parts) or None
 
 

@@ -32,19 +32,25 @@ def generate_strava_auth_url(user_id: str, secret_client: Client) -> str:
     state = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(minutes=_STATE_EXPIRY_MINUTES)
 
-    secret_client.table('strava_oauth_state').insert({
-        'user_id': user_id,
-        'state': state,
-        'expires_at': expires_at.isoformat(),
-    }).execute()
+    secret_client.table('strava_oauth_state').insert(
+        {
+            'user_id': user_id,
+            'state': state,
+            'expires_at': expires_at.isoformat(),
+        },
+    ).execute()
 
-    return f'{STRAVA_AUTHORIZE_URL}?{urlencode({
-        "client_id": os.environ["STRAVA_CLIENT_ID"],
-        "redirect_uri": _STRAVA_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "activity:read_all",
-        "state": state,
-    })}'
+    return f'{STRAVA_AUTHORIZE_URL}?{
+        urlencode(
+            {
+                "client_id": os.environ["STRAVA_CLIENT_ID"],
+                "redirect_uri": _STRAVA_REDIRECT_URI,
+                "response_type": "code",
+                "scope": "activity:read_all",
+                "state": state,
+            }
+        )
+    }'
 
 
 def _exchange_code_for_tokens(code: str, redirect_uri: str) -> dict[str, Any]:

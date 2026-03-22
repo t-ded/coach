@@ -148,6 +148,7 @@ class TestProfileAssistantEditMode:
 
     def test_collection_mode_uses_conversation_prompt_when_section_is_empty(self) -> None:
         from coach.reasoning.profile_assistant.system_prompts import CONVERSATION_PROMPTS
+
         self._assistant.start_section(ProfileParts.TRAINING_PREFERENCES, {})
         self._assistant.get_response('I run 5 times a week')
         prompt_used = self._mock_client.complete.call_args[0][0]

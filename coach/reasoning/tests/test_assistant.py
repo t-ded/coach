@@ -32,9 +32,4 @@ def test_build_assistant_prompt_optional_sections_omitted() -> None:
         chat_history=None,
         user_prompt='How am I doing?',
     )
-    assert result == (
-        'System instructions:\nYou are a coach.\n'
-        'Additional context:\nTraining data here.\n'
-        'User question:\nHow am I doing?\n'
-        'Your answer: <response>'
-    )
+    assert result == ('System instructions:\nYou are a coach.\nAdditional context:\nTraining data here.\nUser question:\nHow am I doing?\nYour answer: <response>')

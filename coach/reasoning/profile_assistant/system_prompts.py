@@ -12,32 +12,20 @@ class ProfileParts(StrEnum):
 
 
 SECTION_INTROS: dict[str, str] = {
-    ProfileParts.CHAT_PREFERENCES: (
-        '--- Chat Preferences ---\n'
-        'How would you like to be coached? Describe your preferences for response style, tone, length, and language.'
-    ),
-    ProfileParts.TRAINING_PREFERENCES: (
-        '--- Training Preferences ---\n'
-        'How do you like to train? Describe workout types you enjoy or dislike, how you structure your sessions, recovery habits, etc.'
-    ),
+    ProfileParts.CHAT_PREFERENCES: ('--- Chat Preferences ---\nHow would you like to be coached? Describe your preferences for response style, tone, length, and language.'),
+    ProfileParts.TRAINING_PREFERENCES: ('--- Training Preferences ---\nHow do you like to train? Describe workout types you enjoy or dislike, how you structure your sessions, recovery habits, etc.'),
     ProfileParts.PERSONAL_INFORMATION: (
         '--- Personal Background ---\n'
         'Tell me about yourself — your fitness history and sports background, current activity level, occupation, and any relevant health context (any injuries or physical restrictions etc.).'
     ),
-    ProfileParts.CONSTRAINTS: (
-        '--- Constraints ---\n'
-        'What are your training constraints? Think about available days per week, time-of-day preferences, scheduling limits etc.'
-    ),
+    ProfileParts.CONSTRAINTS: ('--- Constraints ---\nWhat are your training constraints? Think about available days per week, time-of-day preferences, scheduling limits etc.'),
     ProfileParts.GOALS: (
         '--- Goals ---\n'
         'What are your training goals? For each goal, describe the target (time, distance, weight, etc.), sport, timeline, and how important it is to you. Also any additional related notes.'
     ),
 }
 
-_SKIP_NOTE = (
-    'If the user says they want to skip a question, that something does not apply, or asks you to move on, '
-    'accept that immediately without pushing further.'
-)
+_SKIP_NOTE = 'If the user says they want to skip a question, that something does not apply, or asks you to move on, accept that immediately without pushing further.'
 
 _CHAT_PREFERENCES_PROMPT = f"""
 You are collecting a user's chat preferences for an AI coaching assistant.
@@ -149,9 +137,7 @@ CONVERSATION_PROMPTS: dict[str, str] = {
     ProfileParts.GOALS: _GOALS_PROMPT.strip(),
 }
 
-_EDIT_DONE_NOTE = (
-    'When all requested changes have been captured and the user has nothing more to add, respond with exactly: DONE'
-)
+_EDIT_DONE_NOTE = 'When all requested changes have been captured and the user has nothing more to add, respond with exactly: DONE'
 
 _EDIT_CHAT_PREFERENCES_PROMPT = f"""
 You are helping a user update their chat preferences for an AI coaching assistant.

@@ -415,7 +415,6 @@ dependencies = [
     { name = "requests" },
     { name = "supabase" },
     { name = "ty" },
-    { name = "typer" },
     { name = "types-requests" },
     { name = "uvicorn" },
 ]
@@ -440,7 +439,6 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "supabase", specifier = ">=2.28.0" },
     { name = "ty", specifier = ">=0.0.15" },
-    { name = "typer", specifier = ">=0.21.1" },
     { name = "types-requests", specifier = ">=2.32.4.20260107" },
     { name = "uvicorn", specifier = ">=0.42.0" },
 ]

@@ -54,7 +54,7 @@ target-version = "py313"
 preview = true
 ignore = [
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
-    "UP007", # Use `X | Y` for type annotations (triggers on Optional[])
+"UP007", # Use `X | Y` for type annotations (triggers on Optional[])
     "UP045", # Allow Optional[]
     "SIM108", # Do not force ternary operator
 ]

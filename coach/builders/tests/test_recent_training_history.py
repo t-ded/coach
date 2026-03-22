@@ -68,7 +68,7 @@ class TestBuildRecentTrainingHistory:
 
         assert history.generated_at == datetime_one_week_in_future
         assert history.current_week_summary == self._create_empty_weekly_summary(week_start, week_end)
-        assert history.history_weekly_summaries == (self._create_inclusive_weekly_summary(), )
+        assert history.history_weekly_summaries == (self._create_inclusive_weekly_summary(),)
 
     def test_two_past_weeks(self) -> None:
         datetime_two_weeks_in_future = datetime(2025, 1, 15, tzinfo=UTC)

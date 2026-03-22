@@ -40,8 +40,9 @@ def _map_sport_type(payload: dict[str, str]) -> SportType:
 def map_pbs(best_efforts: Optional[list[dict[str, Any]]]) -> list[BestEffort]:
     if not best_efforts:
         return []
-    return [
-        BestEffort(name=effort['name'], moving_time_seconds=effort['moving_time'])
-        for effort in best_efforts
-        if effort['pr_rank'] == 1
-    ]
+
+    pbs: list[BestEffort] = []
+    for effort in best_efforts:
+        if effort['pr_rank'] == 1:
+            pbs.append(BestEffort(name=effort['name'], moving_time_seconds=effort['moving_time']))
+    return pbs

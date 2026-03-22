@@ -5,6 +5,7 @@ never returns an id_token and Supabase's sign_in_with_id_token cannot be used.
 This module subclasses the provider to request the scope and thread-safely
 propagates the id_token through to the oauth_callback via raw_user_data.
 """
+
 import json
 from typing import Any
 

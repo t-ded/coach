@@ -1,5 +1,6 @@
 from datetime import UTC
 from datetime import datetime
+from unittest.mock import MagicMock
 
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
@@ -15,7 +16,6 @@ _TOKENS = StravaTokens(access_token='acc_token', refresh_token='ref_token', expi
 
 class TestSupabaseStravaTokenRepository:
     def setup_method(self) -> None:
-        from unittest.mock import MagicMock
         self.client = MagicMock()
         self.repo = SupabaseStravaTokenRepository(self.client)
 
@@ -35,9 +35,12 @@ class TestSupabaseStravaTokenRepository:
 
     def test_save_tokens_calls_upsert_rpc_with_correct_arguments(self) -> None:
         self.repo.save_tokens('user-123', _TOKENS)
-        self.client.rpc.assert_called_once_with('upsert_strava_tokens', {
-            'p_user_id': 'user-123',
-            'p_access_token': 'acc_token',
-            'p_refresh_token': 'ref_token',
-            'p_expires_at': _EXPIRES_AT.isoformat(),
-        })
+        self.client.rpc.assert_called_once_with(
+            'upsert_strava_tokens',
+            {
+                'p_user_id': 'user-123',
+                'p_access_token': 'acc_token',
+                'p_refresh_token': 'ref_token',
+                'p_expires_at': _EXPIRES_AT.isoformat(),
+            },
+        )
