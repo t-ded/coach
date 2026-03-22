@@ -48,6 +48,8 @@ _SESSION_CURRENT_SECTION = 'current_section'
 _SESSION_CURRENT_PROFILE = 'current_profile'
 _SESSION_ACTIVITIES = 'activities'
 _SESSION_DISPLAY_NAME = 'display_name'
+_SESSION_SECTIONS_QUEUE = 'sections_queue'
+_SESSION_IS_SETUP_MODE = 'is_setup_mode'
 
 _MODE_COACH = 'coach'
 _MODE_PROFILE = 'profile'
@@ -105,6 +107,10 @@ async def on_chat_start() -> None:
     cl.user_session.set(_SESSION_ACTIVITIES, activities)
     cl.user_session.set(_SESSION_CURRENT_PROFILE, profile)
 
+    if profile is None:
+        await _prompt_profile_setup(display_name).send()
+        return
+
     _init_coach_session(profile, activities, display_name)
     await cl.Message(f'Hello, {display_name}. Coach is ready. What would you like to work on today?').send()
 
@@ -158,10 +164,19 @@ async def _complete_current_section() -> None:
 
     await cl.Message(f'✓ {current_section.title()} saved.').send()
 
-    activities: list[Activity] = cl.user_session.get(_SESSION_ACTIVITIES)
-    display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
-    _init_coach_session(updated_profile, activities, display_name)
-    await cl.Message('Profile updated — coach restarted with your latest profile.').send()
+    sections_queue: list[ProfileParts] = cl.user_session.get(_SESSION_SECTIONS_QUEUE, default=[])
+    if sections_queue:
+        await _enter_next_section()
+    else:
+        activities: list[Activity] = cl.user_session.get(_SESSION_ACTIVITIES)
+        display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
+        _init_coach_session(updated_profile, activities, display_name)
+        is_setup: bool = cl.user_session.get(_SESSION_IS_SETUP_MODE, default=False)
+        if is_setup:
+            cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
+            await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
+        else:
+            await cl.Message('Profile updated — coach restarted with your latest profile.').send()
 
 
 def _init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
@@ -176,6 +191,84 @@ def _is_done(response: str) -> bool:
 
 def _strip_done(response: str) -> str:
     return re.sub(r'(?i)\bDONE[.!]?\s*$', '', response).strip()
+
+
+def _setup_progress_message(section: ProfileParts, position: int, total: int) -> str:
+    return f'Section {position} of {total}: {section.title()}'
+
+
+def _prompt_profile_setup(display_name: str) -> cl.Message:
+    actions = [
+        cl.Action(name='start_profile_setup', payload={}, label='Set up profile'),
+        cl.Action(name='skip_to_coaching', payload={}, label='Skip — go straight to coaching'),
+    ]
+    return cl.Message(
+        f"Welcome, {display_name}! Before we start, let's set up your profile so I can give you tailored guidance. "
+        'This involves 5 short sections (chat preferences, training, background, constraints, and goals). '
+        'You can skip any section.',
+        actions=actions,
+    )
+
+
+@cl.action_callback('start_profile_setup')
+async def on_start_profile_setup(action: cl.Action) -> None:
+    sections_queue = list(ProfileParts)
+    profile_assistant = ProfileAssistant(provider=LLMProvider.GOOGLE, model=None)
+    collected: dict[ProfileParts, Optional[str]] = {}
+
+    cl.user_session.set(_SESSION_PROFILE_ASSISTANT, profile_assistant)
+    cl.user_session.set(_SESSION_COLLECTED_SECTIONS, collected)
+    cl.user_session.set(_SESSION_SECTIONS_QUEUE, sections_queue)
+    cl.user_session.set(_SESSION_IS_SETUP_MODE, True)
+
+    await _enter_next_section()
+
+
+@cl.action_callback('skip_to_coaching')
+async def on_skip_to_coaching(action: cl.Action) -> None:
+    activities: list[Activity] = cl.user_session.get(_SESSION_ACTIVITIES)
+    display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
+    _init_coach_session(None, activities, display_name)
+    await cl.Message('No problem! Coach is ready. What would you like to work on today?').send()
+
+
+@cl.action_callback('skip_section')
+async def on_skip_section(action: cl.Action) -> None:
+    current_section: ProfileParts = cl.user_session.get(_SESSION_CURRENT_SECTION)
+    collected: dict[ProfileParts, Optional[str]] = cl.user_session.get(_SESSION_COLLECTED_SECTIONS)
+    collected[current_section] = None
+    cl.user_session.set(_SESSION_COLLECTED_SECTIONS, collected)
+    await cl.Message(f'Skipped {current_section.title()}.').send()
+
+    sections_queue: list[ProfileParts] = cl.user_session.get(_SESSION_SECTIONS_QUEUE) or []
+    if sections_queue:
+        await _enter_next_section()
+    else:
+        activities: list[Activity] = cl.user_session.get(_SESSION_ACTIVITIES)
+        display_name: str = cl.user_session.get(_SESSION_DISPLAY_NAME)
+        current_profile: Optional[UserProfile] = cl.user_session.get(_SESSION_CURRENT_PROFILE)
+        _init_coach_session(current_profile, activities, display_name)
+        cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
+        await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
+
+
+async def _enter_next_section() -> None:
+    sections_queue: list[ProfileParts] = cl.user_session.get(_SESSION_SECTIONS_QUEUE)
+    section = sections_queue.pop(0)
+    cl.user_session.set(_SESSION_SECTIONS_QUEUE, sections_queue)
+    cl.user_session.set(_SESSION_CURRENT_SECTION, section)
+
+    profile_assistant: ProfileAssistant = cl.user_session.get(_SESSION_PROFILE_ASSISTANT)
+    collected: dict[ProfileParts, Optional[str]] = cl.user_session.get(_SESSION_COLLECTED_SECTIONS)
+    intro = profile_assistant.start_section(section, collected)
+
+    total = len(ProfileParts)
+    position = total - len(sections_queue)
+    progress = _setup_progress_message(section, position, total)
+
+    actions = [cl.Action(name='skip_section', payload={}, label='Skip this section')]
+    cl.user_session.set(_SESSION_MODE, _MODE_PROFILE)
+    await cl.Message(f'{progress}\n\n{intro}', actions=actions).send()
 
 
 def _connect_strava_user_prompt() -> cl.Message:

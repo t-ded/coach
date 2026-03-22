@@ -4,9 +4,11 @@ from unittest.mock import patch
 from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
+from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.web.chainlit_app import _get_display_name
 from coach.web.chainlit_app import _is_done
 from coach.web.chainlit_app import _load_coaching_data
+from coach.web.chainlit_app import _setup_progress_message
 from coach.web.chainlit_app import _strip_done
 
 
@@ -91,3 +93,14 @@ class TestLoadCoachingData:
 
     def test_returns_activities_from_repo(self) -> None:
         assert self._activities is self._mock_activity_repo.list_all.return_value
+
+
+class TestSetupProgressMessage:
+    def test_first_section(self) -> None:
+        assert _setup_progress_message(ProfileParts.CHAT_PREFERENCES, 1, 5) == 'Section 1 of 5: Chat Preferences'
+
+    def test_middle_section(self) -> None:
+        assert _setup_progress_message(ProfileParts.TRAINING_PREFERENCES, 2, 5) == 'Section 2 of 5: Training Preferences'
+
+    def test_last_section(self) -> None:
+        assert _setup_progress_message(ProfileParts.GOALS, 5, 5) == 'Section 5 of 5: Goals'
