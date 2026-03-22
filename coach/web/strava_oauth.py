@@ -14,8 +14,8 @@ from fastapi import HTTPException
 from fastapi.responses import RedirectResponse
 from supabase import Client
 
-from coach.auth.setup.strava import STRAVA_AUTHORIZE_URL
-from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
+from coach.auth.strava import STRAVA_AUTHORIZE_URL
+from coach.auth.strava import STRAVA_OAUTH_ENDPOINT
 from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
 from coach.persistence.database import create_secret_client

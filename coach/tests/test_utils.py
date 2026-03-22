@@ -81,5 +81,3 @@ def test_combine_sections_all_none() -> None:
 def test_combine_sections_strips_content() -> None:
     result = combine_sections([('Title:', '  content with whitespace  ')])
     assert result == ['Title:\ncontent with whitespace']
-
-

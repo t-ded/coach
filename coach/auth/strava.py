@@ -4,10 +4,11 @@ from datetime import datetime
 
 import requests
 
-from coach.auth.setup.strava import STRAVA_OAUTH_ENDPOINT
 from coach.auth.strava_tokens import StravaTokenRepository
 from coach.auth.strava_tokens import StravaTokens
-from coach.auth.utils import no_credentials_found_message
+
+STRAVA_AUTHORIZE_URL = 'https://www.strava.com/oauth/authorize'
+STRAVA_OAUTH_ENDPOINT = 'https://www.strava.com/oauth/token'
 
 
 class StravaAuth:
@@ -18,8 +19,7 @@ class StravaAuth:
     def get_access_token(self) -> str:
         tokens = self._token_repo.get_tokens(self._user_id)
         if tokens is None:
-            msg = no_credentials_found_message('Strava')
-            raise RuntimeError(msg)
+            raise RuntimeError('No Strava credentials found.')
 
         if self._is_expired(tokens):
             tokens = self._refresh(tokens)

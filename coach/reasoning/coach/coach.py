@@ -2,8 +2,6 @@ from datetime import UTC
 from datetime import datetime
 from typing import Optional
 
-import typer
-
 from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
@@ -31,19 +29,6 @@ class Coach(Assistant):
             num_history_weeks=num_history_weeks,
             generated_at=datetime.now(tz=UTC),
         )
-
-    def run_chat_loop(self) -> None:
-        greeting = f'Hello, {self._first_name}. Coach ready.'
-        typer.echo(f'{greeting} Type your question (Ctrl+C to exit).\n')
-        while True:
-            try:
-                user_input = typer.prompt('You')
-            except (EOFError, KeyboardInterrupt):
-                typer.echo('\nGoodbye.')
-                break
-            typer.echo('\nCoach:\n')
-            typer.echo(self.get_response(user_input))
-            typer.echo('')
 
     def _user_system_prompt(self) -> Optional[str]:
         return self._profile.chat_preferences if self._profile else None

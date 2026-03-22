@@ -14,13 +14,9 @@ dependencies = [
     "requests>=2.32.5",
     "supabase>=2.28.0",
     "ty>=0.0.15",
-    "typer>=0.21.1",
     "types-requests>=2.32.4.20260107",
     "uvicorn>=0.42.0",
 ]
-
-[project.scripts]
-coach = "coach.cli.app:main"
 
 [tool.uv]
 package = true
