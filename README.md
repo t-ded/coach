@@ -1,12 +1,5 @@
-<style>
-  .center {
-    text-align: center;
-  }
-</style>
-
-<div class="center">
+<div align="center">
   <img src="public/coach_icon.png" alt="Coach" width="96" />
-
   <h1>Coach</h1>
 
   <p><strong>A personalized AI training coach that is always up to date with your Strava</strong></p>
@@ -40,13 +33,13 @@ Your activities sync automatically at the start of each session, so the coach al
 
 ## ✨ What Coach can do
 
-|                             |                                                                                                    |
-|-----------------------------|----------------------------------------------------------------------------------------------------|
-| 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                         |
-| 💬 **AI chat**              | Multi-turn coaching conversations with your full training context always in view                   |
-| 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
-| 🔐 **Google login**         | No account creation — sign in with your existing Google account                                    |
-| 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                             |
+|                                  |                                                                                                    |
+|----------------------------------|----------------------------------------------------------------------------------------------------|
+| 🔗 **Strava sync**               | Activities sync automatically each session — free Strava account supported                         |
+| 💬 **AI chat**                   | Multi-turn coaching conversations with your full training context always in view                   |
+| 👤 **Personalized profile**      | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
+| 🔐 **Google login**              | No account creation — sign in with your existing Google account                                    |
+| 📝 **Private notes**             | Annotate Strava activities with coaching context that only the AI sees                             |
 
 ---
 
@@ -87,31 +80,22 @@ The coach picks this up automatically. Anything outside the `$...$` markers is i
 <details>
 <summary>First look</summary>
 
-<div class="center">
-  <img src="public/first_look.png" alt="First look" />
-</div>
+<img src="public/first_look.png" alt="First look" />
 
 </details>
 
 <details>
 <summary>Coaching chat</summary>
 
-<div class="center">
-  <img src="public/chat_example_1.png" alt="Coaching example - progress summary" />
-</div>
-
-<div class="center">
-  <img src="public/chat_example_2.png" alt="Coaching example - training plan" />
-</div>
+<img src="public/chat_example_1.png" alt="Coaching example - progress summary" />
+<img src="public/chat_example_2.png" alt="Coaching example - training plan" />
 
 </details>
 
 <details>
 <summary>Profile editing</summary>
 
-<div class="center">
-  <img src="public/edit_profile.png" alt="Profile editing" />
-</div>
+<img src="public/edit_profile.png" alt="Profile editing" />
 
 </details>
 

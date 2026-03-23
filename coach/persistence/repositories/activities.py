@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from datetime import UTC
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -71,6 +72,11 @@ class SupabaseActivityRepository(Repository[Activity]):
         if last is None or last < self._SYNC_LOOKBACK_SECONDS:
             return 0
         return last - self._SYNC_LOOKBACK_SECONDS
+
+    def existing_ids(self, after: int) -> set[int]:
+        dt = datetime.fromtimestamp(after, tz=UTC).isoformat()
+        response = self._table().select('id').eq('user_id', self._user_id).gte('start_time_utc', dt).execute()
+        return {cast(ActivityRow, row)['id'] for row in response.data}
 
     def reset_table(self) -> None:
         self._table().delete().eq(column='user_id', value=self._user_id).execute()

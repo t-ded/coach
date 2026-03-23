@@ -183,6 +183,7 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - Prefer private helpers within a module over extracting a separate helper module for logic tightly coupled to a single caller — a new module is only warranted when logic is genuinely reused or completely independent. The same applies to wrapper functions: a one-liner that only adds a fixed set of arguments to another constructor or function call is not worth naming.
 - Functions should have a single, non-overlapping responsibility. Avoid "halfway abstractions" where a function takes pre-constructed dependencies but also owns loading/fetching internally — that halfway position makes the function hard to test and unclear to read. Either own the full setup (construct deps + do the work) or accept pre-loaded data and act on it.
 - After making any change, review the affected code for simplification opportunities, duplication, and best-practice violations before considering the task done
+- Use `datetime.UTC` alias instead of `timezone.UTC` for consistency
 
 ## GitHub workflow
 
