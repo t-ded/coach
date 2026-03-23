@@ -1,14 +1,23 @@
-<div align="center">
+<style>
+  .center {
+    text-align: center;
+  }
+</style>
+
+<div class="center">
   <img src="public/coach_icon.png" alt="Coach" width="96" />
 
-  # Coach
+  <h1>Coach</h1>
 
-  **An AI training coach that knows your Strava data**
+  <p><strong>A personalized AI training coach that is always up to date with your Strava</strong></p>
 
-  *Sign in with Google · Connect Strava · Chat with your coach*
+  <p><em>Sign in with Google · Connect Strava · Chat with your coach</em></p>
 
-  **[Open Coach →](https://coach-production-e0b4.up.railway.app/)**
-
+  <p>
+    <a href="https://coach-production-e0b4.up.railway.app/">
+      <strong>Open Coach →</strong>
+    </a>
+  </p>
 </div>
 
 ---
@@ -31,28 +40,28 @@ Your activities sync automatically at the start of each session, so the coach al
 
 ## ✨ What Coach can do
 
-| | |
-|---|---|
-| 🔗 **Strava sync** | Activities sync automatically each session — free Strava account supported |
-| 💬 **AI chat** | Multi-turn coaching conversations with your full training context always in view |
+|                             |                                                                                                    |
+|-----------------------------|----------------------------------------------------------------------------------------------------|
+| 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                         |
+| 💬 **AI chat**              | Multi-turn coaching conversations with your full training context always in view                   |
 | 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
-| 🔐 **Google login** | No account creation — sign in with your existing Google account |
-| 📝 **Private notes** | Annotate Strava activities with coaching context that only the AI sees |
+| 🔐 **Google login**         | No account creation — sign in with your existing Google account                                    |
+| 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                             |
 
 ---
 
 ## 👤 Your profile
 
-Your profile is what makes coaching genuinely personal rather than generic. After connecting Strava, you'll be guided through five short sections. Fill in as many or as few as you like — you can skip anything, and come back to edit it all later via the **Edit Profile** button.
+Your profile is what makes coaching genuinely personal rather than generic. After connecting Strava, you'll be guided through five short sections. Fill in as many or as few as you like — you can skip anything and come back to edit it all later via the **Edit Profile** button.
 
 ### 💬 Chat preferences
-How you want the coach to talk to you. Prefer concise and direct? Want it to be motivational and warm? Happy to read in another language? This is the place to say so.
+How do you want the coach to talk to you? Prefer concise and direct? Want it to be motivational and warm? Happy to read in another language? This is the place to say so.
 
 ### 🏃 Training preferences
 What you actually enjoy — and what you can't stand — in training. Workout types, formats, recovery habits. This isn't about structuring your plan (the coach figures that out); it's about making sure advice lands in a way that suits how you like to train.
 
 ### 🧍 Personal background
-Who you are as an athlete. Fitness history, sports background, current activity level, occupation or lifestyle factors that affect how much energy you have. Any health context you're comfortable sharing.
+Who you are as an athlete. Mention fitness history, sports background, current activity level, occupation or lifestyle factors that affect how much energy you have. Any health context you're comfortable sharing.
 
 ### 📅 Constraints
 Your hard limits. How many days a week you can train, preferred time of day, any scheduling restrictions. The coach treats these as non-negotiable when suggesting sessions or weekly structure.
@@ -75,32 +84,34 @@ The coach picks this up automatically. Anything outside the `$...$` markers is i
 ---
 
 ## 🎬 In action
-
 <details>
-<summary>Login &amp; onboarding &nbsp;— TODO</summary>
+<summary>First look</summary>
 
-> Screenshots coming soon.
+<div class="center">
+  <img src="public/first_look.png" alt="First look" />
+</div>
 
 </details>
 
 <details>
-<summary>Profile setup &nbsp;— TODO</summary>
+<summary>Coaching chat</summary>
 
-> Screenshots coming soon.
+<div class="center">
+  <img src="public/chat_example_1.png" alt="Coaching example - progress summary" />
+</div>
+
+<div class="center">
+  <img src="public/chat_example_2.png" alt="Coaching example - training plan" />
+</div>
 
 </details>
 
 <details>
-<summary>Coaching chat &nbsp;— TODO</summary>
+<summary>Profile editing</summary>
 
-> Screenshots coming soon.
-
-</details>
-
-<details>
-<summary>Editing your profile &nbsp;— TODO</summary>
-
-> Screenshots coming soon.
+<div class="center">
+  <img src="public/edit_profile.png" alt="Profile editing" />
+</div>
 
 </details>
 

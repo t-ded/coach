@@ -18,11 +18,11 @@ dependencies = [
     "uvicorn>=0.42.0",
 ]
 
-[tool.uv]
-package = true
-
 [tool.setuptools.packages.find]
 include = ["coach*"]
+
+[tool.uv]
+package = true
 
 [tool.mypy]
 no_implicit_reexport = true
@@ -32,7 +32,6 @@ disallow_untyped_defs = true
 strict = true
 no_warn_return_any = true
 disallow_any_generics = false
-mypy_path = ["src"]
 
 [[tool.mypy.overrides]]
 module = ["coach.web.chainlit_app", "coach.web.coaching", "coach.web.google_oauth", "coach.web.profile_flow", "coach.web.session"]
