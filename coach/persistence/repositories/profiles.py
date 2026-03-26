@@ -8,6 +8,7 @@ from supabase import Client
 from coach.domain.profile import UserProfile
 from coach.persistence.serialization import deserialize_goal
 from coach.persistence.serialization import serialize_goal
+from coach.reasoning.providers import LLMProvider
 
 type ProfileRow = dict[str, Any]
 
@@ -33,6 +34,9 @@ class SupabaseUserProfileRepository:
 
     def delete(self) -> None:
         self._table().delete().eq('user_id', self._user_id).execute()
+
+    def set_preferred_provider(self, provider: LLMProvider) -> None:
+        self._table().update({'preferred_provider': provider}).eq('user_id', self._user_id).execute()
 
     def _to_row(self, profile: UserProfile) -> ProfileRow:
         return {
