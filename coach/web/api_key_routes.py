@@ -12,12 +12,16 @@ from typing import cast
 
 import requests
 import requests.exceptions
+from chainlit.auth.cookie import get_token_from_cookies
+from chainlit.auth.jwt import decode_jwt
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Form
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
+from jwt.exceptions import PyJWTError
 from supabase import Client
 
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
@@ -25,6 +29,7 @@ from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import display_provider
+from coach.web.session import SESSION_USER_ID
 
 router = APIRouter()
 
@@ -69,6 +74,20 @@ def _lookup_state(state: str, secret_client: Client) -> str:
 
 def _consume_state(state: str, secret_client: Client) -> None:
     secret_client.table(_STATE_TABLE).delete().eq('state', state).execute()
+
+
+def _verify_caller(request: Request, expected_user_id: str) -> None:
+    """Raise 403 if the authenticated user does not match the state row's user_id."""
+    token = get_token_from_cookies(request.cookies)
+    if token is None:
+        raise HTTPException(status_code=403, detail='Authentication required')
+    try:
+        user = decode_jwt(token)
+        actual_user_id = user.metadata.get(SESSION_USER_ID)
+    except PyJWTError as err:
+        raise HTTPException(status_code=403, detail='Invalid authentication token') from err
+    if actual_user_id != expected_user_id:
+        raise HTTPException(status_code=403, detail='This link is not valid for your account')
 
 
 def _validate_api_key(provider: LLMProvider, api_key: str) -> bool:
@@ -134,23 +153,27 @@ def _render_form(state: str, error: Optional[str] = None, selected_provider: str
 
 @router.get('/api-key')
 def api_key_form(
+    request: Request,
     secret_client: _SecretClient,
     state: str,
     error: Optional[str] = None,
     provider: Optional[str] = None,
 ) -> HTMLResponse:
-    _lookup_state(state, secret_client)
+    user_id = _lookup_state(state, secret_client)
+    _verify_caller(request, user_id)
     return _render_form(state, error, selected_provider=provider or 'google')
 
 
 @router.post('/api-key/store', response_model=None)
 def api_key_store(
+    request: Request,
     secret_client: _SecretClient,
     state: str = Form(...),
     provider: str = Form(...),
     api_key: str = Form(...),
 ) -> Union[RedirectResponse, HTMLResponse]:
     user_id = _lookup_state(state, secret_client)
+    _verify_caller(request, user_id)
 
     try:
         llm_provider = LLMProvider(provider)
