@@ -17,6 +17,16 @@ class LLMProvider(StrEnum):
     OPENAI = 'openai'
 
 
+_PROVIDER_DISPLAY_NAMES: dict[LLMProvider, str] = {
+    LLMProvider.GOOGLE: 'Google AI Studio',
+    LLMProvider.OPENAI: 'OpenAI',
+}
+
+
+def display_provider(provider: LLMProvider) -> str:
+    return _PROVIDER_DISPLAY_NAMES.get(provider, provider.value.title())
+
+
 def create_llm_client(
     provider: LLMProvider = LLMProvider.GOOGLE,
     model: Optional[str] = None,

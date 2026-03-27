@@ -2,23 +2,14 @@ from typing import Optional
 
 import chainlit as cl
 
+from coach.auth.llm_keys import LLMKeyRepository
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
-from coach.domain.activity import Activity
-from coach.domain.profile import UserProfile
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.reasoning.providers import LLMProvider
+from coach.reasoning.providers import display_provider
 from coach.web import coaching
 from coach.web import session
-
-_PROVIDER_DISPLAY_NAMES: dict[LLMProvider, str] = {
-    LLMProvider.GOOGLE: 'Google AI Studio',
-    LLMProvider.OPENAI: 'OpenAI',
-}
-
-
-def _display(provider: LLMProvider) -> str:
-    return _PROVIDER_DISPLAY_NAMES.get(provider, provider.value.title())
 
 
 def api_key_onboarding_message() -> cl.Message:
@@ -36,28 +27,41 @@ def api_key_onboarding_message() -> cl.Message:
         '3. Click **Connect OpenAI** below, paste the key, then start a new chat'
     )
     actions = [
-        cl.Action(name='set_api_key_google', payload={}, label='Connect Google AI Studio'),
-        cl.Action(name='set_api_key_openai', payload={}, label='Connect OpenAI'),
+        cl.Action(name='add_provider_key', payload={'provider': LLMProvider.GOOGLE.value}, label='Connect Google AI Studio'),
+        cl.Action(name='add_provider_key', payload={'provider': LLMProvider.OPENAI.value}, label='Connect OpenAI'),
     ]
     return cl.Message(text, actions=actions)
+
+
+def resolve_llm_key(key_repo: LLMKeyRepository, user_id: str, preferred: LLMProvider) -> tuple[Optional[str], LLMProvider, Optional[str]]:
+    key = key_repo.get_key(user_id, preferred)
+    if key is not None:
+        return key, preferred, None
+    for fallback in LLMProvider:
+        if fallback != preferred:
+            key = key_repo.get_key(user_id, fallback)
+            if key is not None:
+                notice = f'Note: using your {display_provider(fallback)} key — your {display_provider(preferred)} key is not configured yet.'
+                return key, fallback, notice
+    return None, preferred, None
 
 
 def _build_management_text(preferred: LLMProvider, stored: list[LLMProvider]) -> str:
     if not stored:
         return '**AI Provider Settings**\n\nNo API keys are stored.'
-    provider_lines = '\n'.join(f'• {_display(p)}' + (' *(preferred)*' if p == preferred else '') for p in stored)
-    return f'**AI Provider Settings**\n\nCurrent preferred provider: **{_display(preferred)}**\n\n**Stored keys:**\n{provider_lines}'
+    provider_lines = '\n'.join(f'• {display_provider(p)}' + (' *(preferred)*' if p == preferred else '') for p in stored)
+    return f'**AI Provider Settings**\n\nCurrent preferred provider: **{display_provider(preferred)}**\n\n**Stored keys:**\n{provider_lines}'
 
 
 def _build_management_actions(preferred: LLMProvider, stored: list[LLMProvider]) -> list[cl.Action]:
     actions: list[cl.Action] = []
     non_stored = [p for p in LLMProvider if p not in stored]
     for p in non_stored:
-        actions.append(cl.Action(name='add_provider_key', payload={'provider': p.value}, label=f'Add {_display(p)} key'))
+        actions.append(cl.Action(name='add_provider_key', payload={'provider': p.value}, label=f'Add {display_provider(p)} key'))
     for p in stored:
         if p != preferred:
-            actions.append(cl.Action(name='set_preferred_provider', payload={'provider': p.value}, label=f'Use {_display(p)}'))
-        actions.append(cl.Action(name='remove_provider_key', payload={'provider': p.value}, label=f'Remove {_display(p)} key'))
+            actions.append(cl.Action(name='set_preferred_provider', payload={'provider': p.value}, label=f'Use {display_provider(p)}'))
+        actions.append(cl.Action(name='remove_provider_key', payload={'provider': p.value}, label=f'Remove {display_provider(p)} key'))
     return actions
 
 
@@ -82,20 +86,15 @@ async def handle_set_preferred(provider: LLMProvider) -> None:
 
     api_key = SupabaseLLMKeyRepository(secret_client).get_key(user_id, provider)
     if api_key is None:
-        await cl.Message(f'No {_display(provider)} key found. Add one first.').send()
+        await cl.Message(f'No {display_provider(provider)} key found. Add one first.').send()
         return
 
     SupabaseUserProfileRepository(authenticated_client, user_id).set_preferred_provider(provider)
     cl.user_session.set(coaching.SESSION_LLM_PROVIDER, provider)
     cl.user_session.set(coaching.SESSION_LLM_API_KEY, api_key)
+    _reinit_coach()
 
-    profile: Optional[UserProfile] = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
-    activities: list[Activity] = cl.user_session.get(coaching.SESSION_ACTIVITIES)
-    display_name: str = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
-    coaching.init_coach_session(profile, activities, display_name)
-
-    actions = _ready_actions()
-    await cl.Message(f'Switched to **{_display(provider)}**. Coach is ready.', actions=actions).send()
+    await cl.Message(f'Switched to **{display_provider(provider)}**. Coach is ready.', actions=ready_actions()).send()
 
 
 async def handle_remove_key(provider: LLMProvider) -> None:
@@ -119,16 +118,12 @@ async def handle_remove_key(provider: LLMProvider) -> None:
         SupabaseUserProfileRepository(authenticated_client, user_id).set_preferred_provider(fallback)
         cl.user_session.set(coaching.SESSION_LLM_PROVIDER, fallback)
         cl.user_session.set(coaching.SESSION_LLM_API_KEY, fallback_key)
+        _reinit_coach()
 
-        profile: Optional[UserProfile] = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
-        activities: list[Activity] = cl.user_session.get(coaching.SESSION_ACTIVITIES)
-        display_name: str = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
-        coaching.init_coach_session(profile, activities, display_name)
-
-        notice = f'{_display(provider)} key removed. Now using your **{_display(fallback)}** key instead.'
-        await cl.Message(notice, actions=_ready_actions()).send()
+        notice = f'{display_provider(provider)} key removed. Now using your **{display_provider(fallback)}** key instead.'
+        await cl.Message(notice, actions=ready_actions()).send()
     else:
-        await cl.Message(f'{_display(provider)} key removed.', actions=_ready_actions()).send()
+        await cl.Message(f'{display_provider(provider)} key removed.', actions=ready_actions()).send()
 
 
 def _help_text() -> str:
@@ -148,12 +143,19 @@ def _help_text() -> str:
 
 
 async def handle_help() -> None:
-    await cl.Message(_help_text(), actions=_ready_actions()).send()
+    await cl.Message(_help_text(), actions=ready_actions()).send()
 
 
-def _ready_actions() -> list[cl.Action]:
+def ready_actions() -> list[cl.Action]:
     return [
         cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
         cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
         cl.Action(name='help', payload={}, label='Help'),
     ]
+
+
+def _reinit_coach() -> None:
+    profile = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
+    activities = cl.user_session.get(coaching.SESSION_ACTIVITIES)
+    display_name = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
+    coaching.init_coach_session(profile, activities, display_name)
