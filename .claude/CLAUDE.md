@@ -146,16 +146,19 @@ The core domain and reasoning logic (`coach/domain/`, `coach/builders/`, `coach/
 - [ ] Enable `pg_cron` extension in Supabase and schedule periodic cleanup of expired `strava_oauth_state` rows
 - [ ] Activity feed / history view in the UI
 
-### Phase 5 — User API key management
-- [ ] Per-user API key storage in Supabase Vault, keyed by `(user_id, provider)`; same Vault pattern as Strava tokens (SECURITY DEFINER RPCs, secret key only)
-- [ ] Load stored key at chat start; fallback chain: user Vault key → operator env key
-- [ ] UI flow: detect missing key, prompt user to enter one, save to Vault; allow removal
-- [ ] Support both `google` and `openai` providers
+### Phase 5 — User API key management ✅
+- [x] Per-user API key storage in Supabase Vault, keyed by `(user_id, provider)`; same Vault pattern as Strava tokens (SECURITY DEFINER RPCs, secret key only)
+- [x] Load stored key at chat start; fallback to other stored provider with notice if preferred missing; no operator key fallback
+- [x] UI flow: detect missing key, prompt user to enter key via FastAPI password form (key never enters chat stream), save to Vault; allow removal and provider switching
+- [x] Support both `google` and `openai` providers
+- [x] Provider management sub-flow: manage keys, set preferred provider, remove keys with automatic fallback
+- [x] Always-present Help button with setup instructions
 
 ### Phase 6 — Chat persistence
 - [ ] Store chat threads and messages in Supabase (new `threads` / `messages` tables with RLS)
 - [ ] Load the most recent thread on chat start; restore `ChatHistory` from it
 - [ ] Thread list / history view in the UI sidebar
+- **Note:** API key entry goes through the FastAPI form route (`/oauth/api-key`) — the raw key never enters the Chainlit chat stream. When implementing chat persistence, confirm this route is not inadvertently captured in stored threads.
 
 ## Testing conventions
 
