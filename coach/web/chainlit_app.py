@@ -12,6 +12,7 @@ from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
+from coach.web import api_key_flow
 from coach.web import coaching
 from coach.web import profile_flow
 from coach.web import session
@@ -23,14 +24,14 @@ from coach.web.strava_oauth import generate_strava_auth_url
 
 install_patched_google_provider()
 
-# Insert before Chainlit's routes so the SPA catch-all doesn't intercept it
-_fastapi_app = create_app()
-cl.server.app.router.routes.insert(0, Mount('/oauth', app=_fastapi_app))
-
 _PROVIDER_DISPLAY_NAMES: dict[LLMProvider, str] = {
     LLMProvider.GOOGLE: 'Google AI Studio',
     LLMProvider.OPENAI: 'OpenAI',
 }
+
+# Insert before Chainlit's routes so the SPA catch-all doesn't intercept it
+_fastapi_app = create_app()
+cl.server.app.router.routes.insert(0, Mount('/oauth', app=_fastapi_app))
 
 
 @cl.oauth_callback
@@ -78,7 +79,7 @@ async def on_chat_start() -> None:
     api_key, active_provider, provider_notice = _resolve_llm_key(key_repo, user_id, preferred_provider)
 
     if api_key is None:
-        await _api_key_onboarding_message().send()
+        await api_key_flow.api_key_onboarding_message().send()
         return
 
     cl.user_session.set(coaching.SESSION_LLM_PROVIDER, active_provider)
@@ -103,7 +104,10 @@ async def on_chat_start() -> None:
         return
 
     coaching.init_coach_session(profile, activities, display_name)
-    actions = [cl.Action(name='edit_profile', payload={}, label='Edit Profile')]
+    actions = [
+        cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
+        cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
+    ]
     welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
     if provider_notice:
         welcome = f'{provider_notice}\n\n{welcome}'
@@ -183,6 +187,32 @@ async def on_set_api_key_openai(action: cl.Action) -> None:
     await cl.Message(f'[Click here to enter your OpenAI key]({url})').send()
 
 
+@cl.action_callback('manage_ai_provider')
+async def on_manage_ai_provider(action: cl.Action) -> None:
+    await api_key_flow.handle_provider_management()
+
+
+@cl.action_callback('set_preferred_provider')
+async def on_set_preferred_provider(action: cl.Action) -> None:
+    provider = LLMProvider(action.payload['provider'])
+    await api_key_flow.handle_set_preferred(provider)
+
+
+@cl.action_callback('remove_provider_key')
+async def on_remove_provider_key(action: cl.Action) -> None:
+    provider = LLMProvider(action.payload['provider'])
+    await api_key_flow.handle_remove_key(provider)
+
+
+@cl.action_callback('add_provider_key')
+async def on_add_provider_key(action: cl.Action) -> None:
+    provider_str: str = action.payload.get('provider', 'google')
+    user_id = session.get_user_id()
+    url = generate_api_key_form_url(user_id, create_secret_client(), provider=provider_str)
+    provider_name = _PROVIDER_DISPLAY_NAMES.get(LLMProvider(provider_str), provider_str.title())
+    await cl.Message(f'[Click here to add your {provider_name} key]({url})').send()
+
+
 def _resolve_llm_key(key_repo: LLMKeyRepository, user_id: str, preferred: LLMProvider) -> tuple[Optional[str], LLMProvider, Optional[str]]:
     key = key_repo.get_key(user_id, preferred)
     if key is not None:
@@ -194,27 +224,6 @@ def _resolve_llm_key(key_repo: LLMKeyRepository, user_id: str, preferred: LLMPro
                 notice = f'Note: using your {_PROVIDER_DISPLAY_NAMES[fallback]} key — your {_PROVIDER_DISPLAY_NAMES[preferred]} key is not configured yet.'
                 return key, fallback, notice
     return None, preferred, None
-
-
-def _api_key_onboarding_message() -> cl.Message:
-    text = (
-        'To start coaching, you need to connect an AI provider API key. '
-        'Only **one key** is needed — Google AI Studio is the easiest option and has a free tier.\n\n'
-        '**Option A — Google AI Studio (recommended, free)**\n'
-        '1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)\n'
-        '2. Sign in with your Google account\n'
-        '3. Click "Create API key" and copy it\n'
-        '4. Click **Connect Google AI Studio** below, paste the key, then start a new chat\n\n'
-        '**Option B — OpenAI**\n'
-        '1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)\n'
-        '2. Create a new secret key and copy it\n'
-        '3. Click **Connect OpenAI** below, paste the key, then start a new chat'
-    )
-    actions = [
-        cl.Action(name='set_api_key_google', payload={}, label='Connect Google AI Studio'),
-        cl.Action(name='set_api_key_openai', payload={}, label='Connect OpenAI'),
-    ]
-    return cl.Message(text, actions=actions)
 
 
 def _connect_strava_prompt() -> cl.Message:

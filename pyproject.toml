@@ -34,7 +34,7 @@ no_warn_return_any = true
 disallow_any_generics = false
 
 [[tool.mypy.overrides]]
-module = ["coach.web.chainlit_app", "coach.web.coaching", "coach.web.google_oauth", "coach.web.profile_flow", "coach.web.session"]
+module = ["coach.web.api_key_flow", "coach.web.chainlit_app", "coach.web.coaching", "coach.web.google_oauth", "coach.web.profile_flow", "coach.web.session"]
 disallow_untyped_calls = false
 
 [tool.ruff]

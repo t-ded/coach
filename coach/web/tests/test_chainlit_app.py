@@ -1,6 +1,6 @@
 from coach.auth.llm_keys import FakeLLMKeyRepository
 from coach.reasoning.providers import LLMProvider
-from coach.web.chainlit_app import _PROVIDER_DISPLAY_NAMES
+from coach.web.api_key_flow import _PROVIDER_DISPLAY_NAMES
 from coach.web.chainlit_app import _resolve_llm_key
 
 _USER_ID = 'user-123'
