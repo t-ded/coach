@@ -31,7 +31,7 @@ _GOOGLE_VALIDATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 _OPENAI_VALIDATE_URL = 'https://api.openai.com/v1/models'
 
 
-def generate_api_key_form_url(user_id: str, secret_client: Client) -> str:
+def generate_api_key_form_url(user_id: str, secret_client: Client, provider: Optional[str] = None) -> str:
     state = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(minutes=_STATE_EXPIRY_MINUTES)
     secret_client.table(_STATE_TABLE).insert(
@@ -42,7 +42,10 @@ def generate_api_key_form_url(user_id: str, secret_client: Client) -> str:
         },
     ).execute()
     base_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
-    return f'{base_url}/oauth/api-key?state={state}'
+    url = f'{base_url}/oauth/api-key?state={state}'
+    if provider:
+        url += f'&provider={provider}'
+    return url
 
 
 def _lookup_state(state: str, secret_client: Client) -> str:

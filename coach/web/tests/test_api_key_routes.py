@@ -163,3 +163,11 @@ class TestGenerateApiKeyFormUrl:
         with patch.dict(os.environ, {'CHAINLIT_URL': 'https://myapp.com'}):
             url = generate_api_key_form_url(_USER_ID, self._secret_client)
         assert url.startswith('https://myapp.com')
+
+    def test_url_includes_provider_when_specified(self) -> None:
+        url = generate_api_key_form_url(_USER_ID, self._secret_client, provider='openai')
+        assert 'provider=openai' in url
+
+    def test_url_omits_provider_param_when_not_specified(self) -> None:
+        url = generate_api_key_form_url(_USER_ID, self._secret_client)
+        assert 'provider=' not in url
