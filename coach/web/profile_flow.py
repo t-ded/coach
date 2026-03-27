@@ -207,5 +207,8 @@ async def _advance_profile_flow(profile: Optional[UserProfile], done_message: st
         cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
         await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
     else:
-        edit_action = cl.Action(name='edit_profile', payload={}, label='Edit Profile')
-        await cl.Message(done_message, actions=[edit_action]).send()
+        actions = [
+            cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
+            cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
+        ]
+        await cl.Message(done_message, actions=actions).send()

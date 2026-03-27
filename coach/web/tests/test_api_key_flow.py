@@ -1,0 +1,83 @@
+from coach.reasoning.providers import LLMProvider
+from coach.web.api_key_flow import _build_management_actions
+from coach.web.api_key_flow import _build_management_text
+
+_GOOGLE = LLMProvider.GOOGLE
+_OPENAI = LLMProvider.OPENAI
+
+
+class TestBuildManagementText:
+    def test_no_keys_stored(self) -> None:
+        text = _build_management_text(_GOOGLE, [])
+        assert 'No API keys are stored' in text
+
+    def test_shows_preferred_provider(self) -> None:
+        text = _build_management_text(_GOOGLE, [_GOOGLE])
+        assert 'Google AI Studio' in text
+        assert 'preferred' in text
+
+    def test_marks_preferred_provider_in_list(self) -> None:
+        text = _build_management_text(_GOOGLE, [_GOOGLE, _OPENAI])
+        google_pos = text.index('Google AI Studio')
+        preferred_pos = text.index('preferred')
+        # preferred marker should appear near Google AI Studio, not OpenAI
+        openai_pos = text.index('OpenAI')
+        assert abs(google_pos - preferred_pos) < abs(openai_pos - preferred_pos)
+
+    def test_does_not_mark_non_preferred_provider(self) -> None:
+        text = _build_management_text(_GOOGLE, [_GOOGLE, _OPENAI])
+        # OpenAI line should not have the preferred marker
+        openai_line = next(line for line in text.splitlines() if 'OpenAI' in line)
+        assert 'preferred' not in openai_line
+
+    def test_lists_all_stored_providers(self) -> None:
+        text = _build_management_text(_GOOGLE, [_GOOGLE, _OPENAI])
+        assert 'Google AI Studio' in text
+        assert 'OpenAI' in text
+
+
+class TestBuildManagementActions:
+    def _action_names(self, preferred: LLMProvider, stored: list[LLMProvider]) -> list[str]:
+        return [a.name for a in _build_management_actions(preferred, stored)]
+
+    def _action_labels(self, preferred: LLMProvider, stored: list[LLMProvider]) -> list[str]:
+        return [a.label for a in _build_management_actions(preferred, stored)]
+
+    def test_add_button_for_unstored_provider(self) -> None:
+        names = self._action_names(_GOOGLE, [_GOOGLE])
+        assert 'add_provider_key' in names
+
+    def test_no_add_button_when_all_providers_stored(self) -> None:
+        names = self._action_names(_GOOGLE, [_GOOGLE, _OPENAI])
+        assert 'add_provider_key' not in names
+
+    def test_remove_button_for_each_stored_provider(self) -> None:
+        actions = _build_management_actions(_GOOGLE, [_GOOGLE, _OPENAI])
+        remove_actions = [a for a in actions if a.name == 'remove_provider_key']
+        assert len(remove_actions) == 2
+
+    def test_set_preferred_button_only_for_non_preferred_stored(self) -> None:
+        actions = _build_management_actions(_GOOGLE, [_GOOGLE, _OPENAI])
+        set_pref = [a for a in actions if a.name == 'set_preferred_provider']
+        assert len(set_pref) == 1
+        assert set_pref[0].payload['provider'] == 'openai'
+
+    def test_no_set_preferred_button_when_only_one_provider(self) -> None:
+        names = self._action_names(_GOOGLE, [_GOOGLE])
+        assert 'set_preferred_provider' not in names
+
+    def test_remove_button_payload_contains_provider(self) -> None:
+        actions = _build_management_actions(_GOOGLE, [_GOOGLE])
+        remove = next(a for a in actions if a.name == 'remove_provider_key')
+        assert remove.payload['provider'] == 'google'
+
+    def test_add_button_payload_contains_provider(self) -> None:
+        actions = _build_management_actions(_GOOGLE, [_GOOGLE])
+        add = next(a for a in actions if a.name == 'add_provider_key')
+        assert add.payload['provider'] == 'openai'
+
+    def test_no_actions_when_no_keys_stored(self) -> None:
+        # With no stored keys, we still show add buttons for all providers
+        names = self._action_names(_GOOGLE, [])
+        assert all(n == 'add_provider_key' for n in names)
+        assert len(names) == len(list(LLMProvider))
