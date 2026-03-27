@@ -208,4 +208,4 @@ async def _advance_profile_flow(profile: Optional[UserProfile], done_message: st
         cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
         await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
     else:
-        await cl.Message(done_message, actions=api_key_flow._ready_actions()).send()
+        await cl.Message(done_message, actions=api_key_flow.ready_actions()).send()

@@ -101,15 +101,18 @@ class TestApiKeyStore:
             {'p_user_id': _USER_ID, 'p_provider': 'google', 'p_api_key': 'test-key'},
         )
 
-    def test_first_key_updates_preferred_provider(self) -> None:
+    def test_first_key_sets_preferred_provider(self) -> None:
         self._secret_client.rpc.return_value.execute.return_value.data = []
         self._post(provider='openai')
-        self._secret_client.table.return_value.update.assert_called_once_with({'preferred_provider': 'openai'})
+        self._secret_client.table.return_value.upsert.assert_called_once_with(
+            {'user_id': _USER_ID, 'preferred_provider': 'openai'},
+            on_conflict='user_id',
+        )
 
-    def test_subsequent_key_does_not_update_preferred_provider(self) -> None:
+    def test_subsequent_key_does_not_change_preferred_provider(self) -> None:
         self._secret_client.rpc.return_value.execute.return_value.data = [{'provider': 'google'}]
         self._post(provider='openai')
-        self._secret_client.table.return_value.update.assert_not_called()
+        self._secret_client.table.return_value.upsert.assert_not_called()
 
     def test_invalid_state_returns_400(self) -> None:
         self._state_patcher.stop()

@@ -1,10 +1,14 @@
+from coach.auth.llm_keys import FakeLLMKeyRepository
 from coach.reasoning.providers import LLMProvider
+from coach.reasoning.providers import display_provider
 from coach.web.api_key_flow import _build_management_actions
 from coach.web.api_key_flow import _build_management_text
 from coach.web.api_key_flow import _help_text
+from coach.web.api_key_flow import resolve_llm_key
 
 _GOOGLE = LLMProvider.GOOGLE
 _OPENAI = LLMProvider.OPENAI
+_USER_ID = 'user-123'
 
 
 class TestBuildManagementText:
@@ -100,3 +104,47 @@ class TestHelpText:
     def test_contains_manage_ai_provider_instruction(self) -> None:
         text = _help_text()
         assert 'Manage AI Provider' in text
+
+
+class TestResolveLLMKey:
+    def setup_method(self) -> None:
+        self._repo = FakeLLMKeyRepository()
+
+    def test_returns_preferred_key_and_no_notice(self) -> None:
+        self._repo.save_key(_USER_ID, _GOOGLE, 'g-key')
+        key, provider, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert key == 'g-key'
+        assert provider == _GOOGLE
+        assert notice is None
+
+    def test_falls_back_to_other_provider_when_preferred_missing(self) -> None:
+        self._repo.save_key(_USER_ID, _OPENAI, 'o-key')
+        key, provider, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert key == 'o-key'
+        assert provider == _OPENAI
+
+    def test_fallback_notice_names_both_providers(self) -> None:
+        self._repo.save_key(_USER_ID, _OPENAI, 'o-key')
+        _, _, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert notice is not None
+        assert display_provider(_OPENAI) in notice
+        assert display_provider(_GOOGLE) in notice
+
+    def test_returns_none_key_when_no_keys_stored(self) -> None:
+        key, provider, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert key is None
+        assert provider == _GOOGLE
+        assert notice is None
+
+    def test_preferred_provider_key_wins_over_fallback(self) -> None:
+        self._repo.save_key(_USER_ID, _GOOGLE, 'g-key')
+        self._repo.save_key(_USER_ID, _OPENAI, 'o-key')
+        key, provider, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert key == 'g-key'
+        assert provider == _GOOGLE
+        assert notice is None
+
+    def test_no_notice_when_preferred_key_is_present(self) -> None:
+        self._repo.save_key(_USER_ID, _GOOGLE, 'g-key')
+        _, _, notice = resolve_llm_key(self._repo, _USER_ID, _GOOGLE)
+        assert notice is None

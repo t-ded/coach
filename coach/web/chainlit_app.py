@@ -3,7 +3,6 @@ from typing import Optional
 import chainlit as cl
 from starlette.routing import Mount
 
-from coach.auth.llm_keys import LLMKeyRepository
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
@@ -12,6 +11,7 @@ from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
+from coach.reasoning.providers import display_provider
 from coach.web import api_key_flow
 from coach.web import coaching
 from coach.web import profile_flow
@@ -23,11 +23,6 @@ from coach.web.google_oauth import install_patched_google_provider
 from coach.web.strava_oauth import generate_strava_auth_url
 
 install_patched_google_provider()
-
-_PROVIDER_DISPLAY_NAMES: dict[LLMProvider, str] = {
-    LLMProvider.GOOGLE: 'Google AI Studio',
-    LLMProvider.OPENAI: 'OpenAI',
-}
 
 # Insert before Chainlit's routes so the SPA catch-all doesn't intercept it
 _fastapi_app = create_app()
@@ -76,7 +71,7 @@ async def on_chat_start() -> None:
     secret_client = create_secret_client()
     key_repo = SupabaseLLMKeyRepository(secret_client)
     preferred_provider = SupabaseUserProfileRepository(authenticated_client, user_id).get_preferred_provider()
-    api_key, active_provider, provider_notice = _resolve_llm_key(key_repo, user_id, preferred_provider)
+    api_key, active_provider, provider_notice = api_key_flow.resolve_llm_key(key_repo, user_id, preferred_provider)
 
     if api_key is None:
         await api_key_flow.api_key_onboarding_message().send()
@@ -104,11 +99,10 @@ async def on_chat_start() -> None:
         return
 
     coaching.init_coach_session(profile, activities, display_name)
-    actions = api_key_flow._ready_actions()
     welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
     if provider_notice:
         welcome = f'{provider_notice}\n\n{welcome}'
-    await cl.Message(welcome, actions=actions).send()
+    await cl.Message(welcome, actions=api_key_flow.ready_actions()).send()
 
 
 @cl.on_message
@@ -170,18 +164,12 @@ async def on_connect_strava(action: cl.Action) -> None:
     await cl.Message(f'[Click here to connect Strava]({url})').send()
 
 
-@cl.action_callback('set_api_key_google')
-async def on_set_api_key_google(action: cl.Action) -> None:
+@cl.action_callback('add_provider_key')
+async def on_add_provider_key(action: cl.Action) -> None:
+    provider_str: str = action.payload.get('provider', 'google')
     user_id = session.get_user_id()
-    url = generate_api_key_form_url(user_id, create_secret_client(), provider='google')
-    await cl.Message(f'[Click here to enter your Google AI Studio key]({url})').send()
-
-
-@cl.action_callback('set_api_key_openai')
-async def on_set_api_key_openai(action: cl.Action) -> None:
-    user_id = session.get_user_id()
-    url = generate_api_key_form_url(user_id, create_secret_client(), provider='openai')
-    await cl.Message(f'[Click here to enter your OpenAI key]({url})').send()
+    url = generate_api_key_form_url(user_id, create_secret_client(), provider=provider_str)
+    await cl.Message(f'[Click here to connect your {display_provider(LLMProvider(provider_str))} key]({url})').send()
 
 
 @cl.action_callback('manage_ai_provider')
@@ -201,31 +189,9 @@ async def on_remove_provider_key(action: cl.Action) -> None:
     await api_key_flow.handle_remove_key(provider)
 
 
-@cl.action_callback('add_provider_key')
-async def on_add_provider_key(action: cl.Action) -> None:
-    provider_str: str = action.payload.get('provider', 'google')
-    user_id = session.get_user_id()
-    url = generate_api_key_form_url(user_id, create_secret_client(), provider=provider_str)
-    provider_name = _PROVIDER_DISPLAY_NAMES.get(LLMProvider(provider_str), provider_str.title())
-    await cl.Message(f'[Click here to add your {provider_name} key]({url})').send()
-
-
 @cl.action_callback('help')
 async def on_help(action: cl.Action) -> None:
     await api_key_flow.handle_help()
-
-
-def _resolve_llm_key(key_repo: LLMKeyRepository, user_id: str, preferred: LLMProvider) -> tuple[Optional[str], LLMProvider, Optional[str]]:
-    key = key_repo.get_key(user_id, preferred)
-    if key is not None:
-        return key, preferred, None
-    for fallback in LLMProvider:
-        if fallback != preferred:
-            key = key_repo.get_key(user_id, fallback)
-            if key is not None:
-                notice = f'Note: using your {_PROVIDER_DISPLAY_NAMES[fallback]} key — your {_PROVIDER_DISPLAY_NAMES[preferred]} key is not configured yet.'
-                return key, fallback, notice
-    return None, preferred, None
 
 
 def _connect_strava_prompt() -> cl.Message:

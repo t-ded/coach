@@ -4,12 +4,14 @@ import secrets
 from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
+from typing import Annotated
 from typing import Any
 from typing import Optional
 from typing import Union
 from typing import cast
 
-import requests as http_requests
+import requests
+import requests.exceptions
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Form
@@ -22,13 +24,17 @@ from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.reasoning.providers import LLMProvider
+from coach.reasoning.providers import display_provider
 
 router = APIRouter()
 
 _STATE_TABLE = 'api_key_setup_state'
 _STATE_EXPIRY_MINUTES = 10
+_CHAINLIT_URL_DEFAULT = 'http://localhost:8000'
 _GOOGLE_VALIDATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 _OPENAI_VALIDATE_URL = 'https://api.openai.com/v1/models'
+
+_SecretClient = Annotated[Client, Depends(create_secret_client)]
 
 
 def generate_api_key_form_url(user_id: str, secret_client: Client, provider: Optional[str] = None) -> str:
@@ -41,7 +47,7 @@ def generate_api_key_form_url(user_id: str, secret_client: Client, provider: Opt
             'expires_at': expires_at.isoformat(),
         },
     ).execute()
-    base_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
+    base_url = os.environ.get('CHAINLIT_URL', _CHAINLIT_URL_DEFAULT)
     url = f'{base_url}/oauth/api-key?state={state}'
     if provider:
         url += f'&provider={provider}'
@@ -49,7 +55,6 @@ def generate_api_key_form_url(user_id: str, secret_client: Client, provider: Opt
 
 
 def _lookup_state(state: str, secret_client: Client) -> str:
-    """Return user_id for a valid, non-expired state token without consuming it."""
     result = secret_client.table(_STATE_TABLE).select('user_id, expires_at').eq('state', state).execute()
     rows = cast(list[dict[str, Any]], result.data)
     if not rows:
@@ -69,11 +74,11 @@ def _consume_state(state: str, secret_client: Client) -> None:
 def _validate_api_key(provider: LLMProvider, api_key: str) -> bool:
     try:
         if provider == LLMProvider.GOOGLE:
-            response = http_requests.get(_GOOGLE_VALIDATE_URL, params={'key': api_key}, timeout=5)
+            response = requests.get(_GOOGLE_VALIDATE_URL, params={'key': api_key}, timeout=5)
         else:
-            response = http_requests.get(_OPENAI_VALIDATE_URL, headers={'Authorization': f'Bearer {api_key}'}, timeout=5)
+            response = requests.get(_OPENAI_VALIDATE_URL, headers={'Authorization': f'Bearer {api_key}'}, timeout=5)
         return response.status_code == 200
-    except Exception:  # noqa: BLE001
+    except requests.exceptions.RequestException:
         return False
 
 
@@ -129,10 +134,10 @@ def _render_form(state: str, error: Optional[str] = None, selected_provider: str
 
 @router.get('/api-key')
 def api_key_form(
+    secret_client: _SecretClient,
     state: str,
     error: Optional[str] = None,
     provider: Optional[str] = None,
-    secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> HTMLResponse:
     _lookup_state(state, secret_client)
     return _render_form(state, error, selected_provider=provider or 'google')
@@ -140,10 +145,10 @@ def api_key_form(
 
 @router.post('/api-key/store', response_model=None)
 def api_key_store(
+    secret_client: _SecretClient,
     state: str = Form(...),
     provider: str = Form(...),
     api_key: str = Form(...),
-    secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> Union[RedirectResponse, HTMLResponse]:
     user_id = _lookup_state(state, secret_client)
 
@@ -153,7 +158,7 @@ def api_key_store(
         raise HTTPException(status_code=400, detail=f'Unknown provider: {provider}') from exc
 
     if not _validate_api_key(llm_provider, api_key):
-        error_msg = f'The {llm_provider} key could not be verified. Please check it and try again.'
+        error_msg = f'The {display_provider(llm_provider)} key could not be verified. Please check it and try again.'
         return _render_form(state, error_msg, selected_provider=provider)
 
     key_repo = SupabaseLLMKeyRepository(secret_client)
@@ -165,5 +170,4 @@ def api_key_store(
 
     _consume_state(state, secret_client)
 
-    chainlit_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
-    return RedirectResponse(chainlit_url, status_code=303)
+    return RedirectResponse(os.environ.get('CHAINLIT_URL', _CHAINLIT_URL_DEFAULT), status_code=303)

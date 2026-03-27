@@ -42,7 +42,7 @@ class SupabaseUserProfileRepository:
         return LLMProvider(cast(ProfileRow, response.data).get('preferred_provider', 'google'))
 
     def set_preferred_provider(self, provider: LLMProvider) -> None:
-        self._table().update({'preferred_provider': provider}).eq('user_id', self._user_id).execute()
+        self._table().upsert({'user_id': self._user_id, 'preferred_provider': provider.value}, on_conflict='user_id').execute()
 
     def _to_row(self, profile: UserProfile) -> ProfileRow:
         return {
