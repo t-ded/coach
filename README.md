@@ -23,11 +23,49 @@ Coach is a personalized AI coaching assistant that lives in your browser. It rea
 
 1. Open **[coach-production-e0b4.up.railway.app](https://coach-production-e0b4.up.railway.app/)**
 2. Sign in with your Google account
-3. Connect your Strava account — this is a one-time step
-4. Set up your profile *(optional but recommended — takes about 5 minutes)*
-5. Start chatting
+3. Connect an AI provider key — see [Setting up your AI provider key](#-setting-up-your-ai-provider-key) below
+4. Connect your Strava account — see [Connecting Strava](#-connecting-strava) below
+5. Set up your profile *(optional but recommended — takes about 5 minutes)*
+6. Start chatting
 
 Your activities sync automatically at the start of each session, so the coach always has your latest training in view.
+
+---
+
+## 🔑 Setting up your AI provider key<a name="api-key-setup"></a>
+
+Coach uses an AI language model to power the coaching conversation. You bring your own key — it stays encrypted in our database and we never have access to the raw key.
+
+**Option A — Google AI Studio (recommended, free)**
+
+Only a Google account is needed. No credit card, no paid subscription.
+
+1. Go to **[aistudio.google.com/apikey](https://aistudio.google.com/apikey)**
+2. Sign in with your Google account
+3. Click **Create API key**, then copy the key it generates
+4. Back in Coach, click **Connect Google AI Studio** and paste the key
+
+**Option B — OpenAI**
+
+1. Go to **[platform.openai.com/api-keys](https://platform.openai.com/api-keys)**
+2. Click **Create new secret key**, copy it
+3. Back in Coach, click **Connect OpenAI** and paste the key
+
+**Security note:** your key is stored encrypted using Supabase Vault. The operator (whoever runs this Coach instance) never has access to your raw key — only you do.
+
+You can manage your keys at any time using the **Manage AI Provider** button in the chat.
+
+---
+
+## 🔗 Connecting Strava
+
+Connecting Strava lets Coach see your recent training — workouts, distances, heart rate, personal bests. It's a one-time step and uses the standard Strava authorisation flow.
+
+1. After setting up your AI key, click **Connect Strava** in the chat
+2. You'll be taken to the Strava website to authorise Coach
+3. Once you approve, you're redirected back and the coach is ready to go
+
+Coach only reads your activity data — it cannot post or modify anything on your Strava account. A free Strava account is all you need.
 
 ---
 
