@@ -211,9 +211,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Claude Code — track CLAUDE.md but ignore everything else
-.claude/*
-!.claude/CLAUDE.md
+# Claude Code settings
+.claude/settings.local.json
 
 # Chainlit — track config.toml and translations, ignore runtime-generated uploads
 .chainlit/.files/

@@ -71,13 +71,14 @@ Coach only reads your activity data — it cannot post or modify anything on you
 
 ## ✨ What Coach can do
 
-|                                  |                                                                                                    |
-|----------------------------------|----------------------------------------------------------------------------------------------------|
-| 🔗 **Strava sync**               | Activities sync automatically each session — free Strava account supported                         |
-| 💬 **AI chat**                   | Multi-turn coaching conversations with your full training context always in view                   |
-| 👤 **Personalized profile**      | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
-| 🔐 **Google login**              | No account creation — sign in with your existing Google account                                    |
-| 📝 **Private notes**             | Annotate Strava activities with coaching context that only the AI sees                             |
+|                             |                                                                                                    |
+|-----------------------------|----------------------------------------------------------------------------------------------------|
+| 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                         |
+| 💬 **AI chat**              | Multi-turn coaching conversations with your full training context always in view                   |
+| 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
+| 🔐 **Google login**         | No account creation — sign in with your existing Google account                                    |
+| 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                             |
+| 📜 ~~Chat history~~         | Persistent coaching history across different sessions - not yet, next on the roadmap!              |
 
 ---
 
