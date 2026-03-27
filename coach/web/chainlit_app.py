@@ -104,10 +104,7 @@ async def on_chat_start() -> None:
         return
 
     coaching.init_coach_session(profile, activities, display_name)
-    actions = [
-        cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
-        cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
-    ]
+    actions = api_key_flow._ready_actions()
     welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
     if provider_notice:
         welcome = f'{provider_notice}\n\n{welcome}'
@@ -211,6 +208,11 @@ async def on_add_provider_key(action: cl.Action) -> None:
     url = generate_api_key_form_url(user_id, create_secret_client(), provider=provider_str)
     provider_name = _PROVIDER_DISPLAY_NAMES.get(LLMProvider(provider_str), provider_str.title())
     await cl.Message(f'[Click here to add your {provider_name} key]({url})').send()
+
+
+@cl.action_callback('help')
+async def on_help(action: cl.Action) -> None:
+    await api_key_flow.handle_help()
 
 
 def _resolve_llm_key(key_repo: LLMKeyRepository, user_id: str, preferred: LLMProvider) -> tuple[Optional[str], LLMProvider, Optional[str]]:

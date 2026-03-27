@@ -11,6 +11,7 @@ from coach.reasoning.profile_assistant.profile import apply_section_text
 from coach.reasoning.profile_assistant.profile import collected_from_profile
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
+from coach.web import api_key_flow
 from coach.web import coaching
 from coach.web import session
 
@@ -207,8 +208,4 @@ async def _advance_profile_flow(profile: Optional[UserProfile], done_message: st
         cl.user_session.set(_SESSION_IS_SETUP_MODE, False)
         await cl.Message('Profile setup complete! Coach is ready. What would you like to work on today?').send()
     else:
-        actions = [
-            cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
-            cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
-        ]
-        await cl.Message(done_message, actions=actions).send()
+        await cl.Message(done_message, actions=api_key_flow._ready_actions()).send()

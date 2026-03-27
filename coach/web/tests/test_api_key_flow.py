@@ -1,6 +1,7 @@
 from coach.reasoning.providers import LLMProvider
 from coach.web.api_key_flow import _build_management_actions
 from coach.web.api_key_flow import _build_management_text
+from coach.web.api_key_flow import _help_text
 
 _GOOGLE = LLMProvider.GOOGLE
 _OPENAI = LLMProvider.OPENAI
@@ -81,3 +82,21 @@ class TestBuildManagementActions:
         names = self._action_names(_GOOGLE, [])
         assert all(n == 'add_provider_key' for n in names)
         assert len(names) == len(list(LLMProvider))
+
+
+class TestHelpText:
+    def test_contains_google_setup_steps(self) -> None:
+        text = _help_text()
+        assert 'aistudio.google.com/apikey' in text
+
+    def test_contains_openai_setup_steps(self) -> None:
+        text = _help_text()
+        assert 'platform.openai.com/api-keys' in text
+
+    def test_contains_readme_link(self) -> None:
+        text = _help_text()
+        assert 'README' in text
+
+    def test_contains_manage_ai_provider_instruction(self) -> None:
+        text = _help_text()
+        assert 'Manage AI Provider' in text
