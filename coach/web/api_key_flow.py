@@ -131,8 +131,29 @@ async def handle_remove_key(provider: LLMProvider) -> None:
         await cl.Message(f'{_display(provider)} key removed.', actions=_ready_actions()).send()
 
 
+def _help_text() -> str:
+    return (
+        '**How to set up an API key**\n\n'
+        '**Google AI Studio (free)**\n'
+        '1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)\n'
+        '2. Sign in with your Google account\n'
+        '3. Click "Create API key" and copy it\n'
+        '4. Click **Manage AI Provider** below, then **Add Google AI Studio key**, and paste the key\n\n'
+        '**OpenAI**\n'
+        '1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)\n'
+        '2. Create a new secret key and copy it\n'
+        '3. Click **Manage AI Provider** below, then **Add OpenAI key**, and paste the key\n\n'
+        'For more details, see the [README](https://github.com/tded/coach#api-key-setup).'
+    )
+
+
+async def handle_help() -> None:
+    await cl.Message(_help_text(), actions=_ready_actions()).send()
+
+
 def _ready_actions() -> list[cl.Action]:
     return [
         cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
         cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
+        cl.Action(name='help', payload={}, label='Help'),
     ]
