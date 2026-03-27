@@ -5,10 +5,15 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+import pytest
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.testclient import TestClient
 from httpx import Response
+from jwt.exceptions import PyJWTError
 
 from coach.persistence.database import create_secret_client
+from coach.web.api_key_routes import _verify_caller
 from coach.web.api_key_routes import generate_api_key_form_url
 from coach.web.app import create_app
 
@@ -23,6 +28,12 @@ class TestApiKeyForm:
         app = create_app()
         app.dependency_overrides[create_secret_client] = lambda: self._secret_client
         self._client = TestClient(app, raise_server_exceptions=False)
+
+        self._verify_patcher = patch('coach.web.api_key_routes._verify_caller')
+        self._verify_patcher.start()
+
+    def teardown_method(self) -> None:
+        self._verify_patcher.stop()
 
     def _setup_state(self, expires_at: str) -> None:
         result = MagicMock()
@@ -71,6 +82,9 @@ class TestApiKeyStore:
         self._state_patcher = patch('coach.web.api_key_routes._lookup_state', return_value=_USER_ID)
         self._state_mock = self._state_patcher.start()
 
+        self._verify_patcher = patch('coach.web.api_key_routes._verify_caller')
+        self._verify_patcher.start()
+
         self._validate_patcher = patch('coach.web.api_key_routes._validate_api_key', return_value=True)
         self._validate_mock = self._validate_patcher.start()
 
@@ -79,6 +93,7 @@ class TestApiKeyStore:
 
     def teardown_method(self) -> None:
         self._state_patcher.stop()
+        self._verify_patcher.stop()
         self._validate_patcher.stop()
 
     def _post(self, provider: str = 'google', api_key: str = 'test-key', state: str = 'valid-state') -> Response:
@@ -174,3 +189,45 @@ class TestGenerateApiKeyFormUrl:
     def test_url_omits_provider_param_when_not_specified(self) -> None:
         url = generate_api_key_form_url(_USER_ID, self._secret_client)
         assert 'provider=' not in url
+
+
+class TestVerifyCaller:
+    def _make_request(self, cookies: dict) -> Request:
+        mock = MagicMock(spec=Request)
+        mock.cookies = cookies
+        return mock
+
+    def test_no_cookie_raises_403(self) -> None:
+        request = self._make_request({})
+        with patch('coach.web.api_key_routes.get_token_from_cookies', return_value=None), pytest.raises(HTTPException) as exc_info:
+            _verify_caller(request, _USER_ID)
+        assert exc_info.value.status_code == 403
+
+    def test_invalid_token_raises_403(self) -> None:
+        request = self._make_request({'access_token': 'bad'})
+        with (
+            patch('coach.web.api_key_routes.get_token_from_cookies', return_value='bad'),
+            patch('coach.web.api_key_routes.decode_jwt', side_effect=PyJWTError('invalid')),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            _verify_caller(request, _USER_ID)
+        assert exc_info.value.status_code == 403
+
+    def test_mismatched_user_id_raises_403(self) -> None:
+        user = MagicMock()
+        user.metadata = {'supabase_user_id': 'other-user'}
+        request = self._make_request({'access_token': 'valid'})
+        with (
+            patch('coach.web.api_key_routes.get_token_from_cookies', return_value='valid'),
+            patch('coach.web.api_key_routes.decode_jwt', return_value=user),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            _verify_caller(request, _USER_ID)
+        assert exc_info.value.status_code == 403
+
+    def test_matching_user_id_passes(self) -> None:
+        user = MagicMock()
+        user.metadata = {'supabase_user_id': _USER_ID}
+        request = self._make_request({'access_token': 'valid'})
+        with patch('coach.web.api_key_routes.get_token_from_cookies', return_value='valid'), patch('coach.web.api_key_routes.decode_jwt', return_value=user):
+            _verify_caller(request, _USER_ID)  # should not raise
