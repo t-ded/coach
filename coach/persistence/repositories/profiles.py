@@ -35,6 +35,12 @@ class SupabaseUserProfileRepository:
     def delete(self) -> None:
         self._table().delete().eq('user_id', self._user_id).execute()
 
+    def get_preferred_provider(self) -> LLMProvider:
+        response = self._table().select('preferred_provider').eq('user_id', self._user_id).maybe_single().execute()
+        if not response or not response.data:
+            return LLMProvider.GOOGLE
+        return LLMProvider(cast(ProfileRow, response.data).get('preferred_provider', 'google'))
+
     def set_preferred_provider(self, provider: LLMProvider) -> None:
         self._table().update({'preferred_provider': provider}).eq('user_id', self._user_id).execute()
 

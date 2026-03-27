@@ -17,20 +17,6 @@ class LLMProvider(StrEnum):
     OPENAI = 'openai'
 
 
-def resolve_provider_and_key(user_env: dict[str, str], operator_env: dict[str, str]) -> tuple[LLMProvider, str]:
-    """Resolve LLM provider and API key: user-supplied takes priority over operator env var."""
-    if key := user_env.get('GOOGLE_AI_API_KEY'):
-        return LLMProvider.GOOGLE, key
-    if key := user_env.get('OPENAI_API_KEY'):
-        return LLMProvider.OPENAI, key
-    if key := operator_env.get('GOOGLE_AI_API_KEY'):
-        return LLMProvider.GOOGLE, key
-    if key := operator_env.get('OPENAI_API_KEY'):
-        return LLMProvider.OPENAI, key
-    msg = 'No LLM API key found. Set GOOGLE_AI_API_KEY or OPENAI_API_KEY.'
-    raise ValueError(msg)
-
-
 def create_llm_client(
     provider: LLMProvider = LLMProvider.GOOGLE,
     model: Optional[str] = None,
