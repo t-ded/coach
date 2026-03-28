@@ -1,6 +1,7 @@
 import os
 from datetime import UTC
 from datetime import datetime
+from typing import Optional
 
 import requests
 
@@ -15,8 +16,12 @@ class StravaAuth:
     def __init__(self, user_id: str, token_repo: StravaTokenRepository) -> None:
         self._user_id = user_id
         self._token_repo = token_repo
+        self._cached: Optional[StravaTokens] = None
 
     def get_access_token(self) -> str:
+        if self._cached is not None and not self._is_expired(self._cached):
+            return self._cached.access_token
+
         tokens = self._token_repo.get_tokens(self._user_id)
         if tokens is None:
             raise RuntimeError('No Strava credentials found.')
@@ -24,6 +29,7 @@ class StravaAuth:
         if self._is_expired(tokens):
             tokens = self._refresh(tokens)
 
+        self._cached = tokens
         return tokens.access_token
 
     def _is_expired(self, tokens: StravaTokens) -> bool:
