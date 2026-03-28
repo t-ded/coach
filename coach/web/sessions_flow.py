@@ -6,6 +6,7 @@ from coach.domain.session import Message
 from coach.domain.session import Session
 from coach.persistence.repositories.messages import SupabaseMessageRepository
 from coach.persistence.repositories.sessions import SupabaseSessionRepository
+from coach.reasoning.summarizer import SessionSummarizer
 from coach.web import coaching
 from coach.web import session
 
@@ -74,6 +75,14 @@ def _render_past_messages(messages: list[Message]) -> str:
     return '\n---\n'.join(lines)
 
 
+def _summary_is_stale(db_session: Session, latest_message_id: Optional[str]) -> bool:
+    if db_session.summary is None:
+        return True
+    if latest_message_id is None:
+        return False
+    return db_session.summarized_through_message_id != latest_message_id
+
+
 async def handle_open_session(session_id: str) -> None:
     from coach.web.api_key_flow import ready_actions
 
@@ -96,6 +105,26 @@ async def handle_open_session(session_id: str) -> None:
     if messages:
         history_text = _render_past_messages(messages)
         await cl.Message(history_text).send()
+
+    # Generate or use cached summary for coach context
+    summary: Optional[str] = None
+    if messages:
+        latest_id = await cl.make_async(msg_repo.latest_id)(session_id)
+        if _summary_is_stale(db_session, latest_id):
+            await cl.Message('Generating session summary for the coach...').send()
+            provider, api_key = coaching.get_llm_config()
+            summarizer = SessionSummarizer(provider=provider, api_key=api_key)
+            summary = await cl.make_async(summarizer.generate)(messages)
+            if latest_id:
+                await cl.make_async(session_repo.update_summary)(session_id, summary, latest_id)
+        else:
+            summary = db_session.summary
+
+    # Reinitialize coach with session summary
+    profile = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
+    activities = cl.user_session.get(coaching.SESSION_ACTIVITIES)
+    display_name = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
+    coaching.init_coach_session(profile, activities, display_name, session_summary=summary)
 
     cl.user_session.set(coaching.SESSION_DB_SESSION_ID, session_id)
     cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, len(messages))
