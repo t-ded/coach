@@ -116,6 +116,12 @@ async def on_chat_start() -> None:
 
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
+    # Intercept rename/promote text input before normal routing
+    if await sessions_flow.handle_rename_input(message.content):
+        return
+    if await sessions_flow.handle_promote_input(message.content):
+        return
+
     authenticated_client = session.get_authenticated_client()
     mode = cl.user_session.get(coaching.SESSION_MODE)
 
@@ -234,6 +240,25 @@ async def on_cancel_sessions_panel(action: cl.Action) -> None:
 async def on_open_session(action: cl.Action) -> None:
     session_id: str = action.payload['session_id']
     await sessions_flow.handle_open_session(session_id)
+
+
+@cl.action_callback('delete_session')
+async def on_delete_session(action: cl.Action) -> None:
+    session_id: str = action.payload['session_id']
+    await sessions_flow.handle_delete_session(session_id)
+
+
+@cl.action_callback('rename_session')
+async def on_rename_session(action: cl.Action) -> None:
+    session_id: str = action.payload['session_id']
+    await sessions_flow.handle_rename_session(session_id)
+
+
+@cl.action_callback('promote_session')
+async def on_promote_session(action: cl.Action) -> None:
+    session_id: str = action.payload['session_id']
+    default_title: str = action.payload.get('title', '')
+    await sessions_flow.handle_promote_session(session_id, default_title)
 
 
 @cl.action_callback('help')
