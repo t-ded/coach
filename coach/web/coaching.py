@@ -25,8 +25,6 @@ SESSION_DISPLAY_NAME = 'display_name'
 SESSION_CURRENT_PROFILE = 'current_profile'
 SESSION_LLM_PROVIDER = 'llm_provider'
 SESSION_LLM_API_KEY = 'llm_api_key'
-SESSION_DB_SESSION_ID = 'db_session_id'
-SESSION_MESSAGE_COUNT = 'message_count'
 MODE_COACH = 'coach'
 MODE_PROFILE = 'profile'
 
@@ -82,6 +80,13 @@ def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Opti
     activities = activity_repo.list_all()
 
     return profile, activities
+
+
+def reinit_coach_from_session(session_summary: Optional[str] = None) -> None:
+    profile = cl.user_session.get(SESSION_CURRENT_PROFILE)
+    activities = cl.user_session.get(SESSION_ACTIVITIES)
+    display_name = cl.user_session.get(SESSION_DISPLAY_NAME)
+    init_coach_session(profile, activities, display_name, session_summary=session_summary)
 
 
 def format_display_name(raw_display_name: Optional[str], user_identifier: str) -> str:

@@ -7,6 +7,7 @@ from supabase import Client
 
 from coach.domain.chat import Role
 from coach.domain.session import Message
+from coach.utils import parse_utc_datetime
 
 type MessageRow = dict[str, Any]
 
@@ -14,9 +15,8 @@ type MessageRow = dict[str, Any]
 class SupabaseMessageRepository:
     TABLE = 'messages'
 
-    def __init__(self, client: Client, user_id: str) -> None:
+    def __init__(self, client: Client) -> None:
         self._db = client
-        self._user_id = user_id
 
     def _table(self) -> SyncRequestBuilder:
         return self._db.table(self.TABLE)
@@ -38,8 +38,6 @@ class SupabaseMessageRepository:
 
     @staticmethod
     def _from_row(row: MessageRow) -> Message:
-        from coach.utils import parse_utc_datetime
-
         return Message(
             id=row['id'],
             session_id=row['session_id'],

@@ -7,10 +7,35 @@ from coach.domain.session import Session
 from coach.persistence.repositories.messages import SupabaseMessageRepository
 from coach.persistence.repositories.sessions import SupabaseSessionRepository
 from coach.reasoning.summarizer import SessionSummarizer
+from coach.reasoning.title_generator import generate_title
 from coach.web import coaching
 from coach.web import session
 
+SESSION_DB_SESSION_ID = 'db_session_id'
+SESSION_MESSAGE_COUNT = 'message_count'
 SESSION_PENDING_RENAME = 'pending_rename_session_id'
+SESSION_PENDING_PROMOTE = 'pending_promote_session_id'
+
+
+async def save_message_pair(user_content: str, assistant_content: str) -> None:
+    db_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
+    if not db_session_id:
+        return
+
+    authenticated_client = session.get_authenticated_client()
+    user_id = session.get_user_id()
+    msg_repo = SupabaseMessageRepository(authenticated_client)
+    session_repo = SupabaseSessionRepository(authenticated_client, user_id)
+
+    await cl.make_async(msg_repo.save)(db_session_id, 'user', user_content)
+    await cl.make_async(msg_repo.save)(db_session_id, 'assistant', assistant_content)
+    await cl.make_async(session_repo.update_last_message_at)(db_session_id)
+
+    count: int = cl.user_session.get(SESSION_MESSAGE_COUNT, default=0)
+    if count == 0:
+        title = generate_title(user_content)
+        await cl.make_async(session_repo.update_title)(db_session_id, title)
+    cl.user_session.set(SESSION_MESSAGE_COUNT, count + 1)
 
 
 def _format_date(s: Session) -> str:
@@ -64,7 +89,7 @@ async def handle_sessions_panel() -> None:
     user_id = session.get_user_id()
     session_repo = SupabaseSessionRepository(authenticated_client, user_id)
     sessions = await cl.make_async(session_repo.list_for_user)()
-    current_session_id: Optional[str] = cl.user_session.get(coaching.SESSION_DB_SESSION_ID)
+    current_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
     text, actions = _build_session_panel(sessions, current_session_id)
     await cl.Message(text, actions=actions).send()
 
@@ -81,11 +106,11 @@ async def handle_delete_session(session_id: str) -> None:
     session_repo = SupabaseSessionRepository(authenticated_client, user_id)
     await cl.make_async(session_repo.delete)(session_id)
 
-    current_session_id: Optional[str] = cl.user_session.get(coaching.SESSION_DB_SESSION_ID)
+    current_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
     if session_id == current_session_id:
         new_session = await cl.make_async(session_repo.create)()
-        cl.user_session.set(coaching.SESSION_DB_SESSION_ID, new_session.id)
-        cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, 0)
+        cl.user_session.set(SESSION_DB_SESSION_ID, new_session.id)
+        cl.user_session.set(SESSION_MESSAGE_COUNT, 0)
 
     await cl.Message('Session deleted.').send()
     await handle_sessions_panel()
@@ -116,7 +141,7 @@ async def handle_rename_input(user_input: str) -> bool:
 
 
 async def handle_promote_session(session_id: str, default_title: str) -> None:
-    cl.user_session.set(SESSION_PENDING_RENAME, f'promote:{session_id}')
+    cl.user_session.set(SESSION_PENDING_PROMOTE, session_id)
     prompt = 'Enter a title for this thread'
     if default_title:
         prompt += f' (or send "{default_title}" to keep the current title)'
@@ -124,12 +149,11 @@ async def handle_promote_session(session_id: str, default_title: str) -> None:
 
 
 async def handle_promote_input(user_input: str) -> bool:
-    pending: Optional[str] = cl.user_session.get(SESSION_PENDING_RENAME)
-    if not pending or not pending.startswith('promote:'):
+    session_id: Optional[str] = cl.user_session.get(SESSION_PENDING_PROMOTE)
+    if not session_id:
         return False
 
-    cl.user_session.set(SESSION_PENDING_RENAME, None)
-    session_id = pending[len('promote:') :]
+    cl.user_session.set(SESSION_PENDING_PROMOTE, None)
     title = user_input.strip()
 
     authenticated_client = session.get_authenticated_client()
@@ -171,7 +195,7 @@ async def handle_open_session(session_id: str) -> None:
     user_id = session.get_user_id()
 
     session_repo = SupabaseSessionRepository(authenticated_client, user_id)
-    msg_repo = SupabaseMessageRepository(authenticated_client, user_id)
+    msg_repo = SupabaseMessageRepository(authenticated_client)
 
     db_session = await cl.make_async(session_repo.get)(session_id)
     if db_session is None:
@@ -201,13 +225,9 @@ async def handle_open_session(session_id: str) -> None:
         else:
             summary = db_session.summary
 
-    # Reinitialize coach with session summary
-    profile = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
-    activities = cl.user_session.get(coaching.SESSION_ACTIVITIES)
-    display_name = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
-    coaching.init_coach_session(profile, activities, display_name, session_summary=summary)
+    coaching.reinit_coach_from_session(session_summary=summary)
 
-    cl.user_session.set(coaching.SESSION_DB_SESSION_ID, session_id)
-    cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, len(messages))
+    cl.user_session.set(SESSION_DB_SESSION_ID, session_id)
+    cl.user_session.set(SESSION_MESSAGE_COUNT, len(messages))
 
     await cl.Message('Session restored. You can continue the conversation.', actions=ready_actions()).send()
