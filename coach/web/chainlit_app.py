@@ -81,11 +81,12 @@ async def on_chat_start() -> None:
     cl.user_session.set(coaching.SESSION_LLM_API_KEY, api_key)
 
     users_repo = SupabaseUsersRepository(authenticated_client, user_id)
-    if not users_repo.get_strava_user_id():
+    strava_user_id, raw_display_name = users_repo.get_strava_user_id_and_display_name()
+    if not strava_user_id:
         await _connect_strava_prompt().send()
         return
 
-    display_name = coaching.get_display_name(users_repo, user.identifier)
+    display_name = coaching.format_display_name(raw_display_name, user.identifier)
     if coaching.needs_strava_sync(users_repo):
         await cl.Message('Syncing your Strava training data, please wait...').send()
     profile, activities = await cl.make_async(coaching.load_coaching_data)(user_id, authenticated_client)

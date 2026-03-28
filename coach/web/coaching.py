@@ -71,6 +71,5 @@ def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Opti
     return profile, activities
 
 
-def get_display_name(users_repo: SupabaseUsersRepository, user_identifier: str) -> str:
-    display_name = users_repo.get_display_name()
-    return display_name.split()[0] if display_name else user_identifier.split('@')[0]
+def format_display_name(raw_display_name: Optional[str], user_identifier: str) -> str:
+    return raw_display_name.split()[0] if raw_display_name else user_identifier.split('@')[0]
