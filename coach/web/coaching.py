@@ -25,6 +25,8 @@ SESSION_DISPLAY_NAME = 'display_name'
 SESSION_CURRENT_PROFILE = 'current_profile'
 SESSION_LLM_PROVIDER = 'llm_provider'
 SESSION_LLM_API_KEY = 'llm_api_key'
+SESSION_DB_SESSION_ID = 'db_session_id'
+SESSION_MESSAGE_COUNT = 'message_count'
 MODE_COACH = 'coach'
 MODE_PROFILE = 'profile'
 

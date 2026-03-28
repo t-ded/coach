@@ -62,7 +62,7 @@ class SupabaseSessionRepository:
             {
                 'summary': summary,
                 'summarized_through_message_id': through_message_id,
-            }
+            },
         ).eq('id', session_id).eq('user_id', self._user_id).execute()
 
     def delete(self, session_id: str) -> None:
