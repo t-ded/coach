@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="public/coach_icon.png" alt="Coach" width="120" />
-  <h1>Coach</h1>
+  <img src="public/coach_icon_transparent.png" alt="Coach" width="180" style="display:block; margin-bottom: 0;" />
+  <h1 style="margin-top: -15px;">Coach</h1>
 
-  <p><strong>A personalized AI training coach that is always up to date with your Strava</strong></p>
+  <p><strong>A personalized AI training coach that actually knows what you've been up to</strong></p>
 
   <p><em>Sign in with Google · Connect Strava · Chat with your coach</em></p>
 
@@ -15,7 +15,10 @@
 
 ---
 
-Coach is a personalized AI coaching assistant that lives in your browser. It reads your recent Strava activities, personal bests, and training profile — and gives you thoughtful, data-grounded advice in a natural chat. No installation, no configuration. Just sign in.
+You know the drill — you copy your last few runs into ChatGPT, describe your goals, ask for advice, and get something pretty generic back. Next week you do it all over again. **Coach was built to fix exactly that.**
+
+Coach lives in your browser and reads your Strava automatically. It knows your recent workouts, your personal bests, your goals, and how you like to be talked to. You just chat.
+Click the button above, then start your stopwatch - you are most likely going to be **finished with the initial setup before the clock hits 3 minutes!**
 
 ---
 
@@ -25,10 +28,32 @@ Coach is a personalized AI coaching assistant that lives in your browser. It rea
 2. Sign in with your Google account
 3. Connect an AI provider key — see [Setting up your AI provider key](#-setting-up-your-ai-provider-key) below
 4. Connect your Strava account — see [Connecting Strava](#-connecting-strava) below
-5. Set up your profile *(optional but recommended — takes about 5 minutes)*
+5. Set up your profile *(optional but recommended — takes about 5-10 minutes)*
 6. Start chatting
 
 Your activities sync automatically at the start of each session, so the coach always has your latest training in view.
+
+---
+
+## 🎬 In action
+
+<img src="public/first_look.png" alt="First look at Coach" />
+
+> <details>
+> <summary>More screenshots — coaching chat and profile editing</summary>
+> 
+> > <details>
+> > <summary>Coaching examples</summary>
+> > <img src="public/chat_example_1.png" alt="Coaching example - progress summary" />
+> > <img src="public/chat_example_2.png" alt="Coaching example - training plan" />
+> > </details>
+> > 
+> > <details>
+> > <summary>Profile editing</summary>
+> > <img src="public/edit_profile.png" alt="Profile editing" />
+> > </details>
+> 
+> </details>
 
 ---
 
@@ -71,14 +96,48 @@ Coach only reads your activity data — it cannot post or modify anything on you
 
 ## ✨ What Coach can do
 
-|                             |                                                                                                    |
-|-----------------------------|----------------------------------------------------------------------------------------------------|
-| 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                         |
-| 💬 **AI chat**              | Multi-turn coaching conversations with your full training context always in view                   |
+|                             |                                                                                                |
+|-----------------------------|------------------------------------------------------------------------------------------------|
+| 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                     |
+| 💬 **AI chat**              | Ask follow-up questions, push back, explore — it's a dialogue, not a report               |
 | 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
-| 🔐 **Google login**         | No account creation — sign in with your existing Google account                                    |
-| 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                             |
-| 📜 ~~Chat history~~         | Persistent coaching history across different sessions - not yet, next on the roadmap!              |
+| 🔐 **Google login**         | No account creation — sign in with your existing Google account                                |
+| 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                         |
+| 📜 ~~Chat history~~         | Persistent coaching history across different sessions — not yet, next on the roadmap!          |
+
+---
+
+## 🧐 What Coach is — and what it isn't
+
+Knowing where Coach fits (and where it doesn't) will help you get the most out of it.
+
+### How it compares
+
+|                                                           | **Garmin Coach / Insights** | **Strava Summit AI** | **ChatGPT / Claude directly**  | **Coach**                    |
+|-----------------------------------------------------------|---------------------------|---|--------------------------------|------------------------------|
+| Automatically up-to-date with recent training             | ✅        | ✅  | ❌ you paste manually           | ✅                            |
+| You can provide any additional context to your activities | ❌       | ❌ | 🟡 you paste manually          | ✅                            |
+| Full back-and-forth coaching chat and advice on anything  | ❌                         | ❌ | ✅                              | ✅                            |
+| Remembers your goals, preferences and constraints         | 🟡 very limited           | ❌ | 🟡 per session + system prompt | ✅                            |
+| Free                                                      | ❌ needs Garmin            | ❌ | ✅                              | ✅                            |
+| Semi-professional plan building                           | ✅            | ❌ | ❌                              | ❌                            |
+| Full body data integration (HR, sleep, stress etc.)       | ✅            | ❌ | 🟡 you give context manually   | 🟡 you give context manually |
+
+**The short version:** Garmin and Strava are great at what they do — tracking and community. ChatGPT is a brilliant conversationalist - can provide advice not only on the next run, but also on how to eat and how that stressful meeting on friday affects your training. But it knows nothing about your training unless you tell it.
+
+**Coach combines both**: the AI conversation quality of a frontier model with the training context that only Strava has. **Use them all — they complement each other!**
+
+---
+
+## 🗺 What's next
+
+A rough picture of what's coming:
+
+- **💬 Chat persistence** — your coaching history will carry over between sessions so you never lose context *(next up)*
+- **❤️ Heart rate analysis** — deeper use of HR data for load, recovery, and aerobic fitness signals
+- **📊 Better statistics** — richer summaries for you and more structured context for the coach
+- **🚴 More activity types** — cycling, swimming, and other sports - all are supported, but running has richer features
+- **🇺🇸 Improved unit support** — but you can always try forcing Coach to measure progress in football fields via profile settings  
 
 ---
 
@@ -115,30 +174,9 @@ The coach picks this up automatically. Anything outside the `$...$` markers is i
 
 ---
 
-## 🎬 In action
-<details>
-<summary>First look</summary>
+## ⚠️ Disclaimer
 
-<img src="public/first_look.png" alt="First look" />
-
-</details>
-
-<details>
-<summary>Coaching chat</summary>
-
-<img src="public/chat_example_1.png" alt="Coaching example - progress summary" />
-<img src="public/chat_example_2.png" alt="Coaching example - training plan" />
-
-</details>
-
-<details>
-<summary>Profile editing</summary>
-
-<img src="public/edit_profile.png" alt="Profile editing" />
-
-</details>
-
----
+Coach is an AI assistant, not a certified running coach or medical professional. The advice it gives is based on your Strava data and what you tell it about yourself — it cannot see things like injuries, illness, or stress that you haven't shared. Use your own judgement, listen to your body, and consult a qualified professional for anything health-related. Training hard is great; training smart is better; both require you in the loop.
 
 ---
 
