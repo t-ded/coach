@@ -103,7 +103,7 @@ Coach only reads your activity data — it cannot post or modify anything on you
 | 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
 | 🔐 **Google login**         | No account creation — sign in with your existing Google account                                |
 | 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                         |
-| 📜 ~~Chat history~~         | Persistent coaching history across different sessions — not yet, next on the roadmap!          |
+| 📜 **Chat history**         | Sessions auto-save and you can resume past conversations — the coach gets a summary so it remembers what you discussed |
 
 ---
 
@@ -118,7 +118,7 @@ Knowing where Coach fits (and where it doesn't) will help you get the most out o
 | Automatically up-to-date with recent training             | ✅        | ✅  | ❌ you paste manually           | ✅                            |
 | You can provide any additional context to your activities | ❌       | ❌ | 🟡 you paste manually          | ✅                            |
 | Full back-and-forth coaching chat and advice on anything  | ❌                         | ❌ | ✅                              | ✅                            |
-| Remembers your goals, preferences and constraints         | 🟡 very limited           | ❌ | 🟡 per session + system prompt | ✅                            |
+| Remembers your goals, preferences and past conversations  | 🟡 very limited           | ❌ | 🟡 per session + system prompt | ✅                            |
 | Free                                                      | ❌ needs Garmin            | ❌ | ✅                              | ✅                            |
 | Semi-professional plan building                           | ✅            | ❌ | ❌                              | ❌                            |
 | Full body data integration (HR, sleep, stress etc.)       | ✅            | ❌ | 🟡 you give context manually   | 🟡 you give context manually |
@@ -133,7 +133,6 @@ Knowing where Coach fits (and where it doesn't) will help you get the most out o
 
 A rough picture of what's coming:
 
-- **💬 Chat persistence** — your coaching history will carry over between sessions so you never lose context *(next up)*
 - **❤️ Heart rate analysis** — deeper use of HR data for load, recovery, and aerobic fitness signals
 - **📊 Better statistics** — richer summaries for you and more structured context for the coach
 - **🚴 More activity types** — cycling, swimming, and other sports - all are supported, but running has richer features
