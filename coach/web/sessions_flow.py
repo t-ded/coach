@@ -10,9 +10,16 @@ from coach.reasoning.summarizer import SessionSummarizer
 from coach.web import coaching
 from coach.web import session
 
+SESSION_PENDING_RENAME = 'pending_rename_session_id'
+
 
 def _format_date(s: Session) -> str:
     return s.last_message_at.strftime('%b %d, %H:%M')
+
+
+def _short_title(s: Session) -> str:
+    title = s.title or 'Untitled'
+    return title[:30] + '...' if len(title) > 30 else title
 
 
 def _build_session_panel(sessions: list[Session], current_session_id: Optional[str]) -> tuple[str, list[cl.Action]]:
@@ -27,23 +34,25 @@ def _build_session_panel(sessions: list[Session], current_session_id: Optional[s
         if named:
             lines.append('**Threads**')
             for s in named:
-                title = s.title or 'Untitled'
-                lines.append(f'- {title} — {_format_date(s)}')
+                lines.append(f'- {_short_title(s)} — {_format_date(s)}')
             lines.append('')
 
         if unnamed:
             lines.append('**Recent**')
             for s in unnamed:
-                title = s.title or 'Untitled'
-                lines.append(f'- {title} — {_format_date(s)}')
+                lines.append(f'- {_short_title(s)} — {_format_date(s)}')
 
     actions: list[cl.Action] = []
 
     for s in named + unnamed:
-        if s.id == current_session_id:
-            continue
-        label = s.title or 'Untitled'
-        actions.append(cl.Action(name='open_session', payload={'session_id': s.id}, label=f'Open: {label}'))
+        label = _short_title(s)
+        if s.id != current_session_id:
+            actions.append(cl.Action(name='open_session', payload={'session_id': s.id}, label=f'Open: {label}'))
+        if s.session_type == 'named':
+            actions.append(cl.Action(name='rename_session', payload={'session_id': s.id}, label=f'Rename: {label}'))
+        if s.session_type == 'unnamed':
+            actions.append(cl.Action(name='promote_session', payload={'session_id': s.id, 'title': s.title or ''}, label=f'Save as thread: {label}'))
+        actions.append(cl.Action(name='delete_session', payload={'session_id': s.id}, label=f'Delete: {label}'))
 
     actions.append(cl.Action(name='cancel_sessions_panel', payload={}, label='Cancel'))
 
@@ -64,6 +73,78 @@ async def handle_cancel_sessions_panel() -> None:
     from coach.web.api_key_flow import ready_actions
 
     await cl.Message('Chat sessions panel closed.', actions=ready_actions()).send()
+
+
+async def handle_delete_session(session_id: str) -> None:
+    authenticated_client = session.get_authenticated_client()
+    user_id = session.get_user_id()
+    session_repo = SupabaseSessionRepository(authenticated_client, user_id)
+    await cl.make_async(session_repo.delete)(session_id)
+
+    current_session_id: Optional[str] = cl.user_session.get(coaching.SESSION_DB_SESSION_ID)
+    if session_id == current_session_id:
+        new_session = await cl.make_async(session_repo.create)()
+        cl.user_session.set(coaching.SESSION_DB_SESSION_ID, new_session.id)
+        cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, 0)
+
+    await cl.Message('Session deleted.').send()
+    await handle_sessions_panel()
+
+
+async def handle_rename_session(session_id: str) -> None:
+    cl.user_session.set(SESSION_PENDING_RENAME, session_id)
+    await cl.Message('Type the new title for this session:').send()
+
+
+async def handle_rename_input(user_input: str) -> bool:
+    pending_id: Optional[str] = cl.user_session.get(SESSION_PENDING_RENAME)
+    if not pending_id:
+        return False
+
+    cl.user_session.set(SESSION_PENDING_RENAME, None)
+    authenticated_client = session.get_authenticated_client()
+    user_id = session.get_user_id()
+    session_repo = SupabaseSessionRepository(authenticated_client, user_id)
+    new_title = user_input.strip()
+    if new_title:
+        await cl.make_async(session_repo.update_title)(pending_id, new_title)
+        await cl.Message(f'Session renamed to "{new_title}".').send()
+    else:
+        await cl.Message('Rename cancelled (empty title).').send()
+    await handle_sessions_panel()
+    return True
+
+
+async def handle_promote_session(session_id: str, default_title: str) -> None:
+    cl.user_session.set(SESSION_PENDING_RENAME, f'promote:{session_id}')
+    prompt = 'Enter a title for this thread'
+    if default_title:
+        prompt += f' (or send "{default_title}" to keep the current title)'
+    await cl.Message(f'{prompt}:').send()
+
+
+async def handle_promote_input(user_input: str) -> bool:
+    pending: Optional[str] = cl.user_session.get(SESSION_PENDING_RENAME)
+    if not pending or not pending.startswith('promote:'):
+        return False
+
+    cl.user_session.set(SESSION_PENDING_RENAME, None)
+    session_id = pending[len('promote:') :]
+    title = user_input.strip()
+
+    authenticated_client = session.get_authenticated_client()
+    user_id = session.get_user_id()
+    session_repo = SupabaseSessionRepository(authenticated_client, user_id)
+
+    if title:
+        await cl.make_async(session_repo.promote)(session_id, title)
+        await cl.Message(f'Saved as thread: "{title}".').send()
+    else:
+        await cl.make_async(session_repo.promote)(session_id)
+        await cl.Message('Saved as thread.').send()
+
+    await handle_sessions_panel()
+    return True
 
 
 def _render_past_messages(messages: list[Message]) -> str:
