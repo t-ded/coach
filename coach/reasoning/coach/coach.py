@@ -19,10 +19,12 @@ class Coach(Assistant):
         num_history_weeks: int,
         user_display_name: Optional[str] = None,
         api_key: Optional[str] = None,
+        session_summary: Optional[str] = None,
     ) -> None:
         super().__init__(provider=provider, model=model, api_key=api_key)
         self._profile = profile
         self._first_name = user_display_name or 'Athlete'
+        self._session_summary = session_summary
         self._additional_context_attr = build_coach_context(
             profile=profile,
             activities=activities,
@@ -34,6 +36,8 @@ class Coach(Assistant):
         return self._profile.chat_preferences if self._profile else None
 
     def _additional_context(self) -> Optional[str]:
+        if self._session_summary:
+            return f'Summary of our previous conversation:\n{self._session_summary}\n\n{self._additional_context_attr}'
         return self._additional_context_attr
 
     def _system_prompt(self) -> str:

@@ -40,9 +40,23 @@ def get_llm_config() -> tuple[LLMProvider, str]:
     return provider, api_key
 
 
-def init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
+def init_coach_session(
+    profile: Optional[UserProfile],
+    activities: list[Activity],
+    display_name: str,
+    session_summary: Optional[str] = None,
+) -> None:
     provider, api_key = get_llm_config()
-    coach = Coach(provider=provider, model=None, api_key=api_key, profile=profile, activities=activities, num_history_weeks=NUM_HISTORY_WEEKS, user_display_name=display_name)
+    coach = Coach(
+        provider=provider,
+        model=None,
+        api_key=api_key,
+        profile=profile,
+        activities=activities,
+        num_history_weeks=NUM_HISTORY_WEEKS,
+        user_display_name=display_name,
+        session_summary=session_summary,
+    )
     cl.user_session.set(SESSION_COACH, coach)
     cl.user_session.set(SESSION_MODE, MODE_COACH)
 
