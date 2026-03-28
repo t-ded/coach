@@ -230,6 +230,12 @@ async def on_cancel_sessions_panel(action: cl.Action) -> None:
     await sessions_flow.handle_cancel_sessions_panel()
 
 
+@cl.action_callback('open_session')
+async def on_open_session(action: cl.Action) -> None:
+    session_id: str = action.payload['session_id']
+    await sessions_flow.handle_open_session(session_id)
+
+
 @cl.action_callback('help')
 async def on_help(action: cl.Action) -> None:
     await api_key_flow.handle_help()
