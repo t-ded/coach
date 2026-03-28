@@ -68,12 +68,9 @@ def _build_management_actions(preferred: LLMProvider, stored: list[LLMProvider])
 
 async def handle_provider_management() -> None:
     user_id = session.get_user_id()
-    authenticated_client = session.get_authenticated_client()
-    secret_client = create_secret_client()
-
-    key_repo = SupabaseLLMKeyRepository(secret_client)
+    key_repo = SupabaseLLMKeyRepository(create_secret_client())
     stored = key_repo.list_providers(user_id)
-    preferred = SupabaseUserProfileRepository(authenticated_client, user_id).get_preferred_provider()
+    preferred: LLMProvider = cl.user_session.get(coaching.SESSION_LLM_PROVIDER, default=LLMProvider.GOOGLE)
 
     text = _build_management_text(preferred, stored)
     actions = _build_management_actions(preferred, stored)
