@@ -1,5 +1,6 @@
 from datetime import UTC
 from datetime import datetime
+from datetime import timedelta
 from typing import Optional
 
 import chainlit as cl
@@ -28,7 +29,8 @@ SESSION_LLM_API_KEY = 'llm_api_key'
 MODE_COACH = 'coach'
 MODE_PROFILE = 'profile'
 
-_NUM_HISTORY_WEEKS = 8
+NUM_HISTORY_WEEKS = 8
+_ACTIVITY_FETCH_WEEKS = NUM_HISTORY_WEEKS + 2  # +2-week buffer matches the sync lookback window for backdated activities
 _SYNC_COOLDOWN_SECONDS = 60 * 60  # 1 hour — suppresses idle WS reconnects; use on_chat_resume (Phase 6) to remove this
 _last_sync_at: dict[str, datetime] = {}
 
@@ -41,7 +43,7 @@ def get_llm_config() -> tuple[LLMProvider, str]:
 
 def init_coach_session(profile: Optional[UserProfile], activities: list[Activity], display_name: str) -> None:
     provider, api_key = get_llm_config()
-    coach = Coach(provider=provider, model=None, api_key=api_key, profile=profile, activities=activities, num_history_weeks=_NUM_HISTORY_WEEKS, user_display_name=display_name)
+    coach = Coach(provider=provider, model=None, api_key=api_key, profile=profile, activities=activities, num_history_weeks=NUM_HISTORY_WEEKS, user_display_name=display_name)
     cl.user_session.set(SESSION_COACH, coach)
     cl.user_session.set(SESSION_MODE, MODE_COACH)
 
@@ -63,7 +65,8 @@ def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Opti
         _last_sync_at[user_id] = datetime.now(tz=UTC)
 
     profile = profile_repo.load()
-    activities = activity_repo.list_all()
+    cutoff = (datetime.now(tz=UTC) - timedelta(weeks=_ACTIVITY_FETCH_WEEKS)).isoformat()
+    activities = activity_repo.list_all(start_date=cutoff)
 
     return profile, activities
 
