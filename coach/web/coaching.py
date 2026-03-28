@@ -1,6 +1,5 @@
 from datetime import UTC
 from datetime import datetime
-from datetime import timedelta
 from typing import Optional
 
 import chainlit as cl
@@ -30,7 +29,6 @@ MODE_COACH = 'coach'
 MODE_PROFILE = 'profile'
 
 NUM_HISTORY_WEEKS = 8
-_ACTIVITY_FETCH_WEEKS = NUM_HISTORY_WEEKS + 2  # +2-week buffer matches the sync lookback window for backdated activities
 _SYNC_COOLDOWN_SECONDS = 60 * 60  # 1 hour — suppresses idle WS reconnects; use on_chat_resume (Phase 6) to remove this
 
 
@@ -65,8 +63,7 @@ def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Opti
         users_repo.set_last_strava_sync(datetime.now(tz=UTC))
 
     profile = profile_repo.load()
-    cutoff = (datetime.now(tz=UTC) - timedelta(weeks=_ACTIVITY_FETCH_WEEKS)).isoformat()
-    activities = activity_repo.list_all(start_date=cutoff)
+    activities = activity_repo.list_all()
 
     return profile, activities
 
