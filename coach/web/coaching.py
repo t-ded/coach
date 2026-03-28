@@ -32,7 +32,6 @@ MODE_PROFILE = 'profile'
 NUM_HISTORY_WEEKS = 8
 _ACTIVITY_FETCH_WEEKS = NUM_HISTORY_WEEKS + 2  # +2-week buffer matches the sync lookback window for backdated activities
 _SYNC_COOLDOWN_SECONDS = 60 * 60  # 1 hour — suppresses idle WS reconnects; use on_chat_resume (Phase 6) to remove this
-_last_sync_at: dict[str, datetime] = {}
 
 
 def get_llm_config() -> tuple[LLMProvider, str]:
@@ -48,8 +47,8 @@ def init_coach_session(profile: Optional[UserProfile], activities: list[Activity
     cl.user_session.set(SESSION_MODE, MODE_COACH)
 
 
-def needs_strava_sync(user_id: str) -> bool:
-    last = _last_sync_at.get(user_id)
+def needs_strava_sync(users_repo: SupabaseUsersRepository) -> bool:
+    last = users_repo.get_last_strava_sync()
     if last is None:
         return True
     return (datetime.now(tz=UTC) - last).total_seconds() >= _SYNC_COOLDOWN_SECONDS
@@ -59,10 +58,11 @@ def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Opti
     strava_client = StravaClient(user_id, SupabaseStravaTokenRepository(create_secret_client()))
     activity_repo = SupabaseActivityRepository(authenticated_client, user_id)
     profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
+    users_repo = SupabaseUsersRepository(authenticated_client, user_id)
 
-    if needs_strava_sync(user_id):
+    if needs_strava_sync(users_repo):
         sync_strava_for_user(strava_client, activity_repo)
-        _last_sync_at[user_id] = datetime.now(tz=UTC)
+        users_repo.set_last_strava_sync(datetime.now(tz=UTC))
 
     profile = profile_repo.load()
     cutoff = (datetime.now(tz=UTC) - timedelta(weeks=_ACTIVITY_FETCH_WEEKS)).isoformat()

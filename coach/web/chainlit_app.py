@@ -86,7 +86,7 @@ async def on_chat_start() -> None:
         return
 
     display_name = coaching.get_display_name(users_repo, user.identifier)
-    if coaching.needs_strava_sync(user_id):
+    if coaching.needs_strava_sync(users_repo):
         await cl.Message('Syncing your Strava training data, please wait...').send()
     profile, activities = await cl.make_async(coaching.load_coaching_data)(user_id, authenticated_client)
 

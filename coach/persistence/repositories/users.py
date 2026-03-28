@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 from typing import cast
@@ -32,3 +33,10 @@ class SupabaseUsersRepository:
 
     def set_strava_user_id(self, strava_user_id: int) -> None:
         self._set_field('strava_user_id', strava_user_id)
+
+    def get_last_strava_sync(self) -> Optional[datetime]:
+        raw = self._get_field('last_strava_sync_at')
+        return datetime.fromisoformat(cast(str, raw)) if raw else None
+
+    def set_last_strava_sync(self, dt: datetime) -> None:
+        self._set_field('last_strava_sync_at', dt.isoformat())
