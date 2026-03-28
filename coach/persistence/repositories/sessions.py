@@ -9,6 +9,7 @@ from supabase import Client
 
 from coach.domain.session import Session
 from coach.domain.session import SessionType
+from coach.utils import parse_utc_datetime
 
 type SessionRow = dict[str, Any]
 
@@ -73,12 +74,10 @@ class SupabaseSessionRepository:
         response = self._table().select('id').eq('user_id', self._user_id).eq('session_type', session_type).order('last_message_at', desc=True).execute()
         ids_to_delete = [cast(SessionRow, row)['id'] for row in response.data[cap - 1 :]]
         for session_id in ids_to_delete:
-            self._table().delete().eq('id', session_id).execute()
+            self._table().delete().eq('id', session_id).eq('user_id', self._user_id).execute()
 
     @staticmethod
     def _from_row(row: SessionRow) -> Session:
-        from coach.utils import parse_utc_datetime
-
         return Session(
             id=row['id'],
             user_id=row['user_id'],

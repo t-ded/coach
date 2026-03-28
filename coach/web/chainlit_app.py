@@ -6,7 +6,6 @@ from starlette.routing import Mount
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
-from coach.persistence.repositories.messages import SupabaseMessageRepository
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.sessions import SupabaseSessionRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
@@ -14,7 +13,6 @@ from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import display_provider
-from coach.reasoning.title_generator import generate_title
 from coach.web import api_key_flow
 from coach.web import coaching
 from coach.web import profile_flow
@@ -105,8 +103,8 @@ async def on_chat_start() -> None:
     coaching.init_coach_session(profile, activities, display_name)
 
     db_session = SupabaseSessionRepository(authenticated_client, user_id).create()
-    cl.user_session.set(coaching.SESSION_DB_SESSION_ID, db_session.id)
-    cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, 0)
+    cl.user_session.set(sessions_flow.SESSION_DB_SESSION_ID, db_session.id)
+    cl.user_session.set(sessions_flow.SESSION_MESSAGE_COUNT, 0)
 
     welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
     if provider_notice:
@@ -122,7 +120,6 @@ async def on_message(message: cl.Message) -> None:
     if await sessions_flow.handle_promote_input(message.content):
         return
 
-    authenticated_client = session.get_authenticated_client()
     mode = cl.user_session.get(coaching.SESSION_MODE)
 
     if mode == coaching.MODE_PROFILE:
@@ -134,23 +131,9 @@ async def on_message(message: cl.Message) -> None:
         await cl.Message('Coach is not initialised — please refresh and reconnect Strava.').send()
         return
 
-    db_session_id: Optional[str] = cl.user_session.get(coaching.SESSION_DB_SESSION_ID)
     reply = coach.get_response(message.content)
     await cl.Message(reply).send()
-
-    if db_session_id:
-        user_id = session.get_user_id()
-        msg_repo = SupabaseMessageRepository(authenticated_client, user_id)
-        session_repo = SupabaseSessionRepository(authenticated_client, user_id)
-        await cl.make_async(msg_repo.save)(db_session_id, 'user', message.content)
-        await cl.make_async(msg_repo.save)(db_session_id, 'assistant', reply)
-        await cl.make_async(session_repo.update_last_message_at)(db_session_id)
-
-        count: int = cl.user_session.get(coaching.SESSION_MESSAGE_COUNT, default=0)
-        if count == 0:
-            title = generate_title(message.content)
-            await cl.make_async(session_repo.update_title)(db_session_id, title)
-        cl.user_session.set(coaching.SESSION_MESSAGE_COUNT, count + 1)
+    await sessions_flow.save_message_pair(message.content, reply)
 
 
 @cl.action_callback('start_profile_setup')

@@ -158,7 +158,4 @@ def ready_actions() -> list[cl.Action]:
 
 
 def _reinit_coach() -> None:
-    profile = cl.user_session.get(coaching.SESSION_CURRENT_PROFILE)
-    activities = cl.user_session.get(coaching.SESSION_ACTIVITIES)
-    display_name = cl.user_session.get(coaching.SESSION_DISPLAY_NAME)
-    coaching.init_coach_session(profile, activities, display_name)
+    coaching.reinit_coach_from_session()

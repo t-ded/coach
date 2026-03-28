@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Literal
 from typing import Optional
 
+from coach.domain.chat import Role
+
 SessionType = Literal['unnamed', 'named']
 
 
@@ -24,6 +26,6 @@ class Session:
 class Message:
     id: str
     session_id: str
-    role: Literal['user', 'assistant']
+    role: Role
     content: str
     created_at: datetime
