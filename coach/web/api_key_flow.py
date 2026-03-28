@@ -62,6 +62,7 @@ def _build_management_actions(preferred: LLMProvider, stored: list[LLMProvider])
         if p != preferred:
             actions.append(cl.Action(name='set_preferred_provider', payload={'provider': p.value}, label=f'Use {display_provider(p)}'))
         actions.append(cl.Action(name='remove_provider_key', payload={'provider': p.value}, label=f'Remove {display_provider(p)} key'))
+    actions.append(cl.Action(name='cancel_provider_management', payload={}, label='Cancel'))
     return actions
 
 
@@ -77,6 +78,10 @@ async def handle_provider_management() -> None:
     text = _build_management_text(preferred, stored)
     actions = _build_management_actions(preferred, stored)
     await cl.Message(text, actions=actions).send()
+
+
+async def handle_cancel_provider_management() -> None:
+    await cl.Message('AI provider management cancelled.', actions=ready_actions()).send()
 
 
 async def handle_set_preferred(provider: LLMProvider) -> None:

@@ -82,10 +82,15 @@ class TestBuildManagementActions:
         assert add.payload['provider'] == 'openai'
 
     def test_no_actions_when_no_keys_stored(self) -> None:
-        # With no stored keys, we still show add buttons for all providers
+        # With no stored keys, we show add buttons for all providers plus cancel
         names = self._action_names(_GOOGLE, [])
-        assert all(n == 'add_provider_key' for n in names)
-        assert len(names) == len(list(LLMProvider))
+        assert all(n in ('add_provider_key', 'cancel_provider_management') for n in names)
+        assert names.count('add_provider_key') == len(list(LLMProvider))
+
+    def test_cancel_button_always_present(self) -> None:
+        assert 'cancel_provider_management' in self._action_names(_GOOGLE, [])
+        assert 'cancel_provider_management' in self._action_names(_GOOGLE, [_GOOGLE])
+        assert 'cancel_provider_management' in self._action_names(_GOOGLE, [_GOOGLE, _OPENAI])
 
 
 class TestHelpText:

@@ -177,6 +177,11 @@ async def on_manage_ai_provider(action: cl.Action) -> None:
     await api_key_flow.handle_provider_management()
 
 
+@cl.action_callback('cancel_provider_management')
+async def on_cancel_provider_management(action: cl.Action) -> None:
+    await api_key_flow.handle_cancel_provider_management()
+
+
 @cl.action_callback('set_preferred_provider')
 async def on_set_preferred_provider(action: cl.Action) -> None:
     provider = LLMProvider(action.payload['provider'])

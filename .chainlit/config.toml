@@ -1,6 +1,5 @@
 [project]
 # List of environment variables to be provided by each user to use the app.
-# user_env = ["GOOGLE_AI_API_KEY"]
 user_env = []
 
 # Duration (in seconds) during which the session is saved when the connection is lost
@@ -132,7 +131,7 @@ cot = "full"
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
-# custom_js = "/public/test.js"
+custom_js = "/public/autoscroll.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
 alert_style = "classic"
@@ -141,7 +140,7 @@ alert_style = "classic"
 # custom_js_attributes = "async type = \"module\""
 
 # Custom login page image, relative to public directory or external URL
-# login_page_image = "/public/custom-background.jpg"
+login_page_image = "/public/login_background.jpg"
 
 # Custom login page image filter (Tailwind internal filters, no dark/light variants)
 # login_page_image_filter = "brightness-50 grayscale"
@@ -160,7 +159,7 @@ logo_file_url = "/public/coach_icon.png"
 default_avatar_file_url = "/public/coach_icon.png"
 
 # Avatar size in pixels (default: 20).
-# avatar_size = 20
+avatar_size = 30
 
 # Specify a custom build directory for the frontend.
 # This can be used to customize the frontend code.

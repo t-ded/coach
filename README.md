@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/coach_icon.png" alt="Coach" width="96" />
+  <img src="public/coach_icon.png" alt="Coach" width="120" />
   <h1>Coach</h1>
 
   <p><strong>A personalized AI training coach that is always up to date with your Strava</strong></p>
