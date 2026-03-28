@@ -18,15 +18,17 @@ SESSION_PENDING_PROMOTE = 'pending_promote_session_id'
 
 
 async def save_message_pair(user_content: str, assistant_content: str) -> None:
-    db_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
-    if not db_session_id:
-        return
-
     authenticated_client = session.get_authenticated_client()
     user_id = session.get_user_id()
-    msg_repo = SupabaseMessageRepository(authenticated_client)
     session_repo = SupabaseSessionRepository(authenticated_client, user_id)
 
+    db_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
+    if not db_session_id:
+        db_session = await cl.make_async(session_repo.create)()
+        db_session_id = db_session.id
+        cl.user_session.set(SESSION_DB_SESSION_ID, db_session_id)
+
+    msg_repo = SupabaseMessageRepository(authenticated_client)
     await cl.make_async(msg_repo.save)(db_session_id, 'user', user_content)
     await cl.make_async(msg_repo.save)(db_session_id, 'assistant', assistant_content)
     await cl.make_async(session_repo.update_last_message_at)(db_session_id)
@@ -108,8 +110,7 @@ async def handle_delete_session(session_id: str) -> None:
 
     current_session_id: Optional[str] = cl.user_session.get(SESSION_DB_SESSION_ID)
     if session_id == current_session_id:
-        new_session = await cl.make_async(session_repo.create)()
-        cl.user_session.set(SESSION_DB_SESSION_ID, new_session.id)
+        cl.user_session.set(SESSION_DB_SESSION_ID, None)
         cl.user_session.set(SESSION_MESSAGE_COUNT, 0)
 
     await cl.Message('Session deleted.').send()

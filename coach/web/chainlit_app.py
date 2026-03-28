@@ -7,7 +7,6 @@ from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
-from coach.persistence.repositories.sessions import SupabaseSessionRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
 from coach.reasoning.coach.coach import Coach
 from coach.reasoning.profile_assistant.system_prompts import ProfileParts
@@ -88,9 +87,14 @@ async def on_chat_start() -> None:
         return
 
     display_name = coaching.format_display_name(raw_display_name, user.identifier)
-    if coaching.needs_strava_sync(users_repo):
+    sync_strava = coaching.needs_strava_sync(users_repo)
+    if sync_strava:
         await cl.Message('Syncing your Strava training data, please wait...').send()
-    profile, activities = await cl.make_async(coaching.load_coaching_data)(user_id, authenticated_client)
+    profile, activities = await cl.make_async(coaching.load_coaching_data)(
+        user_id,
+        authenticated_client,
+        sync_strava=sync_strava,
+    )
 
     cl.user_session.set(coaching.SESSION_ACTIVITIES, activities)
     cl.user_session.set(coaching.SESSION_DISPLAY_NAME, display_name)
@@ -102,8 +106,6 @@ async def on_chat_start() -> None:
 
     coaching.init_coach_session(profile, activities, display_name)
 
-    db_session = SupabaseSessionRepository(authenticated_client, user_id).create()
-    cl.user_session.set(sessions_flow.SESSION_DB_SESSION_ID, db_session.id)
     cl.user_session.set(sessions_flow.SESSION_MESSAGE_COUNT, 0)
 
     welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'

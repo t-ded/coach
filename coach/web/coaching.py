@@ -66,13 +66,18 @@ def needs_strava_sync(users_repo: SupabaseUsersRepository) -> bool:
     return (datetime.now(tz=UTC) - last).total_seconds() >= _SYNC_COOLDOWN_SECONDS
 
 
-def load_coaching_data(user_id: str, authenticated_client: Client) -> tuple[Optional[UserProfile], list[Activity]]:
-    strava_client = StravaClient(user_id, SupabaseStravaTokenRepository(create_secret_client()))
+def load_coaching_data(
+    user_id: str,
+    authenticated_client: Client,
+    *,
+    sync_strava: bool = True,
+) -> tuple[Optional[UserProfile], list[Activity]]:
     activity_repo = SupabaseActivityRepository(authenticated_client, user_id)
     profile_repo = SupabaseUserProfileRepository(authenticated_client, user_id)
-    users_repo = SupabaseUsersRepository(authenticated_client, user_id)
 
-    if needs_strava_sync(users_repo):
+    if sync_strava:
+        strava_client = StravaClient(user_id, SupabaseStravaTokenRepository(create_secret_client()))
+        users_repo = SupabaseUsersRepository(authenticated_client, user_id)
         sync_strava_for_user(strava_client, activity_repo)
         users_repo.set_last_strava_sync(datetime.now(tz=UTC))
 
