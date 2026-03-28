@@ -152,6 +152,7 @@ def ready_actions() -> list[cl.Action]:
     return [
         cl.Action(name='edit_profile', payload={}, label='Edit Profile'),
         cl.Action(name='manage_ai_provider', payload={}, label='Manage AI Provider'),
+        cl.Action(name='chat_sessions', payload={}, label='Chat Sessions'),
         cl.Action(name='help', payload={}, label='Help'),
     ]
 

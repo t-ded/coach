@@ -19,6 +19,7 @@ from coach.web import api_key_flow
 from coach.web import coaching
 from coach.web import profile_flow
 from coach.web import session
+from coach.web import sessions_flow
 from coach.web.api_key_routes import generate_api_key_form_url
 from coach.web.app import create_app
 from coach.web.auth import sign_in_with_supabase
@@ -217,6 +218,16 @@ async def on_set_preferred_provider(action: cl.Action) -> None:
 async def on_remove_provider_key(action: cl.Action) -> None:
     provider = LLMProvider(action.payload['provider'])
     await api_key_flow.handle_remove_key(provider)
+
+
+@cl.action_callback('chat_sessions')
+async def on_chat_sessions(action: cl.Action) -> None:
+    await sessions_flow.handle_sessions_panel()
+
+
+@cl.action_callback('cancel_sessions_panel')
+async def on_cancel_sessions_panel(action: cl.Action) -> None:
+    await sessions_flow.handle_cancel_sessions_panel()
 
 
 @cl.action_callback('help')
