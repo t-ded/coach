@@ -20,6 +20,7 @@ class Coach(Assistant):
         user_display_name: Optional[str] = None,
         api_key: Optional[str] = None,
         session_summary: Optional[str] = None,
+        generated_at: Optional[datetime] = None,
     ) -> None:
         super().__init__(provider=provider, model=model, api_key=api_key)
         self._profile = profile
@@ -29,7 +30,7 @@ class Coach(Assistant):
             profile=profile,
             activities=activities,
             num_history_weeks=num_history_weeks,
-            generated_at=datetime.now(tz=UTC),
+            generated_at=generated_at or datetime.now(tz=UTC),
         )
 
     def _user_system_prompt(self) -> Optional[str]:
