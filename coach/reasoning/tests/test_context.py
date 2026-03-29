@@ -104,15 +104,18 @@ Weekly summary for 2024-01-01 to 2024-01-07:
 Run: Run 1
 - Duration: 00:00:10
 - Distance: 0.1 km
+- Pace: 1:40/km
 
 Run: Run 2
 - Duration: 00:04:00
 - Distance: 1.0 km
+- Pace: 4:00/km
 
 --- Friday ---
 Ride: Ride 1
 - Duration: 01:00:00
 - Distance: 20.0 km
+- Pace: 3:00/km
 - Elevation gain: 100 meters
 
 ----- Volume aggregation by sport -----
@@ -135,15 +138,18 @@ Weekly summary for 2024-01-08 to 2024-01-14:
 Run: Run 1
 - Duration: 00:00:10
 - Distance: 0.1 km
+- Pace: 1:40/km
 
 Run: Run 2
 - Duration: 00:04:00
 - Distance: 1.0 km
+- Pace: 4:00/km
 
 --- Friday ---
 Ride: Ride 1
 - Duration: 01:00:00
 - Distance: 20.0 km
+- Pace: 3:00/km
 - Elevation gain: 100 meters
 
 ----- Volume aggregation by sport -----
@@ -159,6 +165,44 @@ Ride: Ride 1
 """
 
         assert result == expected
+
+    def test_render_non_distance_activity_omits_distance_and_pace(self) -> None:
+        history = RecentTrainingHistory(
+            generated_at=datetime(2024, 1, 8, 10, 0, 0, tzinfo=UTC),
+            current_week_summary=WeeklySummary(
+                week_start=date(2024, 1, 8),
+                week_end=date(2024, 1, 14),
+                volume_by_sport={SportType.STRENGTH: ActivityVolume(num_activities=1, duration_seconds=3600, distance_meters=None)},
+                activity_summaries={
+                    'Monday': [
+                        ActivitySummary(
+                            start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                            sport_type=SportType.STRENGTH,
+                            description='Upper body',
+                            duration_seconds=3_600,
+                            distance_meters=None,
+                            average_heart_rate=120,
+                        ),
+                    ],
+                    'Tuesday': [],
+                    'Wednesday': [],
+                    'Thursday': [],
+                    'Friday': [],
+                    'Saturday': [],
+                    'Sunday': [],
+                },
+            ),
+            history_weekly_summaries=(),
+        )
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'Distance' not in result
+        assert 'Pace' not in result
+        assert 'WeightTraining: Upper body' in result
+        assert '- Duration: 01:00:00' in result
+        assert '- Average heart rate: 120 bpm' in result
 
     def test_render_activity_with_heart_rate(self) -> None:
         history = RecentTrainingHistory(
