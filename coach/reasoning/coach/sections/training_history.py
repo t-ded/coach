@@ -9,8 +9,8 @@ from coach.domain.training_summaries import RecentTrainingHistory
 from coach.domain.training_summaries import WeeklyActivities
 from coach.domain.training_summaries import WeeklySummary
 from coach.reasoning.coach.sections.base import ContextSection
-from coach.utils import format_total_seconds
-from coach.utils import parse_distance_km
+from coach.reasoning.coach.sections.utils import format_total_seconds
+from coach.reasoning.coach.sections.utils import parse_distance_km
 
 
 def _optional_append(value: Optional[int | float | str], format_str: str, lines: list[str]) -> None:

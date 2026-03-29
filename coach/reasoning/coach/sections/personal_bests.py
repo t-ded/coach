@@ -2,7 +2,7 @@ from typing import Optional
 
 from coach.domain.personal_bests import RunningPersonalBestsSummary
 from coach.reasoning.coach.sections.base import ContextSection
-from coach.utils import days_ago
+from coach.reasoning.coach.sections.utils import days_ago
 
 
 class PersonalBestsSection(ContextSection):

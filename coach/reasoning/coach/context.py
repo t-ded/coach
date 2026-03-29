@@ -9,7 +9,7 @@ from coach.reasoning.coach.sections import ContextSection
 from coach.reasoning.coach.sections import PersonalBestsSection
 from coach.reasoning.coach.sections import ProfileSection
 from coach.reasoning.coach.sections import TrainingHistorySection
-from coach.utils import combine_sections
+from coach.reasoning.coach.sections.utils import combine_sections
 
 
 def build_coach_context(

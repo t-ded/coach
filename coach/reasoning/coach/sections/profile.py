@@ -6,10 +6,10 @@ from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.profile import UserProfile
 from coach.reasoning.coach.sections.base import ContextSection
-from coach.utils import combine_sections
-from coach.utils import format_total_seconds
-from coach.utils import parse_distance_km
-from coach.utils import weeks_and_days_until
+from coach.reasoning.coach.sections.utils import combine_sections
+from coach.reasoning.coach.sections.utils import format_total_seconds
+from coach.reasoning.coach.sections.utils import parse_distance_km
+from coach.reasoning.coach.sections.utils import weeks_and_days_until
 
 PRIORITY_OPTIONS = [prio.value for prio in Priority]
 

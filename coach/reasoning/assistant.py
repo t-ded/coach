@@ -4,9 +4,9 @@ from typing import Optional
 
 from coach.domain.chat import ChatHistory
 from coach.domain.chat import ChatTurn
+from coach.reasoning.coach.sections.utils import combine_sections
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import create_llm_client
-from coach.utils import combine_sections
 
 
 def build_assistant_prompt(
