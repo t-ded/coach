@@ -221,16 +221,17 @@ Summary of recent training history:
 Weekly summary for 2025-03-03 to 2025-03-09:
 ----- Per-day breakdown -----
 --- Monday ---
-Run: easy aerobic
+Run: Easy Run
 - Moving time: 00:50:00 (no rest)
 - Distance: 8.0 km
 - Pace: 6:15/km
 - Elevation gain: 50.0 meters
 - Average heart rate: 140 bpm
 - Max heart rate: 155 bpm
+- Notes: easy aerobic
 
 --- Wednesday ---
-Run: 5x1km intervals
+Run: Intervals
 - Active time: 00:45:00
 - Elapsed time: 01:00:00 (rest: 00:15:00)
 - Distance: 7.0 km
@@ -239,10 +240,12 @@ Run: 5x1km intervals
 - Elevation gain: 20.0 meters
 - Average heart rate: 170 bpm
 - Max heart rate: 188 bpm
+- Notes: 5x1km intervals
 
 --- Thursday ---
-WeightTraining: upper body strength
+WeightTraining: Upper Body
 - Moving time: 00:45:00 (no rest)
+- Notes: upper body strength
 
 ----- Volume aggregation by sport -----
 --- Run ---
@@ -260,12 +263,13 @@ Current week summary (today is Wednesday):
 Weekly summary for 2025-03-10 to 2025-03-16:
 ----- Per-day breakdown -----
 --- Monday ---
-Run: recovery jog
+Run: Recovery Run
 - Moving time: 00:40:00 (no rest)
 - Distance: 5.0 km
 - Pace: 8:00/km
 - Average heart rate: 130 bpm
 - Max heart rate: 142 bpm
+- Notes: recovery jog
 
 ----- Volume aggregation by sport -----
 --- Run ---

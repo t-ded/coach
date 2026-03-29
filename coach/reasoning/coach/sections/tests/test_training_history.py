@@ -44,11 +44,11 @@ class TestTrainingHistorySection:
 
     def test_render_single_history_week(self) -> None:
         self._weekly_activities['Monday'] = [
-            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RUN, description='Run 1', elapsed_time_seconds=10, distance_meters=100),
-            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RUN, description='Run 2', elapsed_time_seconds=240, distance_meters=1000),
+            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RUN, title='Run 1', elapsed_time_seconds=10, distance_meters=100),
+            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RUN, title='Run 2', elapsed_time_seconds=240, distance_meters=1000),
         ]
         self._weekly_activities['Friday'] = [
-            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RIDE, description='Ride 1', elapsed_time_seconds=3600, distance_meters=20_000, elevation_gain_meters=100),
+            ActivitySummary(start_time_utc=_PLACEHOLDER_START, sport_type=SportType.RIDE, title='Ride 1', elapsed_time_seconds=3600, distance_meters=20_000, elevation_gain_meters=100),
         ]
         volume_by_sport = {
             SportType.RUN: ActivityVolume(num_activities=2, duration_seconds=250, distance_meters=1_100.0),
@@ -151,7 +151,7 @@ Ride: Ride 1
             ActivitySummary(
                 start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
                 sport_type=SportType.STRENGTH,
-                description='Upper body',
+                title='Upper body',
                 elapsed_time_seconds=3_600,
                 distance_meters=None,
                 average_heart_rate=120,
@@ -174,7 +174,7 @@ Ride: Ride 1
             ActivitySummary(
                 start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
                 sport_type=SportType.RUN,
-                description='VO2 Max 5x1 @4:30, 1:30 in between',
+                title='VO2 Max 5x1 @4:30, 1:30 in between',
                 elapsed_time_seconds=1_805,
                 distance_meters=5_000,
                 elevation_gain_meters=5.0,
@@ -195,7 +195,7 @@ Ride: Ride 1
             ActivitySummary(
                 start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
                 sport_type=SportType.RUN,
-                description='Tempo run',
+                title='Tempo run',
                 elapsed_time_seconds=1_805,
                 distance_meters=5_000,
                 average_heart_rate=165,
@@ -216,7 +216,7 @@ Ride: Ride 1
             ActivitySummary(
                 start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
                 sport_type=SportType.RUN,
-                description='Intervals 5x1km',
+                title='Intervals 5x1km',
                 elapsed_time_seconds=3_000,
                 moving_time_seconds=2_400,
                 distance_meters=5_000,
@@ -239,7 +239,7 @@ Ride: Ride 1
             ActivitySummary(
                 start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
                 sport_type=SportType.RUN,
-                description='Easy run',
+                title='Easy run',
                 elapsed_time_seconds=1_800,
                 moving_time_seconds=1_800,
                 distance_meters=5_000,

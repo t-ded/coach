@@ -41,7 +41,7 @@ class ActivityVolume:
 class ActivitySummary:
     start_time_utc: datetime
     sport_type: SportType
-    description: str
+    title: str
 
     elapsed_time_seconds: int
     moving_time_seconds: Optional[int] = None
@@ -49,19 +49,22 @@ class ActivitySummary:
     elevation_gain_meters: Optional[float] = None
     average_heart_rate: Optional[float] = None
     max_heart_rate: Optional[float] = None
+    notes: Optional[str] = None
 
     @classmethod
     def from_activity(cls, activity: Activity) -> ActivitySummary:
+        raw_notes = parse_private_notes_activity_summary(activity.notes)
         return cls(
             start_time_utc=activity.start_time_utc,
             sport_type=activity.sport_type,
-            description=parse_private_notes_activity_summary(activity.notes),
+            title=activity.name or '',
             elapsed_time_seconds=activity.elapsed_time_seconds,
             moving_time_seconds=activity.moving_time_seconds,
             distance_meters=activity.distance_meters,
             elevation_gain_meters=activity.elevation_gain_meters,
             average_heart_rate=activity.average_heart_rate,
             max_heart_rate=activity.max_heart_rate,
+            notes=raw_notes or None,
         )
 
 

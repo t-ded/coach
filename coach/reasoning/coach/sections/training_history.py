@@ -106,7 +106,7 @@ class TrainingHistorySection(ContextSection):
         )
 
         lines: list[str] = []
-        lines.append(f'{activity_summary.sport_type.value}: {activity_summary.description}')
+        lines.append(f'{activity_summary.sport_type.value}: {activity_summary.title}')
         lines.append(_render_time(activity_summary, active_seconds, has_rest))
         if is_distance:
             distance_km = parse_distance_km(meters=activity_summary.distance_meters, decimals=1)
@@ -118,6 +118,7 @@ class TrainingHistorySection(ContextSection):
             _optional_append(activity_summary.elevation_gain_meters, '- Elevation gain: {} meters', lines)
         _optional_append(activity_summary.average_heart_rate, '- Average heart rate: {} bpm', lines)
         _optional_append(activity_summary.max_heart_rate, '- Max heart rate: {} bpm', lines)
+        _optional_append(activity_summary.notes, '- Notes: {}', lines)
         return '\n'.join(lines)
 
     @staticmethod
