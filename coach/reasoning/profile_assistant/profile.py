@@ -10,7 +10,7 @@ from coach.domain.goals import Priority
 from coach.domain.goals import TrainingGoal
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
-from coach.reasoning.coach.context import render_training_goal
+from coach.reasoning.coach.sections.profile import render_training_goal
 from coach.reasoning.profile_assistant.system_prompts import CONVERSATION_PROMPTS
 from coach.reasoning.profile_assistant.system_prompts import EDIT_PROMPTS
 from coach.reasoning.profile_assistant.system_prompts import SECTION_INTROS
