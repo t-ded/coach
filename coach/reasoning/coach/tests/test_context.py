@@ -1,5 +1,6 @@
 from datetime import UTC
 from datetime import datetime
+from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
@@ -126,20 +127,26 @@ _CURR_WEEK_RUN = Activity(
 _GOLDEN_ACTIVITIES = [_PREV_WEEK_RUN, _PREV_WEEK_INTERVAL, _PREV_WEEK_STRENGTH, _CURR_WEEK_RUN]
 
 
+def _make_coach(session_summary: Optional[str] = None) -> Coach:
+    return Coach(
+        provider=LLMProvider.GOOGLE,
+        model='test-model',
+        profile=_GOLDEN_PROFILE,
+        activities=_GOLDEN_ACTIVITIES,
+        num_history_weeks=1,
+        user_display_name='Alex',
+        api_key='fake-key-for-test',
+        generated_at=_GOLDEN_NOW,
+        session_summary=session_summary,
+    )
+
+
 class TestGoldenOutputFullPrompt:
     """One place to see the complete prompt that goes to the LLM."""
 
     def test_full_prompt(self) -> None:
-        coach = Coach(
-            provider=LLMProvider.GOOGLE,
-            model='test-model',
-            profile=_GOLDEN_PROFILE,
-            activities=_GOLDEN_ACTIVITIES,
-            num_history_weeks=1,
-            user_display_name='Alex',
-            api_key='fake-key-for-test',
+        coach = _make_coach(
             session_summary='We discussed your upcoming 5K goal and agreed to add one more interval session per week.',
-            generated_at=_GOLDEN_NOW,
         )
 
         result = coach._build_prompt('How should I train this week?')
@@ -201,7 +208,7 @@ Weekly summary for 2025-03-03 to 2025-03-09:
 ----- Per-day breakdown -----
 --- Monday ---
 Run: easy aerobic
-- Duration: 00:50:00
+- Moving time: 00:50:00 (no rest)
 - Distance: 8.0 km
 - Pace: 6:15/km
 - Elevation gain: 50.0 meters
@@ -213,14 +220,15 @@ Run: 5x1km intervals
 - Active time: 00:45:00
 - Elapsed time: 01:00:00 (rest: 00:15:00)
 - Distance: 7.0 km
-- Pace: 6:25/km
+- Active pace: 6:25/km
+- Elapsed pace: 8:34/km
 - Elevation gain: 20.0 meters
 - Average heart rate: 170 bpm
 - Max heart rate: 188 bpm
 
 --- Thursday ---
 WeightTraining: upper body strength
-- Duration: 00:45:00
+- Moving time: 00:45:00 (no rest)
 
 ----- Volume aggregation by sport -----
 --- Run ---
@@ -239,7 +247,7 @@ Weekly summary for 2025-03-10 to 2025-03-16:
 ----- Per-day breakdown -----
 --- Monday ---
 Run: recovery jog
-- Duration: 00:40:00
+- Moving time: 00:40:00 (no rest)
 - Distance: 5.0 km
 - Pace: 8:00/km
 - Average heart rate: 130 bpm
@@ -265,3 +273,21 @@ How should I train this week?
 Your answer: <response>"""
 
         assert result == expected
+
+
+class TestSessionSummary:
+    def test_session_summary_present(self) -> None:
+        summary_text = 'We talked about increasing weekly mileage gradually.'
+        coach = _make_coach(session_summary=summary_text)
+
+        result = coach._build_prompt('What next?')
+
+        assert 'Summary of our previous conversation:' in result
+        assert summary_text in result
+
+    def test_session_summary_absent(self) -> None:
+        coach = _make_coach(session_summary=None)
+
+        result = coach._build_prompt('What next?')
+
+        assert 'Summary of our previous conversation:' not in result

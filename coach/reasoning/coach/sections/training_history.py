@@ -25,6 +25,28 @@ def _format_pace(distance_meters: float, duration_seconds: int) -> str:
     return f'{minutes}:{seconds:02d}/km'
 
 
+def _render_time(activity_summary: ActivitySummary, active_seconds: int, has_rest: bool) -> str:
+    if has_rest:
+        rest_seconds = activity_summary.elapsed_time_seconds - active_seconds
+        active_line = f'- Active time: {format_total_seconds(total_seconds=active_seconds)}'
+        elapsed_line = f'- Elapsed time: {format_total_seconds(total_seconds=activity_summary.elapsed_time_seconds)} (rest: {format_total_seconds(total_seconds=rest_seconds)})'
+        return f'{active_line}\n{elapsed_line}'
+    return f'- Moving time: {format_total_seconds(total_seconds=active_seconds)} (no rest)'
+
+
+def _render_pace(activity_summary: ActivitySummary, active_seconds: int, has_rest: bool) -> Optional[str]:
+    if not activity_summary.distance_meters or not active_seconds:
+        return None
+    active_pace = _format_pace(activity_summary.distance_meters, active_seconds)
+    if has_rest:
+        elapsed_pace = _format_pace(activity_summary.distance_meters, activity_summary.elapsed_time_seconds)
+        pace_str = f'- Active pace: {active_pace}'
+        if elapsed_pace != active_pace:
+            pace_str += f'\n- Elapsed pace: {elapsed_pace}'
+        return pace_str
+    return f'- Pace: {active_pace}'
+
+
 class TrainingHistorySection(ContextSection):
     def __init__(self, recent_training_history: RecentTrainingHistory) -> None:
         self._history = recent_training_history
@@ -59,7 +81,7 @@ class TrainingHistorySection(ContextSection):
         lines.append('----- Volume aggregation by sport -----')
         for sport, volume in weekly_summary.volume_by_sport.items():
             lines.append(f'--- {sport.value} ---')
-            lines.append(self._render_activity_volume(volume, sport))
+            lines.append(self._render_activity_volume(volume=volume, sport=sport))
             lines.append('')
         return '\n'.join(lines)
 
@@ -74,35 +96,36 @@ class TrainingHistorySection(ContextSection):
                     lines.append('')
         return '\n'.join(lines)
 
-    def _render_activity_summary(self, activity_summary: ActivitySummary) -> str:
+    @staticmethod
+    def _render_activity_summary(activity_summary: ActivitySummary) -> str:
         is_distance = activity_summary.sport_type in DISTANCE_SPORT_TYPES
         active_seconds = activity_summary.moving_time_seconds or activity_summary.elapsed_time_seconds
+        has_rest = (
+            activity_summary.moving_time_seconds is not None
+            and activity_summary.moving_time_seconds < activity_summary.elapsed_time_seconds
+        )
 
         lines: list[str] = []
         lines.append(f'{activity_summary.sport_type.value}: {activity_summary.description}')
-        self._render_time(activity_summary, active_seconds, lines)
+        lines.append(_render_time(activity_summary, active_seconds, has_rest))
         if is_distance:
-            _optional_append(parse_distance_km(meters=activity_summary.distance_meters, decimals=1), '- Distance: {}', lines)
-            if activity_summary.distance_meters and active_seconds:
-                lines.append(f'- Pace: {_format_pace(activity_summary.distance_meters, active_seconds)}')
+            distance_km = parse_distance_km(meters=activity_summary.distance_meters, decimals=1)
+            _optional_append(distance_km, '- Distance: {}', lines)
+
+            pace = _render_pace(activity_summary, active_seconds, has_rest)
+            _optional_append(pace, '{}', lines)
+
             _optional_append(activity_summary.elevation_gain_meters, '- Elevation gain: {} meters', lines)
         _optional_append(activity_summary.average_heart_rate, '- Average heart rate: {} bpm', lines)
         _optional_append(activity_summary.max_heart_rate, '- Max heart rate: {} bpm', lines)
         return '\n'.join(lines)
 
-    def _render_time(self, activity_summary: ActivitySummary, active_seconds: int, lines: list[str]) -> None:
-        has_rest = activity_summary.moving_time_seconds is not None and activity_summary.moving_time_seconds < activity_summary.elapsed_time_seconds
-        if has_rest:
-            rest_seconds = activity_summary.elapsed_time_seconds - active_seconds
-            lines.append(f'- Active time: {format_total_seconds(total_seconds=active_seconds)}')
-            lines.append(f'- Elapsed time: {format_total_seconds(total_seconds=activity_summary.elapsed_time_seconds)} (rest: {format_total_seconds(total_seconds=rest_seconds)})')
-        else:
-            lines.append(f'- Duration: {format_total_seconds(total_seconds=active_seconds)}')
-
-    def _render_activity_volume(self, volume: ActivityVolume, sport: SportType) -> str:
+    @staticmethod
+    def _render_activity_volume(*, volume: ActivityVolume, sport: SportType) -> str:
         lines: list[str] = []
         lines.append(f'- Num activities: {volume.num_activities}')
         lines.append(f'- Total duration: {format_total_seconds(total_seconds=volume.duration_seconds)}')
         if sport in DISTANCE_SPORT_TYPES:
-            _optional_append(parse_distance_km(meters=volume.distance_meters, decimals=1), '- Total distance: {}', lines)
+            distance_km = parse_distance_km(meters=volume.distance_meters, decimals=1)
+            _optional_append(distance_km, '- Total distance: {}', lines)
         return '\n'.join(lines)
