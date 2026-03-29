@@ -45,9 +45,15 @@ class Coach(Assistant):
         return self._profile.chat_preferences if self._profile else None
 
     def _additional_context(self) -> Optional[str]:
-        if self._session_summary:
-            return f'Summary of our previous conversation:\n{self._session_summary}\n\n{self._additional_context_attr}'
         return self._additional_context_attr
+
+    def _render_conversation_context(self) -> Optional[str]:
+        in_session = super()._render_conversation_context()
+        if self._session_summary and in_session:
+            return f'Summary of our previous conversation:\n{self._session_summary}\n\n{in_session}'
+        if self._session_summary:
+            return f'Summary of our previous conversation:\n{self._session_summary}'
+        return in_session
 
     def _system_prompt(self) -> str:
         return """

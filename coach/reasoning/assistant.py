@@ -50,12 +50,14 @@ class Assistant(ABC):
         self._history.add(ChatTurn(role='assistant', content=response))
         return response
 
+    def _render_conversation_context(self) -> Optional[str]:
+        return None if self._history.has_no_assistant_response() else self._history.render()
+
     def _build_prompt(self, user_input: str) -> str:
-        chat_history = None if self._history.has_no_assistant_response() else self._history.render()
         return build_assistant_prompt(
             system_prompt=self._system_prompt(),
             user_system_prompt=self._user_system_prompt(),
             additional_context=self._additional_context(),
-            chat_history=chat_history,
+            chat_history=self._render_conversation_context(),
             user_prompt=user_input,
         )

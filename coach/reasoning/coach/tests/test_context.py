@@ -198,9 +198,6 @@ Your responsibilities:
 User instructions:
 Be concise and direct.
 Additional context:
-Summary of our previous conversation:
-We discussed your upcoming 5K goal and agreed to add one more interval session per week.
-
 User profile:
 --- Training preferences ---
 Prefer polarized training with easy runs and hard workouts.
@@ -285,6 +282,9 @@ Running personal bests:
 - Half Marathon: No PB recorded
 - Marathon: No PB recorded
 ----------------------------------------
+Conversation so far:
+Summary of our previous conversation:
+We discussed your upcoming 5K goal and agreed to add one more interval session per week.
 User question:
 How should I train this week?
 Your answer: <response>"""
