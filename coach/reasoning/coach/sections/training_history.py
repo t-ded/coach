@@ -100,10 +100,7 @@ class TrainingHistorySection(ContextSection):
     def _render_activity_summary(activity_summary: ActivitySummary) -> str:
         is_distance = activity_summary.sport_type in DISTANCE_SPORT_TYPES
         active_seconds = activity_summary.moving_time_seconds or activity_summary.elapsed_time_seconds
-        has_rest = (
-            activity_summary.moving_time_seconds is not None
-            and activity_summary.moving_time_seconds < activity_summary.elapsed_time_seconds
-        )
+        has_rest = activity_summary.moving_time_seconds is not None and activity_summary.moving_time_seconds < activity_summary.elapsed_time_seconds
 
         lines: list[str] = []
         lines.append(f'{activity_summary.sport_type.value}: {activity_summary.title}')
