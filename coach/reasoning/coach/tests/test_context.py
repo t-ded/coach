@@ -2,6 +2,8 @@ from datetime import UTC
 from datetime import datetime
 from typing import Optional
 
+from coach.builders.personal_bests import build_running_personal_bests_summary
+from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
 from coach.domain.activity import SportType
@@ -16,27 +18,42 @@ from coach.tests.utils_for_tests import make_activity
 _FIXED_NOW = datetime(2025, 3, 17, 10, 0, 0, tzinfo=UTC)
 
 
+def _build_context(
+    *,
+    profile: Optional[UserProfile] = None,
+    activities: Optional[list[Activity]] = None,
+    num_history_weeks: int = 4,
+    generated_at: datetime = _FIXED_NOW,
+) -> Optional[str]:
+    acts = activities or []
+    return build_coach_context(
+        profile=profile,
+        recent_training_history=build_recent_training_history(activities=acts, generated_at=generated_at, num_history_weeks=num_history_weeks),
+        pb_summary=build_running_personal_bests_summary(activities=acts),
+    )
+
+
 class TestBuildCoachContext:
     def test_profile_section_present_when_profile_is_set(self) -> None:
         profile = UserProfile(training_preferences='Run lots of easy miles.')
-        result = build_coach_context(profile=profile, activities=[], num_history_weeks=4, generated_at=_FIXED_NOW)
+        result = _build_context(profile=profile)
         assert result is not None
         assert 'Run lots of easy miles.' in result
 
     def test_profile_section_absent_when_no_profile(self) -> None:
-        result = build_coach_context(profile=None, activities=[], num_history_weeks=4, generated_at=_FIXED_NOW)
+        result = _build_context()
         assert result is not None
         assert 'User profile:' not in result
 
     def test_pbs_flow_through_from_activities(self) -> None:
         activity = make_activity(id=1, pbs=[BestEffort(name='5K', moving_time_seconds=1200)], start_time_utc=_FIXED_NOW)
-        result = build_coach_context(profile=None, activities=[activity], num_history_weeks=4, generated_at=_FIXED_NOW)
+        result = _build_context(activities=[activity])
         assert result is not None
         assert '5K' in result
 
     def test_current_week_day_reflects_generated_at(self) -> None:
         monday = datetime(2025, 3, 17, 10, 0, 0, tzinfo=UTC)
-        result = build_coach_context(profile=None, activities=[], num_history_weeks=2, generated_at=monday)
+        result = _build_context(generated_at=monday, num_history_weeks=2)
         assert result is not None
         assert 'Monday' in result
 

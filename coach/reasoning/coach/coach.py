@@ -2,6 +2,8 @@ from datetime import UTC
 from datetime import datetime
 from typing import Optional
 
+from coach.builders.personal_bests import build_running_personal_bests_summary
+from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
@@ -26,11 +28,17 @@ class Coach(Assistant):
         self._profile = profile
         self._first_name = user_display_name or 'Athlete'
         self._session_summary = session_summary
+        effective_now = generated_at or datetime.now(tz=UTC)
+        pb_summary = build_running_personal_bests_summary(activities=activities)
+        recent_training_history = build_recent_training_history(
+            activities=activities,
+            generated_at=effective_now,
+            num_history_weeks=num_history_weeks,
+        )
         self._additional_context_attr = build_coach_context(
             profile=profile,
-            activities=activities,
-            num_history_weeks=num_history_weeks,
-            generated_at=generated_at or datetime.now(tz=UTC),
+            recent_training_history=recent_training_history,
+            pb_summary=pb_summary,
         )
 
     def _user_system_prompt(self) -> Optional[str]:
