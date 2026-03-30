@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from coach.reasoning.coach.context import PRIORITY_OPTIONS
+from coach.reasoning.coach.sections.profile import PRIORITY_OPTIONS
 
 
 class ProfileParts(StrEnum):
