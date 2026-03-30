@@ -49,11 +49,10 @@ class Coach(Assistant):
 
     def _render_conversation_context(self) -> Optional[str]:
         in_session = super()._render_conversation_context()
-        if self._session_summary and in_session:
-            return f'Summary of our previous conversation:\n{self._session_summary}\n\n{in_session}'
-        if self._session_summary:
-            return f'Summary of our previous conversation:\n{self._session_summary}'
-        return in_session
+        if not self._session_summary:
+            return in_session
+        summary = f'Summary of our previous conversation:\n{self._session_summary}'
+        return f'{summary}\n\n{in_session}' if in_session else summary
 
     def _system_prompt(self) -> str:
         return """
