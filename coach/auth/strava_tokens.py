@@ -23,6 +23,9 @@ class StravaTokenRepository(ABC):
     @abstractmethod
     def save_tokens(self, user_id: str, tokens: StravaTokens) -> None: ...
 
+    @abstractmethod
+    def delete_tokens(self, user_id: str) -> None: ...
+
 
 class SupabaseStravaTokenRepository(StravaTokenRepository):
     def __init__(self, client: Client) -> None:
@@ -50,3 +53,6 @@ class SupabaseStravaTokenRepository(StravaTokenRepository):
                 'p_expires_at': tokens.expires_at.isoformat(),
             },
         ).execute()
+
+    def delete_tokens(self, user_id: str) -> None:
+        self._client.rpc('delete_strava_tokens', {'p_user_id': user_id}).execute()
