@@ -1,7 +1,7 @@
 -- RPC to delete a user's Strava tokens from Vault.
 -- Called by the deauthorization service when an athlete disconnects the app from Strava.
--- Mirrors the existing upsert_strava_tokens RPC — adapt the body to match your vault schema
--- (replace strava_tokens table/column names if they differ).
+-- Schema: private.strava_tokens stores two vault secret IDs — one for the access token
+-- and one for the refresh token — both of which must be deleted from the Vault.
 CREATE OR REPLACE FUNCTION delete_strava_tokens(p_user_id UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -9,16 +9,22 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-    v_secret_id UUID;
+    v_access_token_vault_id UUID;
+    v_refresh_token_vault_id UUID;
 BEGIN
-    -- Locate the vault secret ID associated with this user's Strava tokens
-    SELECT secret_id INTO v_secret_id
+    SELECT access_token_vault_id, refresh_token_vault_id
+    INTO v_access_token_vault_id, v_refresh_token_vault_id
     FROM private.strava_tokens
     WHERE user_id = p_user_id;
 
-    IF v_secret_id IS NOT NULL THEN
-        PERFORM vault.delete_secret(v_secret_id);
-        DELETE FROM private.strava_tokens WHERE user_id = p_user_id;
+    IF v_access_token_vault_id IS NOT NULL THEN
+        PERFORM vault.delete_secret(v_access_token_vault_id);
     END IF;
+
+    IF v_refresh_token_vault_id IS NOT NULL THEN
+        PERFORM vault.delete_secret(v_refresh_token_vault_id);
+    END IF;
+
+    DELETE FROM private.strava_tokens WHERE user_id = p_user_id;
 END;
 $$;
