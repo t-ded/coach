@@ -179,6 +179,43 @@ Coach is an AI assistant, not a certified running coach or medical professional.
 
 ---
 
+## 🔒 Data & Privacy
+
+### What data Coach stores
+
+| Data | Stored? | Notes |
+|------|---------|-------|
+| Google account email and display name | Yes | Used to identify your account |
+| Strava activity data (last ~8 weeks) | Yes | Synced at session start or via webhook |
+| Your chat messages | Yes | Stored to power session history |
+| Your coaching profile | Yes | The profile you set up guides the AI |
+| Private activity notes (`$...$`) | Yes | Stored as part of your activity data |
+| LLM API key | Yes — encrypted | Stored in Supabase Vault; never accessible in plaintext |
+| Strava access and refresh tokens | Yes — encrypted | Stored in Supabase Vault; never accessible in plaintext |
+
+Coach does not store payment information, health records, or any data beyond what is listed above.
+
+### Read-only Strava access
+
+Coach requests **read-only** permission (`activity:read_all`). It cannot create, edit, delete, or post anything to your Strava account. It can only read your activity history.
+
+### Who can see your data
+
+- **You**: you see your own activities and chat history in the app.
+- **The operator** (whoever runs this Coach instance) has access to your profile data, stored activities, and chat messages via the Supabase dashboard. The operator cannot see your LLM API key or Strava tokens in plaintext — these are stored encrypted in Supabase Vault and are never logged.
+
+### What happens when you disconnect Strava
+
+When you disconnect Coach from [strava.com/settings/apps](https://www.strava.com/settings/apps), Strava sends a deauthorization event to Coach. Upon receiving it, Coach immediately and atomically:
+
+1. Deletes your Strava tokens from Vault
+2. Deletes all stored activity data
+3. Clears the Strava connection from your account
+
+This happens automatically — you do not need to take any action inside Coach.
+
+---
+
 ## 🛠 For developers
 
 > This section is for people who want to run their own instance or contribute to the codebase. If you're just here to use Coach, everything above is all you need.
