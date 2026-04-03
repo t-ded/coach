@@ -18,10 +18,15 @@ class StravaRateLimitError(Exception):
     pass
 
 
+class StravaTokenRevokedError(Exception):
+    pass
+
+
 class StravaClient:
     # Strava enforces a 15-minute and daily rate limit.
     # We back off and retry when we hit the 15-minute limit.
     _RATE_LIMIT_STATUS = 429
+    _UNAUTHORIZED_STATUS = 401
     _MAX_RETRIES = 3
     _FIFTEEN_MINUTES = 15 * 60
 
@@ -37,12 +42,28 @@ class StravaClient:
         now = time.time()
         return self._FIFTEEN_MINUTES - (int(now) % self._FIFTEEN_MINUTES)
 
+    def _log_rate_limit(self, response: requests.Response) -> None:
+        usage = response.headers.get('X-RateLimit-Usage', '')
+        limits = response.headers.get('X-RateLimit-Limit', '')
+        if usage and limits:
+            fifteen_min_used, daily_used = usage.split(',')
+            fifteen_min_limit, daily_limit = limits.split(',')
+            logger.debug(
+                'Strava rate limit: 15-min %s/%s, daily %s/%s',
+                fifteen_min_used.strip(), fifteen_min_limit.strip(),
+                daily_used.strip(), daily_limit.strip(),
+            )
+
     def _get(self, url: str, **kwargs: Any) -> Any:
         for attempt in range(self._MAX_RETRIES):
             response = requests.get(url, headers=self._headers(), timeout=10, **kwargs)
 
+            if response.status_code == self._UNAUTHORIZED_STATUS:
+                raise StravaTokenRevokedError('Strava token is invalid or has been revoked.')
+
             if response.status_code != self._RATE_LIMIT_STATUS:
                 response.raise_for_status()
+                self._log_rate_limit(response)
                 return response.json()
 
             usage = response.headers.get('X-RateLimit-Usage', '')

@@ -4,6 +4,7 @@ import chainlit as cl
 from starlette.routing import Mount
 
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
+from coach.ingestion.strava.client import StravaTokenRevokedError
 from coach.persistence.database import create_anon_client
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
@@ -87,14 +88,30 @@ async def on_chat_start() -> None:
         return
 
     display_name = coaching.format_display_name(raw_display_name, user.identifier)
+
+    if users_repo.get_strava_scope_warning():
+        users_repo.set_strava_scope_warning(False)
+        await cl.Message(
+            'Your Strava connection is missing the **activity:read_all** permission, '
+            'so training history cannot be loaded. '
+            'Please disconnect Strava from [strava.com/settings/apps](https://www.strava.com/settings/apps) '
+            'and then reconnect here to grant full access.',
+            actions=[cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')],
+        ).send()
+        return
+
     sync_strava = coaching.needs_strava_sync(users_repo)
     if sync_strava:
         await cl.Message('Syncing your Strava training data, please wait...').send()
-    profile, activities = await cl.make_async(coaching.load_coaching_data)(
-        user_id,
-        authenticated_client,
-        sync_strava=sync_strava,
-    )
+    try:
+        profile, activities = await cl.make_async(coaching.load_coaching_data)(
+            user_id,
+            authenticated_client,
+            sync_strava=sync_strava,
+        )
+    except StravaTokenRevokedError:
+        await _reconnect_strava_prompt().send()
+        return
 
     cl.user_session.set(coaching.SESSION_ACTIVITIES, activities)
     cl.user_session.set(coaching.SESSION_DISPLAY_NAME, display_name)
@@ -254,3 +271,11 @@ async def on_help(action: cl.Action) -> None:
 def _connect_strava_prompt() -> cl.Message:
     actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
     return cl.Message('To get started, please connect your Strava account.', actions=actions)
+
+
+def _reconnect_strava_prompt() -> cl.Message:
+    actions = [cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')]
+    return cl.Message(
+        'Your Strava connection has expired or been revoked. Please reconnect to continue.',
+        actions=actions,
+    )
