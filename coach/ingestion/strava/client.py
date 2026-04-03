@@ -50,8 +50,10 @@ class StravaClient:
             fifteen_min_limit, daily_limit = limits.split(',')
             logger.debug(
                 'Strava rate limit: 15-min %s/%s, daily %s/%s',
-                fifteen_min_used.strip(), fifteen_min_limit.strip(),
-                daily_used.strip(), daily_limit.strip(),
+                fifteen_min_used.strip(),
+                fifteen_min_limit.strip(),
+                daily_used.strip(),
+                daily_limit.strip(),
             )
 
     def _get(self, url: str, **kwargs: Any) -> Any:
