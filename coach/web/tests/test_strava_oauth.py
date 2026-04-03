@@ -61,7 +61,7 @@ class TestStravaOAuthCallback:
         self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
 
         with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
-            self._client.get('/auth/strava/callback?code=abc&state=valid-state')
+            self._client.get('/auth/strava/callback?code=abc&state=valid-state&scope=activity%3Aread_all')
 
         self._secret_client.rpc.assert_called()
 
@@ -69,9 +69,43 @@ class TestStravaOAuthCallback:
         self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
 
         with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
-            self._client.get('/auth/strava/callback?code=abc&state=valid-state')
+            self._client.get('/auth/strava/callback?code=abc&state=valid-state&scope=activity%3Aread_all')
 
         self._secret_client.table.return_value.update.assert_called_once_with({'strava_user_id': 42})
+
+
+class TestStravaOAuthScopeVerification:
+    def setup_method(self) -> None:
+        self._secret_client = MagicMock()
+        app = create_app()
+        app.dependency_overrides[create_secret_client] = lambda: self._secret_client
+        self._client = TestClient(app, raise_server_exceptions=False)
+        self._setup_state_row(expires_at=datetime.now(UTC) + timedelta(hours=1))
+
+    def _setup_state_row(self, expires_at: datetime) -> None:
+        result = MagicMock()
+        result.data = [{'user_id': 'user-123', 'state': 'valid-state', 'expires_at': expires_at.isoformat()}]
+        self._secret_client.table.return_value.select.return_value.eq.return_value.execute.return_value = result
+
+    def test_scope_warning_stored_when_activity_read_all_missing(self) -> None:
+        with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
+            self._client.get('/auth/strava/callback?code=abc&state=valid-state&scope=read')
+
+        self._secret_client.table.return_value.update.assert_any_call({'strava_scope_warning': True})
+
+    def test_no_scope_warning_when_activity_read_all_granted(self) -> None:
+        with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
+            self._client.get('/auth/strava/callback?code=abc&state=valid-state&scope=read%2Cactivity%3Aread_all')
+
+        update_calls = [str(c) for c in self._secret_client.table.return_value.update.call_args_list]
+        assert not any('strava_scope_warning' in c for c in update_calls)
+
+    def test_no_scope_warning_when_scope_param_absent(self) -> None:
+        with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
+            self._client.get('/auth/strava/callback?code=abc&state=valid-state')
+
+        # Empty scope → activity:read_all missing → warning IS set
+        self._secret_client.table.return_value.update.assert_any_call({'strava_scope_warning': True})
 
 
 class TestGenerateStravaAuthUrl:

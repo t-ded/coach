@@ -12,7 +12,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.responses import RedirectResponse
-from supabase import Client
 
 from coach.auth.strava import STRAVA_AUTHORIZE_URL
 from coach.auth.strava import STRAVA_OAUTH_ENDPOINT
@@ -20,6 +19,7 @@ from coach.auth.strava_tokens import StravaTokens
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.users import SupabaseUsersRepository
+from supabase import Client
 
 router = APIRouter()
 
@@ -90,6 +90,7 @@ def _validate_and_consume_state(state: str, secret_client: Client) -> str:
 def strava_oauth_callback(
     code: str,
     state: str,
+    scope: str = '',
     secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> RedirectResponse:
     user_id = _validate_and_consume_state(state, secret_client)
@@ -103,7 +104,12 @@ def strava_oauth_callback(
     SupabaseStravaTokenRepository(secret_client).save_tokens(user_id, tokens)
 
     strava_athlete_id: int = token_data['athlete']['id']
-    SupabaseUsersRepository(secret_client, user_id).set_strava_user_id(strava_athlete_id)
+    users_repo = SupabaseUsersRepository(secret_client, user_id)
+    users_repo.set_strava_user_id(strava_athlete_id)
+
+    granted_scopes = {s.strip() for s in scope.split(',')}
+    if 'activity:read_all' not in granted_scopes:
+        users_repo.set_strava_scope_warning(True)
 
     chainlit_url = os.environ.get('CHAINLIT_URL', 'http://localhost:8000')
     return RedirectResponse(chainlit_url)
