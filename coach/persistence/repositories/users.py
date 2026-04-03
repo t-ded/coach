@@ -13,6 +13,13 @@ class SupabaseUsersRepository:
         self._db = client
         self._user_id = user_id
 
+    @classmethod
+    def find_user_id_by_strava_id(cls, client: Client, strava_athlete_id: int) -> Optional[str]:
+        response = client.table(cls.TABLE).select('id').eq('strava_user_id', strava_athlete_id).maybe_single().execute()
+        if not response or not response.data:
+            return None
+        return cast(Optional[str], cast(dict[str, Any], response.data).get('id'))
+
     def _get_field(self, column: str) -> Optional[Any]:
         response = self._db.table(self.TABLE).select(column).eq('id', self._user_id).maybe_single().execute()
         if not response or not response.data:
@@ -40,6 +47,15 @@ class SupabaseUsersRepository:
             return None, None
         data = cast(dict[str, Any], response.data)
         return cast(Optional[int], data.get('strava_user_id')), cast(Optional[str], data.get('display_name'))
+
+    def clear_strava_user_id(self) -> None:
+        self._set_field('strava_user_id', None)
+
+    def get_strava_scope_warning(self) -> bool:
+        return bool(self._get_field('strava_scope_warning'))
+
+    def set_strava_scope_warning(self, warning: bool) -> None:
+        self._set_field('strava_scope_warning', warning)
 
     def get_last_strava_sync(self) -> Optional[datetime]:
         raw = self._get_field('last_strava_sync_at')

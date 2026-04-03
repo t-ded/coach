@@ -7,12 +7,12 @@ from typing import cast
 
 from postgrest import CountMethod
 from postgrest import SyncRequestBuilder
-from supabase import Client
 
 from coach.domain.activity import Activity
 from coach.persistence.repository_interface import Repository
 from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import serialize_activity
+from supabase import Client
 
 type ActivityRow = dict[str, Any]
 
@@ -80,6 +80,12 @@ class SupabaseActivityRepository(Repository[Activity]):
 
     def reset_table(self) -> None:
         self._table().delete().eq(column='user_id', value=self._user_id).execute()
+
+    def delete_all_for_user(self) -> None:
+        self._table().delete().eq(column='user_id', value=self._user_id).execute()
+
+    def delete_by_strava_id(self, strava_activity_id: int) -> None:
+        self._table().delete().eq(column='id', value=strava_activity_id).eq(column='user_id', value=self._user_id).execute()
 
     def _to_row(self, activity: Activity) -> ActivityRow:
         row = serialize_activity(activity)
