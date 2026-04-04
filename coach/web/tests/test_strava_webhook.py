@@ -5,6 +5,7 @@ import os
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+import httpx
 from fastapi.testclient import TestClient
 
 from coach.persistence.database import create_secret_client
@@ -21,7 +22,7 @@ def _make_test_client() -> tuple[TestClient, MagicMock]:
     return TestClient(app, raise_server_exceptions=False), secret_client
 
 
-def _signed_post(http: TestClient, payload: dict) -> object:
+def _signed_post(http: TestClient, payload: dict) -> httpx.Response:
     body = json.dumps(payload).encode()
     sig = 'sha256=' + hmac.new(_CLIENT_SECRET.encode(), body, hashlib.sha256).hexdigest()
     return http.post('/webhook/strava', content=body, headers={'Content-Type': 'application/json', 'X-Hub-Signature': sig})
