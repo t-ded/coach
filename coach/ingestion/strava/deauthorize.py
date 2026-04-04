@@ -1,9 +1,10 @@
 import logging
 
+from supabase import Client
+
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
 from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
-from supabase import Client
 
 logger = logging.getLogger(__name__)
 
