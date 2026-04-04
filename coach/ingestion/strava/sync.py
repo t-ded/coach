@@ -15,7 +15,7 @@ def get_new_ids_only(activities: Iterator[dict[str, Any]], existing_ids: set[int
 
 def sync_strava_for_user(strava_client: StravaClient, activity_repo: SupabaseActivityRepository, *, fresh: bool = False) -> int:
     if fresh:
-        activity_repo.reset_table()
+        activity_repo.delete_all_for_user()
 
     cursor = activity_repo.sync_cursor()
     existing = activity_repo.existing_ids(cursor)

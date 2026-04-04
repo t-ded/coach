@@ -86,7 +86,7 @@ class TestSyncStravaForUser:
         assert len(saved) == 1
         assert saved[0].id == 1
 
-    def test_resets_table_before_syncing_when_fresh(self) -> None:
+    def test_deletes_all_activities_before_syncing_when_fresh(self) -> None:
         sync_strava_for_user(self._strava_client, self._activity_repo, fresh=True)
 
-        self._activity_repo.reset_table.assert_called_once()
+        self._activity_repo.delete_all_for_user.assert_called_once()

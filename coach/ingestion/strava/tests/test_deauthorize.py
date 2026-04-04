@@ -12,11 +12,14 @@ class TestDeauthorizeAthlete:
         self._mock_activity_repo = MagicMock()
         self._mock_users_repo = MagicMock()
 
+        mock_users_cls = MagicMock()
+        mock_users_cls.find_user_id_by_strava_id.return_value = 'user-123'
+        mock_users_cls.return_value = self._mock_users_repo
+
         self._patchers = [
             patch('coach.ingestion.strava.deauthorize.SupabaseStravaTokenRepository', return_value=self._mock_token_repo),
             patch('coach.ingestion.strava.deauthorize.SupabaseActivityRepository', return_value=self._mock_activity_repo),
-            patch('coach.ingestion.strava.deauthorize.SupabaseUsersRepository', return_value=self._mock_users_repo),
-            patch('coach.ingestion.strava.deauthorize.SupabaseUsersRepository.find_user_id_by_strava_id', return_value='user-123'),
+            patch('coach.ingestion.strava.deauthorize.SupabaseUsersRepository', mock_users_cls),
         ]
         for p in self._patchers:
             p.start()

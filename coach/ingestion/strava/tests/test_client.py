@@ -65,13 +65,6 @@ class TestStravaClientTokenRevoked:
         with patch('requests.get', return_value=resp), pytest.raises(StravaTokenRevokedError):
             client._get('https://example.com/test')
 
-    def test_does_not_raise_rate_limit_error_on_401(self) -> None:
-        client = _make_client()
-        resp = _response(401)
-
-        with patch('requests.get', return_value=resp), pytest.raises(StravaTokenRevokedError):
-            client._get('https://example.com/test')
-
     def test_raises_rate_limit_error_on_429(self) -> None:
         client = _make_client()
         resp = _response(429, headers={'X-RateLimit-Usage': '200,500', 'X-RateLimit-Limit': '200,2000'})
