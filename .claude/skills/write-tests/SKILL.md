@@ -8,6 +8,7 @@ description: Testing conventions for the coach project. Use this skill whenever 
 ## Structure
 - Tests live in a `tests/` subdirectory next to the module they test (e.g. `coach/builders/tests/`)
 - Test class name mirrors the class under test: `TestRecentTrainingHistoryBuilder` tests `RecentTrainingHistoryBuilder`
+- Test names clearly state what behaviour is being tested (and not just what the input is, for example: `test_bad_input`: wrong; `test_missing_name_field`: wrong; `test_missing_name_field_raises_error`: correct)
 
 ## Setup
 - Use `setup_method` for shared setup with sensible defaults; individual tests override only what's specific to them
