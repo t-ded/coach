@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 import logging
 import os
 from typing import Any
@@ -19,6 +22,12 @@ from coach.persistence.repositories.users import SupabaseUsersRepository
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _verify_strava_signature(body: bytes, signature_header: str) -> bool:
+    client_secret = os.environ.get('STRAVA_CLIENT_SECRET', '')
+    expected = 'sha256=' + hmac.new(client_secret.encode(), body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_header)
 
 
 def _get_verify_token() -> str:
@@ -44,7 +53,11 @@ async def strava_webhook_event(
     request: Request,
     secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> dict[str, str]:
-    payload: dict[str, Any] = await request.json()
+    body = await request.body()
+    if not _verify_strava_signature(body, request.headers.get('X-Hub-Signature', '')):
+        raise HTTPException(status_code=403, detail='Invalid webhook signature')
+
+    payload: dict[str, Any] = json.loads(body)
 
     object_type = payload.get('object_type')
     aspect_type = payload.get('aspect_type')

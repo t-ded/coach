@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 import os
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -8,6 +11,7 @@ from coach.persistence.database import create_secret_client
 from coach.web.app import create_app
 
 _VERIFY_TOKEN = 'test-verify-token'
+_CLIENT_SECRET = 'test-client-secret'
 
 
 def _make_test_client() -> tuple[TestClient, MagicMock]:
@@ -15,6 +19,12 @@ def _make_test_client() -> tuple[TestClient, MagicMock]:
     app = create_app()
     app.dependency_overrides[create_secret_client] = lambda: secret_client
     return TestClient(app, raise_server_exceptions=False), secret_client
+
+
+def _signed_post(http: TestClient, payload: dict) -> object:
+    body = json.dumps(payload).encode()
+    sig = 'sha256=' + hmac.new(_CLIENT_SECRET.encode(), body, hashlib.sha256).hexdigest()
+    return http.post('/webhook/strava', content=body, headers={'Content-Type': 'application/json', 'X-Hub-Signature': sig})
 
 
 class TestStravaWebhookChallenge:
@@ -45,87 +55,57 @@ class TestStravaWebhookChallenge:
 class TestStravaWebhookEvent:
     def setup_method(self) -> None:
         self._http, self._secret_client = _make_test_client()
+        self._env_patcher = patch.dict(os.environ, {'STRAVA_CLIENT_SECRET': _CLIENT_SECRET})
+        self._env_patcher.start()
+
+    def teardown_method(self) -> None:
+        self._env_patcher.stop()
+
+    def test_missing_signature_returns_403(self) -> None:
+        response = self._http.post('/webhook/strava', json={'object_type': 'athlete', 'aspect_type': 'deauthorization', 'owner_id': 42})
+
+        assert response.status_code == 403
+
+    def test_invalid_signature_returns_403(self) -> None:
+        response = self._http.post('/webhook/strava', json={'object_type': 'athlete'}, headers={'X-Hub-Signature': 'sha256=deadbeef'})
+
+        assert response.status_code == 403
 
     def test_deauthorization_event_calls_deauthorize(self) -> None:
         with patch('coach.web.strava_webhook.deauthorize_athlete') as mock_deauth:
-            response = self._http.post(
-                '/webhook/strava',
-                json={
-                    'object_type': 'athlete',
-                    'aspect_type': 'deauthorization',
-                    'owner_id': 42,
-                    'object_id': 42,
-                },
-            )
+            response = _signed_post(self._http, {'object_type': 'athlete', 'aspect_type': 'deauthorization', 'owner_id': 42, 'object_id': 42})
 
         assert response.status_code == 200
         mock_deauth.assert_called_once_with(42, mock_deauth.call_args[0][1])
 
     def test_activity_create_event_dispatches_handler(self) -> None:
         with patch('coach.web.strava_webhook._handle_activity_event') as mock_handler:
-            response = self._http.post(
-                '/webhook/strava',
-                json={
-                    'object_type': 'activity',
-                    'aspect_type': 'create',
-                    'owner_id': 42,
-                    'object_id': 999,
-                },
-            )
+            response = _signed_post(self._http, {'object_type': 'activity', 'aspect_type': 'create', 'owner_id': 42, 'object_id': 999})
 
         assert response.status_code == 200
         mock_handler.assert_called_once_with('create', 42, 999, mock_handler.call_args[0][3])
 
     def test_activity_update_event_dispatches_handler(self) -> None:
         with patch('coach.web.strava_webhook._handle_activity_event') as mock_handler:
-            response = self._http.post(
-                '/webhook/strava',
-                json={
-                    'object_type': 'activity',
-                    'aspect_type': 'update',
-                    'owner_id': 42,
-                    'object_id': 999,
-                },
-            )
+            response = _signed_post(self._http, {'object_type': 'activity', 'aspect_type': 'update', 'owner_id': 42, 'object_id': 999})
 
         assert response.status_code == 200
         mock_handler.assert_called_once()
 
     def test_activity_delete_event_dispatches_handler(self) -> None:
         with patch('coach.web.strava_webhook._handle_activity_event') as mock_handler:
-            response = self._http.post(
-                '/webhook/strava',
-                json={
-                    'object_type': 'activity',
-                    'aspect_type': 'delete',
-                    'owner_id': 42,
-                    'object_id': 999,
-                },
-            )
+            response = _signed_post(self._http, {'object_type': 'activity', 'aspect_type': 'delete', 'owner_id': 42, 'object_id': 999})
 
         assert response.status_code == 200
         mock_handler.assert_called_once_with('delete', 42, 999, mock_handler.call_args[0][3])
 
     def test_unrecognised_event_returns_200(self) -> None:
-        response = self._http.post(
-            '/webhook/strava',
-            json={
-                'object_type': 'something_new',
-                'aspect_type': 'unknown',
-            },
-        )
+        response = _signed_post(self._http, {'object_type': 'something_new', 'aspect_type': 'unknown'})
 
         assert response.status_code == 200
 
     def test_missing_owner_id_returns_200(self) -> None:
-        response = self._http.post(
-            '/webhook/strava',
-            json={
-                'object_type': 'activity',
-                'aspect_type': 'create',
-                'object_id': 999,
-            },
-        )
+        response = _signed_post(self._http, {'object_type': 'activity', 'aspect_type': 'create', 'object_id': 999})
 
         assert response.status_code == 200
 
