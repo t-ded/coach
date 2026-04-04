@@ -15,6 +15,7 @@ description: Git and GitHub workflow rules for the coach project. Use this skill
 ## Pull requests
 - Always rebase merge: `gh pr merge --rebase` (not squash or merge commits)
 - **Always `git push` before `gh pr merge --rebase`** — the command merges the remote branch; local-only commits not yet pushed are silently left behind
+- Always check that the CI has passed after pushing to the remote branch - do not report success before you can report also success on CI
 
 ## Issues
 - `gh issue close` accepts one issue at a time — loop for multiple:
