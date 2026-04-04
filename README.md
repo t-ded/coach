@@ -183,15 +183,15 @@ Coach is an AI assistant, not a certified running coach or medical professional.
 
 ### What data Coach stores
 
-| Data | Stored? | Notes |
-|------|---------|-------|
-| Google account email and display name | Yes | Used to identify your account |
-| Strava activity data (last ~8 weeks) | Yes | Synced at session start or via webhook |
-| Your chat messages | Yes | Stored to power session history |
-| Your coaching profile | Yes | The profile you set up guides the AI |
-| Private activity notes (`$...$`) | Yes | Stored as part of your activity data |
-| LLM API key | Yes — encrypted | Stored in Supabase Vault; never accessible in plaintext |
-| Strava access and refresh tokens | Yes — encrypted | Stored in Supabase Vault; never accessible in plaintext |
+| Data | Stored?         | Notes |
+|------|-----------------|-------|
+| Google account email and display name | Yes             | Used to identify your account |
+| Strava activity data | Yes             | Synced at session start or via webhook |
+| Your chat messages | Yes             | Stored to power session history |
+| Your coaching profile | Yes             | The profile you set up guides the AI |
+| Private activity notes (`$...$`) | Yes             | Stored as part of your activity data |
+| LLM API key | Yes - encrypted | Stored in Supabase Vault; never accessible in plaintext |
+| Strava access and refresh tokens | Yes - encrypted | Stored in Supabase Vault; never accessible in plaintext |
 
 Coach does not store payment information, health records, or any data beyond what is listed above.
 
@@ -202,7 +202,17 @@ Coach requests **read-only** permission (`activity:read_all`). It cannot create,
 ### Who can see your data
 
 - **You**: you see your own activities and chat history in the app.
-- **The operator** (whoever runs this Coach instance) has access to your profile data, stored activities, and chat messages via the Supabase dashboard. The operator cannot see your LLM API key or Strava tokens in plaintext — these are stored encrypted in Supabase Vault and are never logged.
+- **The operator** (whoever runs this Coach instance) has access to your profile data, stored activities, and chat messages via the Supabase dashboard. The operator cannot see your LLM API key or Strava tokens in plaintext - these are stored encrypted in Supabase Vault and are never logged. Always ensure that the website you are using matches the link provided at the top of this READMe. 
+
+### How your Strava data is used
+
+Your Strava activity data is used **solely** to provide coaching context within Coach. It is not sold, shared with third parties, or used for advertising. Specifically:
+
+- Activity data is passed to the AI model you have configured (e.g. OpenAI, Google Gemini, Anthropic Claude) in order to generate coaching responses. By using Coach you should be aware that this data leaves Coach and is processed by that third-party provider under their own terms of service and privacy policy.
+- Activity data is not shared with any other third party.
+- Activity data is not used to train models, build profiles for advertising, or for any purpose other than generating your coaching responses.
+
+This use of Strava data is in line with the [Strava API Agreement](https://www.strava.com/legal/api).
 
 ### What happens when you disconnect Strava
 
@@ -212,7 +222,7 @@ When you disconnect Coach from [strava.com/settings/apps](https://www.strava.com
 2. Deletes all stored activity data
 3. Clears the Strava connection from your account
 
-This happens automatically — you do not need to take any action inside Coach.
+This happens automatically - you do not need to take any action inside Coach and you have full control over your data.
 
 ---
 
