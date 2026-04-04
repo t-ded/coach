@@ -7,12 +7,12 @@ from typing import cast
 
 from postgrest import CountMethod
 from postgrest import SyncRequestBuilder
+from supabase import Client
 
 from coach.domain.activity import Activity
 from coach.persistence.repository_interface import Repository
 from coach.persistence.serialization import deserialize_activity
 from coach.persistence.serialization import serialize_activity
-from supabase import Client
 
 type ActivityRow = dict[str, Any]
 
@@ -77,9 +77,6 @@ class SupabaseActivityRepository(Repository[Activity]):
         dt = datetime.fromtimestamp(after, tz=UTC).isoformat()
         response = self._table().select('id').eq('user_id', self._user_id).gte('start_time_utc', dt).execute()
         return {cast(ActivityRow, row)['id'] for row in response.data}
-
-    def reset_table(self) -> None:
-        self._table().delete().eq(column='user_id', value=self._user_id).execute()
 
     def delete_all_for_user(self) -> None:
         self._table().delete().eq(column='user_id', value=self._user_id).execute()

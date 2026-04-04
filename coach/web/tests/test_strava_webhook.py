@@ -34,7 +34,7 @@ class TestStravaWebhookChallenge:
 
         assert response.status_code == 403
 
-    def test_missing_env_var_raises(self) -> None:
+    def test_missing_env_var_returns_500(self) -> None:
         env = {k: v for k, v in os.environ.items() if k != 'STRAVA_WEBHOOK_VERIFY_TOKEN'}
         with patch.dict(os.environ, env, clear=True):
             response = self._http.get('/webhook/strava?hub.challenge=abc123&hub.verify_token=anything')

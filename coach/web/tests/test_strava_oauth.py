@@ -100,11 +100,10 @@ class TestStravaOAuthScopeVerification:
         update_calls = [str(c) for c in self._secret_client.table.return_value.update.call_args_list]
         assert not any('strava_scope_warning' in c for c in update_calls)
 
-    def test_no_scope_warning_when_scope_param_absent(self) -> None:
+    def test_scope_warning_stored_when_scope_param_absent(self) -> None:
         with patch('coach.web.strava_oauth._exchange_code_for_tokens', return_value=_VALID_TOKEN_DATA):
             self._client.get('/auth/strava/callback?code=abc&state=valid-state')
 
-        # Empty scope → activity:read_all missing → warning IS set
         self._secret_client.table.return_value.update.assert_any_call({'strava_scope_warning': True})
 
 

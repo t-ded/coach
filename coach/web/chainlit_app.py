@@ -91,13 +91,7 @@ async def on_chat_start() -> None:
 
     if users_repo.get_strava_scope_warning():
         users_repo.set_strava_scope_warning(False)
-        await cl.Message(
-            'Your Strava connection is missing the **activity:read_all** permission, '
-            'so training history cannot be loaded. '
-            'Please disconnect Strava from [strava.com/settings/apps](https://www.strava.com/settings/apps) '
-            'and then reconnect here to grant full access.',
-            actions=[cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')],
-        ).send()
+        await _insufficient_scope_prompt().send()
         return
 
     sync_strava = coaching.needs_strava_sync(users_repo)
@@ -271,6 +265,17 @@ async def on_help(action: cl.Action) -> None:
 def _connect_strava_prompt() -> cl.Message:
     actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
     return cl.Message('To get started, please connect your Strava account.', actions=actions)
+
+
+def _insufficient_scope_prompt() -> cl.Message:
+    actions = [cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')]
+    return cl.Message(
+        'Your Strava connection is missing the **activity:read_all** permission, '
+        'so training history cannot be loaded. '
+        'Please disconnect Strava from [strava.com/settings/apps](https://www.strava.com/settings/apps) '
+        'and then reconnect here to grant full access.',
+        actions=actions,
+    )
 
 
 def _reconnect_strava_prompt() -> cl.Message:
