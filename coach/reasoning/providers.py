@@ -42,6 +42,6 @@ def create_llm_client(
         return GoogleAILLMClient(api_key=key, model=model or 'gemini-2.5-flash', max_retries=max_retries)
 
     if provider == LLMProvider.OPENAI:
-        return OpenAILLMClient(api_key=key, model=model or 'gpt-5-nano', max_retries=max_retries)
+        return OpenAILLMClient(api_key=key, model=model or 'gpt-5.4-nano', max_retries=max_retries)
 
     raise ValueError(f'Unsupported provider: {provider}')
