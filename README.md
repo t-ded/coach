@@ -103,7 +103,6 @@ Coach only reads your activity data — it cannot post or modify anything on you
 | 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
 | 🔐 **Google login**         | No account creation — sign in with your existing Google account                                |
 | 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                         |
-| 📜 **Chat history**         | Sessions auto-save and you can resume past conversations — the coach gets a summary so it remembers what you discussed |
 
 ---
 
@@ -118,7 +117,7 @@ Knowing where Coach fits (and where it doesn't) will help you get the most out o
 | Automatically up-to-date with recent training             | ✅        | ✅  | ❌ you paste manually           | ✅                            |
 | You can provide any additional context to your activities | ❌       | ❌ | 🟡 you paste manually          | ✅                            |
 | Full back-and-forth coaching chat and advice on anything  | ❌                         | ❌ | ✅                              | ✅                            |
-| Remembers your goals, preferences and past conversations  | 🟡 very limited           | ❌ | 🟡 per session + system prompt | ✅                            |
+| Remembers your goals, preferences and past conversations  | 🟡 very limited           | ❌ | 🟡 per session + system prompt | 🟡 profile persists, chat per session |
 | Free                                                      | ❌ needs Garmin            | ❌ | ✅                              | ✅                            |
 | Semi-professional plan building                           | ✅            | ❌ | ❌                              | ❌                            |
 | Full body data integration (HR, sleep, stress etc.)       | ✅            | ❌ | 🟡 you give context manually   | 🟡 you give context manually |
@@ -187,7 +186,6 @@ Coach is an AI assistant, not a certified running coach or medical professional.
 |------|-----------------|-------|
 | Google account email and display name | Yes             | Used to identify your account |
 | Strava activity data | Yes             | Synced at session start or via webhook |
-| Your chat messages | Yes             | Stored to power session history |
 | Your coaching profile | Yes             | The profile you set up guides the AI |
 | Private activity notes (`$...$`) | Yes             | Stored as part of your activity data |
 | LLM API key | Yes - encrypted | Stored in Supabase Vault; never accessible in plaintext |
@@ -201,8 +199,8 @@ Coach requests **read-only** permission (`activity:read_all`). It cannot create,
 
 ### Who can see your data
 
-- **You**: you see your own activities and chat history in the app.
-- **The operator** (whoever runs this Coach instance) has access to your profile data, stored activities, and chat messages via the Supabase dashboard. The operator cannot see your LLM API key or Strava tokens in plaintext - these are stored encrypted in Supabase Vault and are never logged. Always ensure that the website you are using matches the link provided at the top of this READMe. 
+- **You**: you see your own activities in the app.
+- **The operator** (whoever runs this Coach instance) has access to your profile data and stored activities via the Supabase dashboard. The operator cannot see your LLM API key or Strava tokens in plaintext - these are stored encrypted in Supabase Vault and are never logged. Always ensure that the website you are using matches the link provided at the top of this README.
 
 ### How your Strava data is used
 
