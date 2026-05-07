@@ -5,7 +5,7 @@ description = "Personalised coach integrated with the Strava API to be always up
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "chainlit>=2.10.0",
+    "chainlit>=2.11.1",
     "fastapi>=0.135.3",
     "google-genai>=1.66.0",
     "more-itertools>=10.8.0",
