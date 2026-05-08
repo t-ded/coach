@@ -52,3 +52,37 @@ def test_generate_formats_roles_correctly() -> None:
     assert 'User: First question' in prompt
     assert 'Assistant: First answer' in prompt
     assert 'User: Second question' in prompt
+
+
+def test_prompt_includes_structured_sections_instruction() -> None:
+    messages = [_make_message('user', 'Hello')]
+
+    with patch('coach.reasoning.summarizer.create_llm_client') as mock_create:
+        mock_client = MagicMock()
+        mock_client.complete.return_value = 'Summary text'
+        mock_create.return_value = mock_client
+
+        summarizer = SessionSummarizer(provider=LLMProvider.GOOGLE, api_key='test-key')
+        summarizer.generate(messages)
+
+    prompt = mock_client.complete.call_args[0][0]
+    assert 'Active concerns' in prompt
+    assert 'Agreed training plan' in prompt
+    assert 'Key decisions' in prompt
+    assert 'Open follow-ups' in prompt
+
+
+def test_prompt_instructs_omit_empty_sections() -> None:
+    messages = [_make_message('user', 'Hello')]
+
+    with patch('coach.reasoning.summarizer.create_llm_client') as mock_create:
+        mock_client = MagicMock()
+        mock_client.complete.return_value = 'Summary text'
+        mock_create.return_value = mock_client
+
+        summarizer = SessionSummarizer(provider=LLMProvider.GOOGLE, api_key='test-key')
+        summarizer.generate(messages)
+
+    prompt = mock_client.complete.call_args[0][0]
+    assert 'omit' in prompt.lower()
+    assert 'None' not in prompt or 'do not write "None"' in prompt
