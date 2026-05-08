@@ -201,6 +201,8 @@ User instructions:
 Be concise and direct.
 Additional context:
 Today's date: Wednesday, March 12, 2025
+Training phase:
+Open training — no active goal with a future date set.
 User profile:
 --- Training preferences ---
 Prefer polarized training with easy runs and hard workouts.
@@ -217,6 +219,13 @@ Can train max 5 days per week, no morning sessions before 7am.
     - Goal date: N/A
     - Notes: Focus on VO2max intervals.
     - Priority: HIGH (Options were: ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'])
+Training trends:
+Training trends (last 1 week):
+  Week of 2025-03-03: 15.0 km | 2.3 h | 3 sessions
+4-week avg: 15.0 km/week running
+Volume trend: stable
+Active weeks: 1/1
+Longest run: 8.0 km
 Recent weeks training context:
 Summary of recent training history:
 ----------------------------------------
