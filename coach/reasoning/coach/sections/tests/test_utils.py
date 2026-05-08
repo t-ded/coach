@@ -41,12 +41,14 @@ def test_days_ago_datetime() -> None:
 def test_weeks_and_days_until() -> None:
     today = datetime.now(tz=UTC).date()
 
-    assert weeks_and_days_until(today) == ''
-    assert weeks_and_days_until(today + timedelta(days=1)) == '1 day'
-    assert weeks_and_days_until(today + timedelta(days=7)) == '1 week'
-    assert weeks_and_days_until(today + timedelta(days=14)) == '2 weeks'
-    assert weeks_and_days_until(today + timedelta(days=15)) == '2 weeks and 1 day'
-    assert weeks_and_days_until(today + timedelta(days=16)) == '2 weeks and 2 days'
+    assert weeks_and_days_until(today - timedelta(days=1)) == 'passed 1 day ago'
+    assert weeks_and_days_until(today - timedelta(days=3)) == 'passed 3 days ago'
+    assert weeks_and_days_until(today) == 'today'
+    assert weeks_and_days_until(today + timedelta(days=1)) == 'in 1 day'
+    assert weeks_and_days_until(today + timedelta(days=7)) == 'in 1 week'
+    assert weeks_and_days_until(today + timedelta(days=14)) == 'in 2 weeks'
+    assert weeks_and_days_until(today + timedelta(days=15)) == 'in 2 weeks and 1 day'
+    assert weeks_and_days_until(today + timedelta(days=16)) == 'in 2 weeks and 2 days'
 
 
 def test_combine_sections_all_present() -> None:

@@ -24,4 +24,7 @@ def build_coach_context(
 
     rendered_pairs = [(s.header, s.render()) for s in sections]
     parts = combine_sections(rendered_pairs)
-    return '\n'.join(parts) or None
+    if not parts:
+        return None
+    date_anchor = recent_training_history.generated_at.strftime("Today's date: %A, %B %d, %Y")
+    return '\n'.join([date_anchor, *parts])

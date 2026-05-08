@@ -19,7 +19,7 @@ def render_training_goal(training_goal: TrainingGoal) -> str:
     lines.append(f'- {training_goal.name}')
     lines.append(f'    - Sport: {training_goal.sport_type.value}')
 
-    time_until_suffix = f' (in {weeks_and_days_until(training_goal.goal_date)})' if isinstance(training_goal.goal_date, date) else ''
+    time_until_suffix = f' ({weeks_and_days_until(training_goal.goal_date)})' if isinstance(training_goal.goal_date, date) else ''
     lines.append(f'    - Goal date: {training_goal.goal_date}' + time_until_suffix)
 
     if isinstance(training_goal, DistanceActivityTrainingGoal):
