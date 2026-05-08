@@ -35,3 +35,12 @@ class ActiveTrainingPhase:
     phase: TrainingMacroPhase
     weeks_to_goal: Optional[int]
     goal_name: Optional[str]
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class PaceZones:
+    reference_distance: str  # e.g. '5K', '10K'
+    easy_pace: str  # 'M:SS/km'
+    marathon_pace: str
+    threshold_pace: str
+    interval_pace: str

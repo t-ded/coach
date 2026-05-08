@@ -256,3 +256,140 @@ Ride: Ride 1
         assert 'Active time' not in result
         assert 'Elapsed time' not in result
         assert 'Active pace' not in result
+
+    def test_classification_label_appears_for_easy_run(self) -> None:
+        # avg_hr=130, max_hr=160 → 130 <= 160*0.77=123.2? No, 130 > 123.2 → not easy by HR
+        # Use avg_hr=120, max_hr=160 → 120 <= 123.2 → Easy, elapsed=2400 < 3900
+        self._weekly_activities['Monday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.RUN,
+                title='Morning run',
+                elapsed_time_seconds=2_400,
+                moving_time_seconds=2_400,
+                distance_meters=5_000,
+                average_heart_rate=120.0,
+                max_heart_rate=160.0,
+            ),
+        ]
+        volume = {SportType.RUN: ActivityVolume(num_activities=1, duration_seconds=2400, distance_meters=5000.0)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'Run (Easy): Morning run' in result
+
+    def test_classification_label_appears_for_interval_run(self) -> None:
+        # ratio=2700/3600=0.75 < 0.87 AND max_hr=185 >= 185*0.92=170.2
+        self._weekly_activities['Wednesday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.RUN,
+                title='Track session',
+                elapsed_time_seconds=3_600,
+                moving_time_seconds=2_700,
+                distance_meters=7_000,
+                average_heart_rate=170.0,
+                max_heart_rate=185.0,
+            ),
+        ]
+        volume = {SportType.RUN: ActivityVolume(num_activities=1, duration_seconds=2700, distance_meters=7000.0)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'Run (Interval): Track session' in result
+
+    def test_non_run_activity_keeps_original_format(self) -> None:
+        self._weekly_activities['Monday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.STRENGTH,
+                title='Squats',
+                elapsed_time_seconds=3_600,
+                average_heart_rate=120.0,
+                max_heart_rate=160.0,
+            ),
+        ]
+        volume = {SportType.STRENGTH: ActivityVolume(num_activities=1, duration_seconds=3600, distance_meters=None)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'WeightTraining: Squats' in result
+        assert '(' not in result.split('WeightTraining: Squats')[0].split('---')[-1]
+
+    def test_intensity_distribution_block_appears_for_classified_runs(self) -> None:
+        # Two runs: one easy, one interval
+        self._weekly_activities['Monday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.RUN,
+                title='Easy run',
+                elapsed_time_seconds=2_400,
+                moving_time_seconds=2_400,
+                average_heart_rate=120.0,
+                max_heart_rate=185.0,
+            ),
+        ]
+        self._weekly_activities['Wednesday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.RUN,
+                title='Intervals',
+                elapsed_time_seconds=3_600,
+                moving_time_seconds=2_700,
+                average_heart_rate=170.0,
+                max_heart_rate=185.0,
+            ),
+        ]
+        volume = {SportType.RUN: ActivityVolume(num_activities=2, duration_seconds=5100, distance_meters=12000.0)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert '----- Run intensity -----' in result
+        assert 'Easy: 1' in result
+        assert 'Interval: 1' in result
+
+    def test_no_intensity_distribution_when_no_runs_classified(self) -> None:
+        # Strength only — no runs to classify
+        self._weekly_activities['Monday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.STRENGTH,
+                title='Upper body',
+                elapsed_time_seconds=3_600,
+            ),
+        ]
+        volume = {SportType.STRENGTH: ActivityVolume(num_activities=1, duration_seconds=3600, distance_meters=None)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'Run intensity' not in result
+
+    def test_no_intensity_distribution_for_unclassifiable_runs(self) -> None:
+        # Run with no HR and no pace zones — unclassifiable
+        self._weekly_activities['Monday'] = [
+            ActivitySummary(
+                start_time_utc=datetime(2024, 1, 8, 12, tzinfo=UTC),
+                sport_type=SportType.RUN,
+                title='Run',
+                elapsed_time_seconds=3_000,
+                moving_time_seconds=3_000,
+                distance_meters=5_000,
+            ),
+        ]
+        volume = {SportType.RUN: ActivityVolume(num_activities=1, duration_seconds=3000, distance_meters=5000.0)}
+        history = _make_current_week_history(self._weekly_activities, volume)
+
+        section = TrainingHistorySection(history)
+        result = section.render()
+        assert result is not None
+        assert 'Run intensity' not in result

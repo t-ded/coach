@@ -233,7 +233,7 @@ Summary of recent training history:
 Weekly summary for 2025-03-03 to 2025-03-09:
 ----- Per-day breakdown -----
 --- Monday ---
-Run: Easy Run
+Run (Easy): Easy Run
 - Moving time: 00:50:00 (no rest)
 - Distance: 8.0 km
 - Pace: 6:15/km
@@ -243,7 +243,7 @@ Run: Easy Run
 - Notes: easy aerobic
 
 --- Wednesday ---
-Run: Intervals
+Run (Interval): Intervals
 - Active time: 00:45:00
 - Elapsed time: 01:00:00 (rest: 00:15:00)
 - Distance: 7.0 km
@@ -259,6 +259,8 @@ WeightTraining: Upper Body
 - Moving time: 00:45:00 (no rest)
 - Notes: upper body strength
 
+----- Run intensity -----
+Easy: 1 | Interval: 1
 ----- Volume aggregation by sport -----
 --- Run ---
 - Num activities: 2
@@ -275,7 +277,7 @@ Current week summary (today is Wednesday):
 Weekly summary for 2025-03-10 to 2025-03-16:
 ----- Per-day breakdown -----
 --- Monday ---
-Run: Recovery Run
+Run (Easy): Recovery Run
 - Moving time: 00:40:00 (no rest)
 - Distance: 5.0 km
 - Pace: 8:00/km
@@ -283,6 +285,8 @@ Run: Recovery Run
 - Max heart rate: 142 bpm
 - Notes: recovery jog
 
+----- Run intensity -----
+Easy: 1
 ----- Volume aggregation by sport -----
 --- Run ---
 - Num activities: 1
