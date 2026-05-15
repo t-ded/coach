@@ -143,10 +143,20 @@ class TestHandleActivityEvent:
         self._strava_client.get_detailed_activity.assert_called_once_with(999)
         self._activity_repo.save.assert_called_once()
 
+    def test_create_triggers_insight_notification(self) -> None:
+        with patch('coach.web.strava_webhook._try_send_activity_insight') as mock_notify:
+            self._run('create')
+        mock_notify.assert_called_once()
+
     def test_update_fetches_and_saves_activity(self) -> None:
         self._run('update')
         self._strava_client.get_detailed_activity.assert_called_once_with(999)
         self._activity_repo.save.assert_called_once()
+
+    def test_update_does_not_trigger_insight_notification(self) -> None:
+        with patch('coach.web.strava_webhook._try_send_activity_insight') as mock_notify:
+            self._run('update')
+        mock_notify.assert_not_called()
 
     def test_unknown_user_is_ignored(self) -> None:
         from coach.web.strava_webhook import _handle_activity_event

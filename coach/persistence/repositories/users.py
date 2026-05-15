@@ -63,3 +63,18 @@ class SupabaseUsersRepository:
 
     def set_last_strava_sync(self, dt: datetime) -> None:
         self._set_field('last_strava_sync_at', dt.isoformat())
+
+    def get_email(self) -> Optional[str]:
+        response = self._db.auth.admin.get_user_by_id(self._user_id)
+        return response.user.email if response.user else None
+
+    def get_email_notifications_enabled(self) -> bool:
+        value = self._get_field('email_notifications_enabled')
+        return True if value is None else bool(value)
+
+    def get_last_insight_email_at(self) -> Optional[datetime]:
+        raw = self._get_field('last_insight_email_at')
+        return datetime.fromisoformat(cast(str, raw)) if raw else None
+
+    def set_last_insight_email_at(self, dt: datetime) -> None:
+        self._set_field('last_insight_email_at', dt.isoformat())

@@ -3,21 +3,29 @@ import hmac
 import json
 import logging
 import os
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
-from supabase import Client
 
+from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
+from coach.domain.activity import Activity
 from coach.ingestion.strava.client import StravaClient
 from coach.ingestion.strava.deauthorize import deauthorize_athlete
 from coach.ingestion.strava.mapper import map_strava_activity
+from coach.notifications.activity_insight import ActivityInsightGenerator
+from coach.notifications.factory import build_notification_service
 from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.activities import SupabaseActivityRepository
+from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
+from supabase import Client
 
 logger = logging.getLogger(__name__)
 
@@ -91,5 +99,51 @@ def _handle_activity_event(aspect_type: str, owner_id: int, object_id: int, secr
         activity = map_strava_activity(raw)
         activity_repo.save(activity)
         logger.info('Upserted activity %d for user %s via webhook (%s).', object_id, user_id, aspect_type)
+        if aspect_type == 'create':
+            _try_send_activity_insight(user_id, activity, secret_client)
     else:
         logger.debug('Ignoring unrecognised activity aspect_type=%s for athlete %d.', aspect_type, owner_id)
+
+
+_INSIGHT_EMAIL_COOLDOWN_HOURS = 24
+
+
+def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: Client) -> None:
+    try:
+        notification_service = build_notification_service()
+        if notification_service is None:
+            return
+
+        users_repo = SupabaseUsersRepository(secret_client, user_id)
+        if not users_repo.get_email_notifications_enabled():
+            return
+
+        last_sent = users_repo.get_last_insight_email_at()
+        if last_sent and datetime.now(UTC) - last_sent < timedelta(hours=_INSIGHT_EMAIL_COOLDOWN_HOURS):
+            logger.debug('Insight email cooldown active for user %s — skipping.', user_id)
+            return
+
+        email = users_repo.get_email()
+        if not email:
+            logger.warning('No email found for user %s — cannot send insight.', user_id)
+            return
+
+        profile_repo = SupabaseUserProfileRepository(secret_client, user_id)
+        provider = profile_repo.get_preferred_provider()
+        key_repo = SupabaseLLMKeyRepository(secret_client)
+        api_key = key_repo.get_key(user_id, provider)
+        if api_key is None:
+            logger.debug('No LLM key for user %s — cannot generate insight.', user_id)
+            return
+
+        display_name_raw = users_repo.get_display_name()
+        display_name = display_name_raw.split()[0] if display_name_raw else 'Athlete'
+
+        generator = ActivityInsightGenerator(provider=provider, api_key=api_key)
+        insight = generator.generate(activity, display_name)
+
+        notification_service.send_activity_insight(to=email, insight=insight)
+        users_repo.set_last_insight_email_at(datetime.now(UTC))
+        logger.info('Sent activity insight email to user %s for activity %d.', user_id, activity.id)
+    except Exception:
+        logger.exception('Failed to send activity insight for user %s activity %d.', user_id, activity.id)
