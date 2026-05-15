@@ -2,6 +2,7 @@ import os
 from enum import StrEnum
 from typing import Optional
 
+from coach.reasoning.clients import AnthropicLLMClient
 from coach.reasoning.clients import GoogleAILLMClient
 from coach.reasoning.clients import LLMClient
 from coach.reasoning.clients import OpenAILLMClient
@@ -9,17 +10,20 @@ from coach.reasoning.clients import OpenAILLMClient
 _ENV_KEYS: dict[str, str] = {
     'google': 'GOOGLE_AI_API_KEY',
     'openai': 'OPENAI_API_KEY',
+    'anthropic': 'ANTHROPIC_API_KEY',
 }
 
 
 class LLMProvider(StrEnum):
     GOOGLE = 'google'
     OPENAI = 'openai'
+    ANTHROPIC = 'anthropic'
 
 
 _PROVIDER_DISPLAY_NAMES: dict[LLMProvider, str] = {
     LLMProvider.GOOGLE: 'Google AI Studio',
     LLMProvider.OPENAI: 'OpenAI',
+    LLMProvider.ANTHROPIC: 'Anthropic',
 }
 
 
@@ -43,5 +47,8 @@ def create_llm_client(
 
     if provider == LLMProvider.OPENAI:
         return OpenAILLMClient(api_key=key, model=model or 'gpt-5.4-nano', max_retries=max_retries)
+
+    if provider == LLMProvider.ANTHROPIC:
+        return AnthropicLLMClient(api_key=key, model=model or 'claude-sonnet-4-6', max_retries=max_retries)
 
     raise ValueError(f'Unsupported provider: {provider}')

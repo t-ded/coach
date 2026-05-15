@@ -47,11 +47,12 @@ class TestApiKeyForm:
         assert 'text/html' in response.headers['content-type']
         assert '<input type="password"' in response.text
 
-    def test_form_contains_provider_selector(self) -> None:
+    def test_form_contains_all_providers(self) -> None:
         self._setup_state(_VALID_EXPIRES)
         response = self._client.get('/api-key?state=valid-state')
         assert 'google' in response.text
         assert 'openai' in response.text.lower()
+        assert 'anthropic' in response.text.lower()
 
     def test_invalid_state_returns_400(self) -> None:
         result = MagicMock()

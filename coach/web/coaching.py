@@ -43,7 +43,7 @@ def init_coach_session(
     activities: list[Activity],
     display_name: str,
     session_summary: Optional[str] = None,
-) -> None:
+) -> Coach:
     provider, api_key = get_llm_config()
     coach = Coach(
         provider=provider,
@@ -57,6 +57,7 @@ def init_coach_session(
     )
     cl.user_session.set(SESSION_COACH, coach)
     cl.user_session.set(SESSION_MODE, MODE_COACH)
+    return coach
 
 
 def needs_strava_sync(users_repo: SupabaseUsersRepository) -> bool:

@@ -115,12 +115,10 @@ async def on_chat_start() -> None:
         await profile_flow.prompt_profile_setup(display_name).send()
         return
 
-    coaching.init_coach_session(profile, activities, display_name)
+    coach = coaching.init_coach_session(profile, activities, display_name)
 
     cl.user_session.set(sessions_flow.SESSION_MESSAGE_COUNT, 0)
 
-    coach: Optional[Coach] = cl.user_session.get(coaching.SESSION_COACH)
-    assert coach is not None
     try:
         opening = await cl.make_async(coach.generate_opening_message)()
     except RuntimeError:

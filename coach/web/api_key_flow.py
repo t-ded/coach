@@ -24,11 +24,16 @@ def api_key_onboarding_message() -> cl.Message:
         '**Option B — OpenAI**\n'
         '1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)\n'
         '2. Create a new secret key and copy it\n'
-        '3. Click **Connect OpenAI** below, paste the key, then start a new chat'
+        '3. Click **Connect OpenAI** below, paste the key, then start a new chat\n\n'
+        '**Option C — Anthropic (Claude)**\n'
+        '1. Go to [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)\n'
+        '2. Create a new key and copy it\n'
+        '3. Click **Connect Anthropic** below, paste the key, then start a new chat'
     )
     actions = [
         cl.Action(name='add_provider_key', payload={'provider': LLMProvider.GOOGLE.value}, label='Connect Google AI Studio'),
         cl.Action(name='add_provider_key', payload={'provider': LLMProvider.OPENAI.value}, label='Connect OpenAI'),
+        cl.Action(name='add_provider_key', payload={'provider': LLMProvider.ANTHROPIC.value}, label='Connect Anthropic'),
     ]
     return cl.Message(text, actions=actions)
 
@@ -140,6 +145,10 @@ def _help_text() -> str:
         '1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)\n'
         '2. Create a new secret key and copy it\n'
         '3. Click **Manage AI Provider** below, then **Add OpenAI key**, and paste the key\n\n'
+        '**Anthropic (Claude)**\n'
+        '1. Go to [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)\n'
+        '2. Create a new key and copy it\n'
+        '3. Click **Manage AI Provider** below, then **Add Anthropic key**, and paste the key\n\n'
         'For more details, see the [README](https://github.com/tded/coach#api-key-setup).'
     )
 

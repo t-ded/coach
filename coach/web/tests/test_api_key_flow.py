@@ -8,6 +8,7 @@ from coach.web.api_key_flow import resolve_llm_key
 
 _GOOGLE = LLMProvider.GOOGLE
 _OPENAI = LLMProvider.OPENAI
+_ANTHROPIC = LLMProvider.ANTHROPIC
 _USER_ID = 'user-123'
 
 
@@ -53,7 +54,7 @@ class TestBuildManagementActions:
         assert 'add_provider_key' in names
 
     def test_no_add_button_when_all_providers_stored(self) -> None:
-        names = self._action_names(_GOOGLE, [_GOOGLE, _OPENAI])
+        names = self._action_names(_GOOGLE, [_GOOGLE, _OPENAI, _ANTHROPIC])
         assert 'add_provider_key' not in names
 
     def test_remove_button_for_each_stored_provider(self) -> None:

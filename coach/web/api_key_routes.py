@@ -38,6 +38,14 @@ _STATE_EXPIRY_MINUTES = 10
 _CHAINLIT_URL_DEFAULT = 'http://localhost:8000'
 _GOOGLE_VALIDATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 _OPENAI_VALIDATE_URL = 'https://api.openai.com/v1/models'
+_ANTHROPIC_VALIDATE_URL = 'https://api.anthropic.com/v1/models'
+_ANTHROPIC_VERSION_HEADER = '2023-06-01'
+
+_PROVIDER_LABELS: dict[LLMProvider, str] = {
+    LLMProvider.GOOGLE: 'Google AI Studio (free tier available)',
+    LLMProvider.OPENAI: 'OpenAI',
+    LLMProvider.ANTHROPIC: 'Anthropic (Claude)',
+}
 
 _SecretClient = Annotated[Client, Depends(create_secret_client)]
 
@@ -94,17 +102,26 @@ def _validate_api_key(provider: LLMProvider, api_key: str) -> bool:
     try:
         if provider == LLMProvider.GOOGLE:
             response = requests.get(_GOOGLE_VALIDATE_URL, params={'key': api_key}, timeout=5)
-        else:
+        elif provider == LLMProvider.OPENAI:
             response = requests.get(_OPENAI_VALIDATE_URL, headers={'Authorization': f'Bearer {api_key}'}, timeout=5)
+        else:
+            response = requests.get(
+                _ANTHROPIC_VALIDATE_URL,
+                headers={'x-api-key': api_key, 'anthropic-version': _ANTHROPIC_VERSION_HEADER},
+                timeout=5,
+            )
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
 
 
+def _provider_options_html(selected_provider: str) -> str:
+    return '\n'.join(f'      <option value="{p.value}"{" selected" if p.value == selected_provider else ""}>{label}</option>' for p, label in _PROVIDER_LABELS.items())
+
+
 def _render_form(state: str, error: Optional[str] = None, selected_provider: str = 'google') -> HTMLResponse:
     error_html = f'<p class="error">{html_module.escape(error)}</p>' if error else ''
-    google_selected = 'selected' if selected_provider == 'google' else ''
-    openai_selected = 'selected' if selected_provider == 'openai' else ''
+    provider_options = _provider_options_html(selected_provider)
     content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,15 +150,15 @@ def _render_form(state: str, error: Optional[str] = None, selected_provider: str
 
     <label for="provider">Provider</label>
     <select name="provider" id="provider">
-      <option value="google" {google_selected}>Google AI Studio (free tier available)</option>
-      <option value="openai" {openai_selected}>OpenAI</option>
+{provider_options}
     </select>
 
     <label for="api_key">API key</label>
     <input type="password" name="api_key" id="api_key" placeholder="Paste your API key here" autocomplete="off" required>
     <p class="hint">
-      Get a free Google AI Studio key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
-      OpenAI keys are at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>.
+      Google AI Studio: <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> (free tier available) ·
+      OpenAI: <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> ·
+      Anthropic: <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a>
     </p>
 
     <button type="submit">Save and continue</button>

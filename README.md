@@ -76,6 +76,12 @@ Only a Google account is needed. No credit card, no paid subscription.
 2. Click **Create new secret key**, copy it
 3. Back in Coach, click **Connect OpenAI** and paste the key
 
+**Option C — Anthropic (Claude)**
+
+1. Go to **[console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)**
+2. Create a new key and copy it
+3. Back in Coach, click **Connect Anthropic** and paste the key
+
 **Security note:** your key is stored encrypted using Supabase Vault. The operator (whoever runs this Coach instance) never has access to your raw key — only you do.
 
 You can manage your keys at any time using the **Manage AI Provider** button in the chat.
@@ -236,7 +242,7 @@ This happens automatically - you do not need to take any action inside Coach and
 - A Supabase project with the required schema (see CLAUDE.md for SQL steps)
 - A Strava API app (strava.com/settings/api)
 - A Google Cloud OAuth client
-- A Google AI Studio or OpenAI API key
+- A Google AI Studio, OpenAI, or Anthropic API key
 
 ### Running locally
 

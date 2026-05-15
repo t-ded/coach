@@ -3,6 +3,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Optional
 
+import anthropic
 from google import genai
 from google.genai import types
 from openai import OpenAI
@@ -78,3 +79,31 @@ class OpenAILLMClient(LLMClient):
             max_output_tokens=self._max_output_tokens,
         )
         return response.output_text
+
+
+class AnthropicLLMClient(LLMClient):
+    _DEFAULT_MAX_TOKENS = 4096
+
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        model: str,
+        max_retries: int = 3,
+        max_output_tokens: Optional[int] = None,
+    ) -> None:
+        super().__init__(max_retries=max_retries)
+        self._client = anthropic.Anthropic(api_key=api_key)
+        self._model = model
+        self._max_output_tokens = max_output_tokens or self._DEFAULT_MAX_TOKENS
+
+    def _call_api(self, prompt: str) -> str:
+        message = self._client.messages.create(
+            model=self._model,
+            max_tokens=self._max_output_tokens,
+            messages=[{'role': 'user', 'content': prompt}],
+        )
+        content = message.content[0]
+        if not isinstance(content, anthropic.types.TextBlock):
+            raise ValueError(f'Unexpected response block type: {type(content)}')
+        return content.text
