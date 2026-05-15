@@ -57,12 +57,18 @@ class SupabaseUsersRepository:
     def set_strava_scope_warning(self, warning: bool) -> None:
         self._set_field('strava_scope_warning', warning)
 
-    def get_last_strava_sync(self) -> Optional[datetime]:
-        raw = self._get_field('last_strava_sync_at')
+    def _get_datetime_field(self, column: str) -> Optional[datetime]:
+        raw = self._get_field(column)
         return datetime.fromisoformat(cast(str, raw)) if raw else None
 
+    def _set_datetime_field(self, column: str, dt: datetime) -> None:
+        self._set_field(column, dt.isoformat())
+
+    def get_last_strava_sync(self) -> Optional[datetime]:
+        return self._get_datetime_field('last_strava_sync_at')
+
     def set_last_strava_sync(self, dt: datetime) -> None:
-        self._set_field('last_strava_sync_at', dt.isoformat())
+        self._set_datetime_field('last_strava_sync_at', dt)
 
     def get_email(self) -> Optional[str]:
         response = self._db.auth.admin.get_user_by_id(self._user_id)
@@ -70,11 +76,23 @@ class SupabaseUsersRepository:
 
     def get_email_notifications_enabled(self) -> bool:
         value = self._get_field('email_notifications_enabled')
-        return True if value is None else bool(value)
+        if value is None:
+            return True
+        return bool(value)
 
     def get_last_insight_email_at(self) -> Optional[datetime]:
-        raw = self._get_field('last_insight_email_at')
-        return datetime.fromisoformat(cast(str, raw)) if raw else None
+        return self._get_datetime_field('last_insight_email_at')
 
     def set_last_insight_email_at(self, dt: datetime) -> None:
-        self._set_field('last_insight_email_at', dt.isoformat())
+        self._set_datetime_field('last_insight_email_at', dt)
+
+    def get_notification_context(self) -> tuple[bool, Optional[datetime], Optional[str]]:
+        """Return (notifications_enabled, last_insight_email_at, display_name) in one query."""
+        response = self._db.table(self.TABLE).select('email_notifications_enabled, last_insight_email_at, display_name').eq('id', self._user_id).maybe_single().execute()
+        data = cast(dict[str, Any], response.data) if response and response.data else {}
+        enabled_raw = data.get('email_notifications_enabled')
+        enabled = bool(enabled_raw) if enabled_raw is not None else True
+        last_raw = data.get('last_insight_email_at')
+        last_sent = datetime.fromisoformat(cast(str, last_raw)) if last_raw else None
+        display_name = cast(Optional[str], data.get('display_name'))
+        return enabled, last_sent, display_name

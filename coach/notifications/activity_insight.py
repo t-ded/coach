@@ -57,7 +57,7 @@ def _format_activity(activity: Activity) -> str:
 def _format_pace(activity: Activity) -> Optional[str]:
     if not activity.distance_meters or not activity.moving_time_seconds:
         return None
-    if activity.distance_meters == 0 or activity.sport_type not in (SportType.RUN, SportType.WALK):
+    if activity.sport_type not in (SportType.RUN, SportType.WALK):
         return None
     pace_seconds_per_km = activity.moving_time_seconds / (activity.distance_meters / 1000)
     minutes = int(pace_seconds_per_km // 60)

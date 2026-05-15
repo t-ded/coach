@@ -104,19 +104,25 @@ def _validate_api_key(provider: LLMProvider, api_key: str) -> bool:
             response = requests.get(_GOOGLE_VALIDATE_URL, params={'key': api_key}, timeout=5)
         elif provider == LLMProvider.OPENAI:
             response = requests.get(_OPENAI_VALIDATE_URL, headers={'Authorization': f'Bearer {api_key}'}, timeout=5)
-        else:
+        elif provider == LLMProvider.ANTHROPIC:
             response = requests.get(
                 _ANTHROPIC_VALIDATE_URL,
                 headers={'x-api-key': api_key, 'anthropic-version': _ANTHROPIC_VERSION_HEADER},
                 timeout=5,
             )
+        else:
+            raise ValueError(f'No validation URL configured for provider: {provider}')
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
 
 
 def _provider_options_html(selected_provider: str) -> str:
-    return '\n'.join(f'      <option value="{p.value}"{" selected" if p.value == selected_provider else ""}>{label}</option>' for p, label in _PROVIDER_LABELS.items())
+    parts = []
+    for provider, label in _PROVIDER_LABELS.items():
+        selected = ' selected' if provider.value == selected_provider else ''
+        parts.append(f'      <option value="{provider.value}"{selected}>{label}</option>')
+    return '\n'.join(parts)
 
 
 def _render_form(state: str, error: Optional[str] = None, selected_provider: str = 'google') -> HTMLResponse:

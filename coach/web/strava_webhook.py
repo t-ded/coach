@@ -105,7 +105,7 @@ def _handle_activity_event(aspect_type: str, owner_id: int, object_id: int, secr
         logger.debug('Ignoring unrecognised activity aspect_type=%s for athlete %d.', aspect_type, owner_id)
 
 
-_INSIGHT_EMAIL_COOLDOWN_HOURS = 24
+_INSIGHT_EMAIL_COOLDOWN = timedelta(hours=24)
 
 
 def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: Client) -> None:
@@ -115,11 +115,12 @@ def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: 
             return
 
         users_repo = SupabaseUsersRepository(secret_client, user_id)
-        if not users_repo.get_email_notifications_enabled():
+        notifications_enabled, last_sent, display_name_raw = users_repo.get_notification_context()
+        if not notifications_enabled:
             return
 
-        last_sent = users_repo.get_last_insight_email_at()
-        if last_sent and datetime.now(UTC) - last_sent < timedelta(hours=_INSIGHT_EMAIL_COOLDOWN_HOURS):
+        now = datetime.now(UTC)
+        if last_sent and now - last_sent < _INSIGHT_EMAIL_COOLDOWN:
             logger.debug('Insight email cooldown active for user %s — skipping.', user_id)
             return
 
@@ -136,14 +137,13 @@ def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: 
             logger.debug('No LLM key for user %s — cannot generate insight.', user_id)
             return
 
-        display_name_raw = users_repo.get_display_name()
         display_name = display_name_raw.split()[0] if display_name_raw else 'Athlete'
 
         generator = ActivityInsightGenerator(provider=provider, api_key=api_key)
         insight = generator.generate(activity, display_name)
 
         notification_service.send_activity_insight(to=email, insight=insight)
-        users_repo.set_last_insight_email_at(datetime.now(UTC))
+        users_repo.set_last_insight_email_at(now)
         logger.info('Sent activity insight email to user %s for activity %d.', user_id, activity.id)
     except Exception:
         logger.exception('Failed to send activity insight for user %s activity %d.', user_id, activity.id)
