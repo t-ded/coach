@@ -12,6 +12,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
+from supabase import Client
 
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.auth.strava_tokens import SupabaseStravaTokenRepository
@@ -25,7 +26,6 @@ from coach.persistence.database import create_secret_client
 from coach.persistence.repositories.activities import SupabaseActivityRepository
 from coach.persistence.repositories.profiles import SupabaseUserProfileRepository
 from coach.persistence.repositories.users import SupabaseUsersRepository
-from supabase import Client
 
 logger = logging.getLogger(__name__)
 

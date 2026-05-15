@@ -22,6 +22,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from jwt.exceptions import PyJWTError
+from supabase import Client
 
 from coach.auth.llm_keys import SupabaseLLMKeyRepository
 from coach.persistence.database import create_secret_client
@@ -29,7 +30,6 @@ from coach.persistence.repositories.profiles import SupabaseUserProfileRepositor
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import display_provider
 from coach.web.session import SESSION_USER_ID
-from supabase import Client
 
 router = APIRouter()
 
