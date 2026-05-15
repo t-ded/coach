@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.52.0",
     "chainlit>=2.11.1",
-    "fastapi>=0.135.3",
+    "fastapi>=0.136.1",
     "google-genai>=1.66.0",
     "more-itertools>=10.8.0",
     "openai>=2.15.0",
