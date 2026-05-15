@@ -16,7 +16,7 @@ dependencies = [
     "resend>=2.0.0",
     "supabase>=2.28.3",
     "ty>=0.0.15",
-    "types-requests>=2.32.4.20260107",
+    "types-requests>=2.33.0.20260513",
     "uvicorn>=0.42.0",
 ]
 
