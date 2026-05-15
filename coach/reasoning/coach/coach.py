@@ -7,6 +7,7 @@ from coach.builders.recent_training_history import build_recent_training_history
 from coach.domain.activity import Activity
 from coach.domain.profile import UserProfile
 from coach.reasoning.assistant import Assistant
+from coach.reasoning.assistant import build_assistant_prompt
 from coach.reasoning.coach.context import build_coach_context
 from coach.reasoning.providers import LLMProvider
 
@@ -53,6 +54,21 @@ class Coach(Assistant):
             return in_session
         summary = f'Summary of our previous conversation:\n{self._session_summary}'
         return f'{summary}\n\n{in_session}' if in_session else summary
+
+    def generate_opening_message(self) -> str:
+        prompt = build_assistant_prompt(
+            system_prompt=self._system_prompt(),
+            user_system_prompt=self._user_system_prompt(),
+            additional_context=self._additional_context(),
+            user_prompt=(
+                f'Generate a brief 2-3 sentence opening message to start the coaching session with {self._first_name}. '
+                'Pick the single most notable observation from their recent training data — '
+                'a specific recent workout, a trend, an upcoming goal milestone, or a notable pattern. '
+                'Include real numbers from the data. Do not be generic. '
+                'End with a brief open invitation for them to continue.'
+            ),
+        )
+        return self._llm_client.complete(prompt)
 
     def _system_prompt(self) -> str:
         return """

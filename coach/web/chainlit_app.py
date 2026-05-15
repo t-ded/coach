@@ -119,10 +119,15 @@ async def on_chat_start() -> None:
 
     cl.user_session.set(sessions_flow.SESSION_MESSAGE_COUNT, 0)
 
-    welcome = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
+    coach: Optional[Coach] = cl.user_session.get(coaching.SESSION_COACH)
+    assert coach is not None
+    try:
+        opening = await cl.make_async(coach.generate_opening_message)()
+    except RuntimeError:
+        opening = f'Hello, {display_name}. Coach is ready. What would you like to work on today?'
     if provider_notice:
-        welcome = f'{provider_notice}\n\n{welcome}'
-    await cl.Message(welcome, actions=api_key_flow.ready_actions()).send()
+        opening = f'{provider_notice}\n\n{opening}'
+    await cl.Message(opening, actions=api_key_flow.ready_actions()).send()
 
 
 @cl.on_message
