@@ -24,10 +24,11 @@ Layer flow:
 3. `coach/web/coaching.py` — coach session init, data loading, LLM config; owns `SESSION_*`/`MODE_*` constants
 4. `coach/web/profile_flow.py` — profile setup/editing flow
 5. `coach/builders/` — `Activity` → `RecentTrainingHistory`, `RunningPersonalBestsSummary`, `TrainingGoal`
-6. `coach/reasoning/` — `Coach`/`ProfileAssistant`; `providers.py` for LLM key resolution; `clients.py` for LLM wrappers
+6. `coach/reasoning/` — `Coach`/`ProfileAssistant`; `providers.py` for LLM key resolution; `clients.py` for LLM wrappers (Google, OpenAI, Anthropic)
 7. `coach/persistence/` — Supabase repos; Vault RPC via `SUPABASE_SECRET_KEY` for Strava tokens + API keys
    FastAPI routers: `strava_oauth.py` (OAuth callback), `strava_webhook.py` (activity + deauth events)
    Deauthorization service: `coach/ingestion/strava/deauthorize.py`
+8. `coach/notifications/` — `NotificationService` with `ResendEmailBackend` (email) + `PushBackend` stub; `ActivityInsightGenerator` for post-activity LLM insights; triggered by Strava webhook on activity create
 
 ## Skills
 

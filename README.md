@@ -106,6 +106,7 @@ Coach only reads your activity data — it cannot post or modify anything on you
 |-----------------------------|------------------------------------------------------------------------------------------------|
 | 🔗 **Strava sync**          | Activities sync automatically each session — free Strava account supported                     |
 | 💬 **AI chat**              | Ask follow-up questions, push back, explore — it's a dialogue, not a report               |
+| 📬 **Post-activity insights** | Coach emails you a specific observation about your latest activity moments after it syncs — pulls you back to the conversation without you having to remember to check |
 | 👤 **Personalized profile** | Guided setup across 5 sections so the coach understands who you are and what you're working toward |
 | 🔐 **Google login**         | No account creation — sign in with your existing Google account                                |
 | 📝 **Private notes**        | Annotate Strava activities with coaching context that only the AI sees                         |
@@ -139,10 +140,10 @@ Knowing where Coach fits (and where it doesn't) will help you get the most out o
 
 A rough picture of what's coming:
 
-- **❤️ Heart rate analysis** — deeper use of HR data for load, recovery, and aerobic fitness signals
-- **📊 Better statistics** — richer summaries for you and more structured context for the coach
-- **🚴 More activity types** — cycling, swimming, and other sports - all are supported, but running has richer features
-- **🇺🇸 Improved unit support** — but you can always try forcing Coach to measure progress in football fields via profile settings  
+- **❤️ Activity enrichment** — km splits, HR zones, and pace zone inference from your PBs so the coach understands training intensity, not just volume
+- **💸 Freemium tier** — use Coach with a limited free tier (no API key required) or bring your own key for unlimited access
+- **📅 Calendar integration** — Coach checks for upcoming events when planning workouts and flags scheduling conflicts
+- **🚴 More activity types** — cycling and swimming with sport-specific analysis, not just running
 
 ---
 
@@ -271,3 +272,4 @@ mypy .                # type-check
 The repository includes a `Dockerfile` and `railway.toml`. Connect the repo in Railway, set the required environment variables (see `.env.example`), and Railway builds and deploys automatically on every push to `master`.
 
 Key env vars to set: `STRAVA_REDIRECT_URI`, `CHAINLIT_URL`, `OAUTH_GOOGLE_CLIENT_SECRET`, `STRAVA_CLIENT_SECRET`, `SUPABASE_SECRET_KEY`, `CHAINLIT_AUTH_SECRET`.
+Optional: `RESEND_API_KEY` + `RESEND_FROM_EMAIL` to enable post-activity email notifications (silently disabled if absent).
