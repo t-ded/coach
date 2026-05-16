@@ -24,8 +24,10 @@ def _make_test_client() -> tuple[TestClient, MagicMock]:
 
 def _signed_post(http: TestClient, payload: dict) -> httpx.Response:
     body = json.dumps(payload).encode()
-    sig = 'sha256=' + hmac.new(_CLIENT_SECRET.encode(), body, hashlib.sha256).hexdigest()
-    return http.post('/webhook/strava', content=body, headers={'Content-Type': 'application/json', 'X-Hub-Signature': sig})
+    timestamp = '1234567890'
+    v1 = hmac.new(_CLIENT_SECRET.encode(), f'{timestamp}.'.encode() + body, hashlib.sha256).hexdigest()
+    sig = f't={timestamp},v1={v1}'
+    return http.post('/webhook/strava', content=body, headers={'Content-Type': 'application/json', 'X-Strava-Signature': sig})
 
 
 class TestStravaWebhookChallenge:
@@ -68,7 +70,7 @@ class TestStravaWebhookEvent:
         assert response.status_code == 403
 
     def test_invalid_signature_returns_403(self) -> None:
-        response = self._http.post('/webhook/strava', json={'object_type': 'athlete'}, headers={'X-Hub-Signature': 'sha256=deadbeef'})
+        response = self._http.post('/webhook/strava', json={'object_type': 'athlete'}, headers={'X-Strava-Signature': 't=1234567890,v1=deadbeef'})
 
         assert response.status_code == 403
 
