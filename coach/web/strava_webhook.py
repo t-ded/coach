@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 import json
 import logging
 import os
@@ -32,18 +30,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _verify_strava_signature(body: bytes, signature_header: str) -> bool:
-    parts = dict(kv.split('=', 1) for kv in signature_header.split(',') if '=' in kv)
-    timestamp = parts.get('t', '')
-    v1 = parts.get('v1', '')
-    if not timestamp or not v1:
-        return False
-    client_secret = os.environ.get('STRAVA_CLIENT_SECRET', '')
-    signed_payload = f'{timestamp}.'.encode() + body
-    expected = hmac.new(client_secret.encode(), signed_payload, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, v1)
-
-
 def _get_verify_token() -> str:
     token = os.environ.get('STRAVA_WEBHOOK_VERIFY_TOKEN')
     if not token:
@@ -68,9 +54,6 @@ async def strava_webhook_event(
     secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> dict[str, str]:
     body = await request.body()
-    if not _verify_strava_signature(body, request.headers.get('X-Strava-Signature', '')):
-        raise HTTPException(status_code=403, detail='Invalid webhook signature')
-
     payload: dict[str, Any] = json.loads(body)
 
     object_type = payload.get('object_type')
