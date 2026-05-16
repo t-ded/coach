@@ -9,6 +9,8 @@ from coach.persistence.database import create_secret_client
 from coach.web.app import create_app
 
 _VERIFY_TOKEN = 'test-verify-token'
+_WEBHOOK_TOKEN = 'test-webhook-token'
+_WEBHOOK_PATH = f'/webhook/strava/{_WEBHOOK_TOKEN}'
 
 
 def _make_test_client() -> tuple[TestClient, MagicMock]:
@@ -19,7 +21,7 @@ def _make_test_client() -> tuple[TestClient, MagicMock]:
 
 
 def _post(http: TestClient, payload: dict) -> httpx.Response:
-    return http.post('/webhook/strava', json=payload)
+    return http.post(_WEBHOOK_PATH, json=payload)
 
 
 class TestStravaWebhookChallenge:
@@ -28,21 +30,21 @@ class TestStravaWebhookChallenge:
 
     def test_valid_token_returns_challenge(self) -> None:
         with patch.dict(os.environ, {'STRAVA_WEBHOOK_VERIFY_TOKEN': _VERIFY_TOKEN}):
-            response = self._http.get(f'/webhook/strava?hub.challenge=abc123&hub.verify_token={_VERIFY_TOKEN}')
+            response = self._http.get(f'{_WEBHOOK_PATH}?hub.challenge=abc123&hub.verify_token={_VERIFY_TOKEN}')
 
         assert response.status_code == 200
         assert response.json() == {'hub.challenge': 'abc123'}
 
     def test_invalid_token_returns_403(self) -> None:
         with patch.dict(os.environ, {'STRAVA_WEBHOOK_VERIFY_TOKEN': _VERIFY_TOKEN}):
-            response = self._http.get('/webhook/strava?hub.challenge=abc123&hub.verify_token=wrong')
+            response = self._http.get(f'{_WEBHOOK_PATH}?hub.challenge=abc123&hub.verify_token=wrong')
 
         assert response.status_code == 403
 
     def test_missing_env_var_returns_500(self) -> None:
         env = {k: v for k, v in os.environ.items() if k != 'STRAVA_WEBHOOK_VERIFY_TOKEN'}
         with patch.dict(os.environ, env, clear=True):
-            response = self._http.get('/webhook/strava?hub.challenge=abc123&hub.verify_token=anything')
+            response = self._http.get(f'{_WEBHOOK_PATH}?hub.challenge=abc123&hub.verify_token=anything')
 
         assert response.status_code == 500
 
@@ -50,6 +52,23 @@ class TestStravaWebhookChallenge:
 class TestStravaWebhookEvent:
     def setup_method(self) -> None:
         self._http, self._secret_client = _make_test_client()
+        self._env_patcher = patch.dict(os.environ, {'STRAVA_WEBHOOK_PATH_TOKEN': _WEBHOOK_TOKEN})
+        self._env_patcher.start()
+
+    def teardown_method(self) -> None:
+        self._env_patcher.stop()
+
+    def test_invalid_path_token_returns_403(self) -> None:
+        response = self._http.post('/webhook/strava/wrong-token', json={'object_type': 'athlete'})
+
+        assert response.status_code == 403
+
+    def test_missing_path_token_env_var_returns_403(self) -> None:
+        env = {k: v for k, v in os.environ.items() if k != 'STRAVA_WEBHOOK_PATH_TOKEN'}
+        with patch.dict(os.environ, env, clear=True):
+            response = _post(self._http, {'object_type': 'athlete'})
+
+        assert response.status_code == 403
 
     def test_deauthorization_event_calls_deauthorize(self) -> None:
         with patch('coach.web.strava_webhook.deauthorize_athlete') as mock_deauth:

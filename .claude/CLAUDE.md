@@ -11,6 +11,7 @@ Required env vars: `SUPABASE_SECRET_KEY`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SEC
 Set `CHAINLIT_APP_ROOT` to repo root and `STRAVA_REDIRECT_URI=http://localhost:8000/oauth/auth/strava/callback` in `.env`.
 Optional (post-activity email insights): `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — if absent, email notifications are silently disabled.
 DB migration required for notifications: run `supabase/migrations/20260515_add_notification_columns.sql`.
+Webhook path token: `STRAVA_WEBHOOK_PATH_TOKEN` — a random secret embedded in the webhook URL (`/oauth/webhook/strava/{token}`). Must match what is registered with Strava as the callback URL.
 
 ## Architecture
 

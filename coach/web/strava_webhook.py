@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 import os
@@ -38,8 +39,14 @@ def _get_verify_token() -> str:
     return token
 
 
-@router.get('/webhook/strava')
-def strava_webhook_challenge(request: Request) -> dict[str, str]:
+def _check_path_token(path_token: str) -> None:
+    expected = os.environ.get('STRAVA_WEBHOOK_PATH_TOKEN', '')
+    if not expected or not hmac.compare_digest(path_token, expected):
+        raise HTTPException(status_code=403)
+
+
+@router.get('/webhook/strava/{path_token}')
+def strava_webhook_challenge(request: Request, path_token: str) -> dict[str, str]:  # noqa: ARG001
     hub_challenge = request.query_params.get('hub.challenge', '')
     hub_verify_token = request.query_params.get('hub.verify_token', '')
 
@@ -49,12 +56,14 @@ def strava_webhook_challenge(request: Request) -> dict[str, str]:
     return {'hub.challenge': hub_challenge}
 
 
-@router.post('/webhook/strava')
+@router.post('/webhook/strava/{path_token}')
 async def strava_webhook_event(
+    path_token: str,
     request: Request,
     background_tasks: BackgroundTasks,
     secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> dict[str, str]:
+    _check_path_token(path_token)
     body = await request.body()
     payload: dict[str, Any] = json.loads(body)
 
