@@ -6,6 +6,7 @@ from typing import Any
 
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
+from coach.domain.activity import Split
 from coach.domain.activity import SportType
 from coach.domain.goals import DistanceActivityTrainingGoal
 from coach.domain.goals import Priority
@@ -74,6 +75,7 @@ def deserialize_goal(raw: dict[str, Any]) -> TrainingGoal:
 
 def deserialize_activity(serialized: dict[str, Any]) -> Activity:
     pbs = [BestEffort(name=pb['name'], moving_time_seconds=pb['moving_time_seconds']) for pb in serialized['pbs']]
+    splits = [Split(**s) for s in serialized.get('splits', [])]
 
     return Activity(
         id=serialized['id'],
@@ -91,4 +93,5 @@ def deserialize_activity(serialized: dict[str, Any]) -> Activity:
         is_manual=bool(serialized['is_manual']),
         is_race=bool(serialized['is_race']),
         pbs=pbs,
+        splits=splits,
     )

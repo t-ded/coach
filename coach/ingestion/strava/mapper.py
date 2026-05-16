@@ -4,6 +4,7 @@ from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
+from coach.domain.activity import Split
 from coach.domain.activity import SportType
 from coach.utils import parse_utc_datetime
 
@@ -29,12 +30,33 @@ def map_strava_activity(payload: dict[str, Any]) -> Activity:
         is_manual=bool(payload.get('manual', False)),
         is_race=bool(payload.get('workout_type') == 1),
         pbs=map_pbs(payload.get('best_efforts')),
+        splits=map_splits(payload.get('splits_metric')),
     )
 
 
 def _map_sport_type(payload: dict[str, str]) -> SportType:
     raw = payload.get('sport_type') or payload.get('type') or SportType.OTHER
     return SportType(raw) if raw in SportType._value2member_map_ else SportType.OTHER
+
+
+def map_splits(splits_metric: Optional[list[dict[str, Any]]]) -> list[Split]:
+    if not splits_metric:
+        return []
+    result = []
+    for s in splits_metric:
+        distance = s.get('distance', 0.0)
+        if not distance or distance <= 0:
+            continue
+        result.append(
+            Split(
+                distance_meters=float(distance),
+                elapsed_time_seconds=int(s.get('elapsed_time', 0)),
+                moving_time_seconds=int(s.get('moving_time', 0)),
+                average_speed_ms=float(s.get('average_speed', 0.0)),
+                average_heartrate=s.get('average_heartrate'),
+            ),
+        )
+    return result
 
 
 def map_pbs(best_efforts: Optional[list[dict[str, Any]]]) -> list[BestEffort]:

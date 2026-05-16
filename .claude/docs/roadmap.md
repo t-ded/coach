@@ -10,7 +10,7 @@ Phases 1–6 are complete. The app is live at https://coach-production-e0b4.up.r
 
 ## Tier 2 — next (PRDs required before implementation)
 
-- [ ] #106 — **Activity enrichment** (PRD): km splits + HR from Strava detailed API; pace zones derived from PBs; intensity breakdown in coach context
+- [x] #106 — **Activity enrichment**: km splits + HR from Strava detailed API; pace zones derived from PBs; `ActivityIntensityProfile` builder; `ActivityIntensitySection` in coach context
 - [ ] #107 — **Prompt caching**: `cache_control` on static coaching context block (Anthropic); depends on #104
 - [ ] #108 — **Freemium tier** (PRD): system Anthropic key + per-user usage caps + BYOK unlimited; depends on #104 + #107
 

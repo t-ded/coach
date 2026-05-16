@@ -22,6 +22,15 @@ class BestEffort:
     moving_time_seconds: int
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class Split:
+    distance_meters: float
+    elapsed_time_seconds: int
+    moving_time_seconds: int
+    average_speed_ms: float
+    average_heartrate: Optional[float]
+
+
 DISTANCE_SPORT_TYPES = (SportType.RUN, SportType.RIDE, SportType.SWIM, SportType.WALK)
 
 
@@ -55,3 +64,6 @@ class Activity:
 
     # Personal bests
     pbs: list[BestEffort] = field(default_factory=list)
+
+    # Per-km splits from Strava detailed activity (empty for manual/old activities)
+    splits: list[Split] = field(default_factory=list)
