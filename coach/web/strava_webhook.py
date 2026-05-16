@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
@@ -51,6 +52,7 @@ def strava_webhook_challenge(request: Request) -> dict[str, str]:
 @router.post('/webhook/strava')
 async def strava_webhook_event(
     request: Request,
+    background_tasks: BackgroundTasks,
     secret_client: Client = Depends(create_secret_client),  # noqa: B008
 ) -> dict[str, str]:
     body = await request.body()
@@ -62,9 +64,9 @@ async def strava_webhook_event(
     object_id = payload.get('object_id')
 
     if object_type == 'athlete' and aspect_type == 'deauthorization' and owner_id is not None:
-        deauthorize_athlete(int(owner_id), secret_client)
+        background_tasks.add_task(deauthorize_athlete, int(owner_id), secret_client)
     elif object_type == 'activity' and aspect_type is not None and owner_id is not None and object_id is not None:
-        _handle_activity_event(aspect_type, int(owner_id), int(object_id), secret_client)
+        background_tasks.add_task(_handle_activity_event, aspect_type, int(owner_id), int(object_id), secret_client)
     else:
         logger.debug('Ignoring unrecognised webhook event: object_type=%s aspect_type=%s', object_type, aspect_type)
 
