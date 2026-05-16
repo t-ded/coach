@@ -5,6 +5,7 @@
 ```bash
 uv sync --group dev                             # install
 chainlit run coach/web/chainlit_app.py          # run app
+ruff check . && ruff format . && mypy . && pytest   # full check suite (see /run-checks)
 ```
 
 Required env vars: `SUPABASE_SECRET_KEY`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `CHAINLIT_AUTH_SECRET`
@@ -24,12 +25,22 @@ Layer flow:
 2. `coach/web/session.py` — auth helpers + session key constants
 3. `coach/web/coaching.py` — coach session init, data loading, LLM config; owns `SESSION_*`/`MODE_*` constants
 4. `coach/web/profile_flow.py` — profile setup/editing flow
-5. `coach/builders/` — `Activity` → `RecentTrainingHistory`, `RunningPersonalBestsSummary`, `TrainingGoal`
-6. `coach/reasoning/` — `Coach`/`ProfileAssistant`; `providers.py` for LLM key resolution; `clients.py` for LLM wrappers (Google, OpenAI, Anthropic)
-7. `coach/persistence/` — Supabase repos; Vault RPC via `SUPABASE_SECRET_KEY` for Strava tokens + API keys
+5. `coach/domain/` — immutable domain models (`Activity`, `Profile`, `TrainingSession`, `ActivityIntensityProfile`, etc.) shared across layers
+6. `coach/builders/` — transforms raw Strava/domain data into coaching context objects (`RecentTrainingHistory`, `RunningPersonalBestsSummary`, `TrainingGoal`, `ActivityIntensityProfile`, weekly summaries, training trends)
+7. `coach/reasoning/` — `providers.py` (LLM key resolution), `clients.py` (Google/OpenAI/Anthropic wrappers); `coach/` submodule contains `Coach` with `context.py` + `sections/` (one section per coaching context block); `profile_assistant/` for profile setup LLM flows
+8. `coach/persistence/` — Supabase repos; Vault RPC via `SUPABASE_SECRET_KEY` for Strava tokens + API keys
    FastAPI routers: `strava_oauth.py` (OAuth callback), `strava_webhook.py` (activity + deauth events)
    Deauthorization service: `coach/ingestion/strava/deauthorize.py`
-8. `coach/notifications/` — `NotificationService` with `ResendEmailBackend` (email) + `PushBackend` stub; `ActivityInsightGenerator` for post-activity LLM insights; triggered by Strava webhook on activity create
+9. `coach/auth/` — Strava token helpers (exchange, refresh)
+10. `coach/notifications/` — `NotificationService` with `ResendEmailBackend` (email) + `PushBackend` stub; `ActivityInsightGenerator` for post-activity LLM insights; triggered by Strava webhook on activity create
+
+## Code style
+
+Non-negotiables (enforced by code review, beyond what ruff/mypy catch automatically):
+- **No single-letter variables** — name every variable for what it holds
+- **`# type: ignore` and `typing.Any` are symptoms**, not solutions — investigate the root cause; if truly unavoidable, add a comment explaining why
+- **Security first** — authentication, authorization, and input validation take precedence over feature completeness; never defer security hardening
+- **Refactor before feature** — when adding a feature, first make the existing code ready to accept it cleanly; the feature itself should be indistinguishable from the surrounding code in style and structure
 
 ## Skills
 
