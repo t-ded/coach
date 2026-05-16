@@ -28,6 +28,7 @@ def test_serialize_activity() -> None:
         'is_manual': SAMPLE_RUN.is_manual,
         'is_race': SAMPLE_RUN.is_race,
         'pbs': [{'name': '1K', 'moving_time_seconds': 120}],
+        'splits': [],
     }
 
 

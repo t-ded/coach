@@ -3,9 +3,11 @@ from datetime import datetime
 from typing import Any
 
 from coach.domain.activity import BestEffort
+from coach.domain.activity import Split
 from coach.domain.activity import SportType
 from coach.ingestion.strava.mapper import map_activities
 from coach.ingestion.strava.mapper import map_pbs
+from coach.ingestion.strava.mapper import map_splits
 from coach.ingestion.strava.mapper import map_strava_activity
 
 
@@ -125,6 +127,53 @@ class TestStravaMapperMapPbs:
             ],
         )
         assert map_strava_activity(payload).pbs == [BestEffort(name='5K', moving_time_seconds=1200)]
+
+
+class TestStravaMapperMapSplits:
+    def test_returns_empty_when_none(self) -> None:
+        assert map_splits(None) == []
+
+    def test_returns_empty_when_empty_list(self) -> None:
+        assert map_splits([]) == []
+
+    def test_maps_split_fields(self) -> None:
+        raw = [{'distance': 1000.0, 'elapsed_time': 355, 'moving_time': 350, 'average_speed': 2.86, 'average_heartrate': 155.0}]
+        result = map_splits(raw)
+        assert len(result) == 1
+        assert result[0] == Split(
+            distance_meters=1000.0,
+            elapsed_time_seconds=355,
+            moving_time_seconds=350,
+            average_speed_ms=2.86,
+            average_heartrate=155.0,
+        )
+
+    def test_skips_zero_distance_splits(self) -> None:
+        raw = [
+            {'distance': 0.0, 'elapsed_time': 5, 'moving_time': 5, 'average_speed': 2.5, 'average_heartrate': None},
+            {'distance': 1000.0, 'elapsed_time': 350, 'moving_time': 350, 'average_speed': 2.86, 'average_heartrate': None},
+        ]
+        result = map_splits(raw)
+        assert len(result) == 1
+
+    def test_hr_optional(self) -> None:
+        raw = [{'distance': 1000.0, 'elapsed_time': 350, 'moving_time': 350, 'average_speed': 2.86}]
+        result = map_splits(raw)
+        assert result[0].average_heartrate is None
+
+    def test_splits_present_on_mapped_activity(self) -> None:
+        payload = _base_payload(
+            splits_metric=[
+                {'distance': 1000.0, 'elapsed_time': 350, 'moving_time': 350, 'average_speed': 2.86, 'average_heartrate': 155.0},
+            ],
+        )
+        activity = map_strava_activity(payload)
+        assert len(activity.splits) == 1
+        assert activity.splits[0].distance_meters == 1000.0
+
+    def test_no_splits_metric_gives_empty_splits(self) -> None:
+        activity = map_strava_activity(_base_payload())
+        assert activity.splits == []
 
 
 class TestStravaMapperMapActivities:

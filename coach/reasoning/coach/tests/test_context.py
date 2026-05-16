@@ -30,6 +30,7 @@ def _build_context(
         profile=profile,
         recent_training_history=build_recent_training_history(activities=acts, generated_at=generated_at, num_history_weeks=num_history_weeks),
         pb_summary=build_running_personal_bests_summary(activities=acts),
+        activities=acts,
     )
 
 

@@ -4,6 +4,7 @@ from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import BestEffort
+from coach.domain.activity import Split
 from coach.domain.activity import SportType
 
 _DEFAULT_START = datetime(2025, 1, 1, tzinfo=UTC)
@@ -15,6 +16,7 @@ def make_activity(
     sport_type: SportType = SportType.RUN,
     start_time_utc: datetime = _DEFAULT_START,
     pbs: Optional[list[BestEffort]] = None,
+    splits: Optional[list[Split]] = None,
 ) -> Activity:
     return Activity(
         id=id,
@@ -25,6 +27,7 @@ def make_activity(
         is_manual=False,
         is_race=False,
         pbs=pbs or [],
+        splits=splits or [],
     )
 
 

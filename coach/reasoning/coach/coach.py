@@ -40,6 +40,7 @@ class Coach(Assistant):
             profile=profile,
             recent_training_history=recent_training_history,
             pb_summary=pb_summary,
+            activities=activities,
         )
 
     def _user_system_prompt(self) -> Optional[str]:

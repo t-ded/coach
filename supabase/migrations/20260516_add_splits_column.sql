@@ -1,0 +1,1 @@
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS splits JSONB NOT NULL DEFAULT '[]'::jsonb;
