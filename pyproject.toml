@@ -7,16 +7,16 @@ requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.52.0",
     "chainlit>=2.11.1",
-    "fastapi>=0.135.3",
+    "fastapi>=0.136.1",
     "google-genai>=1.66.0",
     "more-itertools>=10.8.0",
-    "openai>=2.15.0",
+    "openai>=2.36.0",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "resend>=2.0.0",
     "supabase>=2.28.3",
     "ty>=0.0.15",
-    "types-requests>=2.32.4.20260107",
+    "types-requests>=2.33.0.20260513",
     "uvicorn>=0.42.0",
 ]
 
@@ -102,9 +102,9 @@ known-third-party = ["supabase"]
 
 [dependency-groups]
 dev = [
-    "freezegun>=1.5.1",
+    "freezegun>=1.5.5",
     "httpx>=0.28.1",
-    "mypy>=1.19.1",
+    "mypy>=2.1.0",
     "pytest>=9.0.3",
     "ruff>=0.15.10",
 ]
