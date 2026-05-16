@@ -2,6 +2,9 @@ from typing import Optional
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
+from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import TrainingGoal
+from coach.domain.profile import UserProfile
 from coach.reasoning.providers import LLMProvider
 from coach.reasoning.providers import create_llm_client
 
@@ -10,14 +13,17 @@ class ActivityInsightGenerator:
     def __init__(self, *, provider: LLMProvider, api_key: str) -> None:
         self._client = create_llm_client(provider=provider, api_key=api_key)
 
-    def generate(self, activity: Activity, display_name: str) -> str:
+    def generate(self, activity: Activity, display_name: str, profile: Optional[UserProfile] = None) -> str:
         details = _format_activity(activity)
+        profile_section = f'\nAthlete context:\n{_format_profile_context(profile)}\n' if profile else ''
         prompt = (
             f'You are a personal training coach. Generate a brief, specific, encouraging post-activity message '
             f'for {display_name} based on the following activity:\n\n'
-            f'{details}\n\n'
+            f'{details}'
+            f'{profile_section}\n'
             'Write 3-5 sentences. Reference the real numbers from the activity. '
             'Comment on what was notable — good effort, strong pace, high elevation, etc. '
+            'If the athlete has upcoming goals, briefly relate this session to their preparation. '
             'End with brief encouragement or a forward-looking observation. '
             'Do not be generic. Do not invent data not listed above.'
         )
@@ -52,6 +58,30 @@ def _format_activity(activity: Activity) -> str:
         parts.append(f'Athlete notes: {activity.notes}')
 
     return '\n'.join(parts)
+
+
+def _format_profile_context(profile: UserProfile) -> str:
+    parts: list[str] = []
+    if profile.personal_information:
+        parts.append(f'About the athlete: {profile.personal_information}')
+    if profile.training_preferences:
+        parts.append(f'Training preferences: {profile.training_preferences}')
+    if profile.constraints:
+        parts.append(f'Constraints: {profile.constraints}')
+    if profile.goals:
+        goal_lines = [_format_goal(g) for g in profile.goals]
+        parts.append('Goals:\n' + '\n'.join(f'  - {line}' for line in goal_lines))
+    return '\n'.join(parts)
+
+
+def _format_goal(goal: TrainingGoal) -> str:
+    line = f'{goal.name} ({goal.sport_type}, {goal.goal_date})'
+    if isinstance(goal, DistanceActivityTrainingGoal) and goal.goal_distance_meters:
+        km = goal.goal_distance_meters / 1000
+        line += f', {km:.1f} km @ {goal.goal_pace}'
+    if goal.notes:
+        line += f' — {goal.notes}'
+    return line
 
 
 def _format_pace(activity: Activity) -> Optional[str]:

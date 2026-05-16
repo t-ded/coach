@@ -122,6 +122,7 @@ def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: 
 
         profile_repo = SupabaseUserProfileRepository(secret_client, user_id)
         provider = profile_repo.get_preferred_provider()
+        profile = profile_repo.load()
         key_repo = SupabaseLLMKeyRepository(secret_client)
         api_key = key_repo.get_key(user_id, provider)
         if api_key is None:
@@ -131,7 +132,7 @@ def _try_send_activity_insight(user_id: str, activity: Activity, secret_client: 
         display_name = display_name_raw.split()[0] if display_name_raw else 'Athlete'
 
         generator = ActivityInsightGenerator(provider=provider, api_key=api_key)
-        insight = generator.generate(activity, display_name)
+        insight = generator.generate(activity, display_name, profile)
 
         notification_service.send_activity_insight(to=email, insight=insight)
         users_repo.set_last_insight_email_at(now)

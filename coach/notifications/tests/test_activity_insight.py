@@ -5,9 +5,14 @@ from unittest.mock import patch
 
 from coach.domain.activity import Activity
 from coach.domain.activity import SportType
+from coach.domain.goals import DistanceActivityTrainingGoal
+from coach.domain.goals import Priority
+from coach.domain.goals import TrainingGoal
+from coach.domain.profile import UserProfile
 from coach.notifications.activity_insight import ActivityInsightGenerator
 from coach.notifications.activity_insight import _format_activity
 from coach.notifications.activity_insight import _format_pace
+from coach.notifications.activity_insight import _format_profile_context
 from coach.reasoning.providers import LLMProvider
 
 _BASE_ACTIVITY = Activity(
@@ -137,6 +142,47 @@ class TestFormatActivity:
         assert 'race' in result
 
 
+class TestFormatProfileContext:
+    def test_includes_personal_information(self) -> None:
+        profile = UserProfile(personal_information='Masters runner, 45 years old')
+        result = _format_profile_context(profile)
+        assert 'Masters runner, 45 years old' in result
+
+    def test_includes_training_preferences(self) -> None:
+        profile = UserProfile(training_preferences='Polarised training, 80% easy')
+        result = _format_profile_context(profile)
+        assert 'Polarised training, 80% easy' in result
+
+    def test_includes_constraints(self) -> None:
+        profile = UserProfile(constraints='Knee issues, no back-to-back hard days')
+        result = _format_profile_context(profile)
+        assert 'Knee issues' in result
+
+    def test_includes_distance_goal_with_pace(self) -> None:
+        goal = DistanceActivityTrainingGoal(
+            name='Prague Marathon',
+            sport_type=SportType.RUN,
+            goal_date='2026-10-04',
+            goal_distance_meters=42_195,
+            goal_duration_seconds=14400,
+            goal_pace='5:41/km',
+        )
+        profile = UserProfile(goals=(goal,))
+        result = _format_profile_context(profile)
+        assert 'Prague Marathon' in result
+        assert '42.2 km' in result
+        assert '5:41/km' in result
+
+    def test_includes_base_goal_without_distance(self) -> None:
+        goal = TrainingGoal(name='Get fit', sport_type=SportType.RUN, goal_date='2026-12-31', priority=Priority.MEDIUM)
+        profile = UserProfile(goals=(goal,))
+        result = _format_profile_context(profile)
+        assert 'Get fit' in result
+
+    def test_empty_profile_returns_empty_string(self) -> None:
+        assert _format_profile_context(UserProfile()) == ''
+
+
 class TestActivityInsightGenerator:
     def setup_method(self) -> None:
         self._mock_client = MagicMock()
@@ -163,3 +209,18 @@ class TestActivityInsightGenerator:
         prompt = self._mock_client.complete.call_args[0][0]
         assert 'Run' in prompt
         assert '10.00 km' in prompt
+
+    def test_prompt_includes_profile_context_when_provided(self) -> None:
+        profile = UserProfile(
+            personal_information='Masters runner',
+            goals=(TrainingGoal(name='Prague Marathon', sport_type=SportType.RUN, goal_date='2026-10-04', priority=Priority.HIGH),),
+        )
+        self._generator.generate(_BASE_ACTIVITY, 'Tom', profile)
+        prompt = self._mock_client.complete.call_args[0][0]
+        assert 'Masters runner' in prompt
+        assert 'Prague Marathon' in prompt
+
+    def test_prompt_works_without_profile(self) -> None:
+        self._generator.generate(_BASE_ACTIVITY, 'Tom', None)
+        prompt = self._mock_client.complete.call_args[0][0]
+        assert 'Athlete context' not in prompt
