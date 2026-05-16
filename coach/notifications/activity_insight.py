@@ -1,3 +1,5 @@
+from datetime import UTC
+from datetime import datetime
 from typing import Optional
 
 from coach.domain.activity import Activity
@@ -14,10 +16,11 @@ class ActivityInsightGenerator:
         self._client = create_llm_client(provider=provider, api_key=api_key)
 
     def generate(self, activity: Activity, display_name: str, profile: Optional[UserProfile] = None) -> str:
+        today = datetime.now(UTC).strftime('%A, %B %d, %Y')
         details = _format_activity(activity)
         profile_section = f'\nAthlete context:\n{_format_profile_context(profile)}\n' if profile else ''
         prompt = (
-            f'You are a personal training coach. Generate a brief, specific, encouraging post-activity message '
+            f'Today is {today}. You are a personal training coach. Generate a brief, specific, encouraging post-activity message '
             f'for {display_name} based on the following activity:\n\n'
             f'{details}'
             f'{profile_section}\n'
