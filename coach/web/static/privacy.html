@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coach — Privacy Policy</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6e6; background: #16181c; }
+      a { color: #ff7a45; }
+      th { background: #23262c; }
+      td, th { border-color: #33373f; }
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; }
+    .effective { color: #888; font-size: 0.9rem; margin-top: 0; }
+    a { color: #fc5200; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+    th { background: #f5f5f5; }
+    code { background: rgba(127,127,127,0.18); padding: 0.1rem 0.35rem; border-radius: 4px; }
+    footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(127,127,127,0.3); }
+    footer img { height: 40px; display: block; margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="effective">Coach &middot; effective 29 May 2026</p>
+
+  <p>
+    Coach is a personal AI training assistant that reads your Strava activity data to give you
+    coaching feedback. This policy explains what data Coach handles, how it is used, and how you
+    stay in control of it.
+  </p>
+
+  <h2>What data Coach stores</h2>
+  <table>
+    <thead>
+      <tr><th>Data</th><th>Stored?</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Google account email and display name</td><td>Yes</td><td>Used to identify your account</td></tr>
+      <tr><td>Strava activity data</td><td>Yes</td><td>Synced at session start or via webhook</td></tr>
+      <tr><td>Your coaching chat messages</td><td>Yes</td><td>Stored to power session history; does not include Strava social activity (comments, kudos)</td></tr>
+      <tr><td>Your coaching profile</td><td>Yes</td><td>The profile you set up guides the AI</td></tr>
+      <tr><td>Private activity notes (<code>$...$</code>)</td><td>Yes</td><td>Stored as part of your activity data</td></tr>
+      <tr><td>LLM API key</td><td>Yes — encrypted</td><td>Stored in Supabase Vault; never accessible in plaintext</td></tr>
+      <tr><td>Strava access and refresh tokens</td><td>Yes — encrypted</td><td>Stored in Supabase Vault; never accessible in plaintext</td></tr>
+    </tbody>
+  </table>
+  <p>Coach does not store payment information, health records, or any data beyond what is listed above.</p>
+
+  <h2>Read-only Strava access</h2>
+  <p>
+    Coach requests <strong>read-only</strong> permission (<code>activity:read_all</code>). It cannot
+    create, edit, delete, or post anything to your Strava account — it can only read your activity history.
+  </p>
+
+  <h2>Who can see your data</h2>
+  <ul>
+    <li><strong>You:</strong> you see your own activities and coaching chat history in the app, and no one else's.</li>
+    <li><strong>The operator</strong> (whoever runs this Coach instance) can access your profile data,
+      stored activities, and coaching chat messages via the database dashboard. The operator cannot see
+      your LLM API key or Strava tokens in plaintext — these are encrypted in Supabase Vault and are never logged.</li>
+  </ul>
+
+  <h2>How your Strava data is used</h2>
+  <p>
+    Your Strava activity data is used <strong>solely</strong> to provide coaching context within Coach.
+    It is not sold, shared with third parties, or used for advertising. Specifically:
+  </p>
+  <ul>
+    <li>Activity data is passed to the AI model you have configured (e.g. OpenAI, Google Gemini, Anthropic
+      Claude) <strong>only to generate coaching responses (inference)</strong> — never to train, fine-tune,
+      or otherwise build AI or machine-learning models. This data leaves Coach and is processed by that
+      third-party provider under their own terms of service and privacy policy.</li>
+    <li>The major providers do not train their models on data sent through their paid APIs. Both
+      <a href="https://openai.com/enterprise-privacy/" target="_blank" rel="noopener">OpenAI</a> and
+      <a href="https://privacy.anthropic.com/en/articles/7996868-is-my-data-used-for-model-training" target="_blank" rel="noopener">Anthropic</a>
+      state that inputs and outputs submitted via their APIs are not used for model training by default.
+      Review the policy of whichever provider and API key you choose to supply.</li>
+    <li>Activity data is not shared with any other third party.</li>
+    <li>Activity data is not used to train models, build advertising profiles, or for any purpose other
+      than generating your coaching responses.</li>
+  </ul>
+  <p>
+    This use of Strava data is in line with the
+    <a href="https://www.strava.com/legal/api" target="_blank" rel="noopener">Strava API Agreement</a>,
+    including its restriction on using athlete data to train artificial-intelligence or machine-learning models.
+  </p>
+
+  <h2>Retention and deleting your data</h2>
+  <p>
+    When you disconnect Coach from
+    <a href="https://www.strava.com/settings/apps" target="_blank" rel="noopener">strava.com/settings/apps</a>,
+    Strava sends a deauthorization event to Coach. On receiving it, Coach immediately and atomically:
+  </p>
+  <ol>
+    <li>Deletes your Strava tokens from Vault</li>
+    <li>Deletes all stored activity data</li>
+    <li>Clears the Strava connection from your account</li>
+  </ol>
+  <p>This happens automatically — you do not need to take any action inside Coach, and you keep full control over your data.</p>
+
+  <h2>Contact and support</h2>
+  <p>
+    For questions, data requests, or support, open an issue at
+    <a href="https://github.com/t-ded/coach/issues" target="_blank" rel="noopener">github.com/t-ded/coach/issues</a>.
+    You can review or revoke Coach's Strava access any time at
+    <a href="https://www.strava.com/settings/apps" target="_blank" rel="noopener">strava.com/settings/apps</a>.
+  </p>
+
+  <footer>
+    <a href="https://www.strava.com" target="_blank" rel="noopener">
+      <img src="/public/strava/powered_by_strava.png" alt="Powered by Strava" />
+    </a>
+  </footer>
+</body>
+</html>
