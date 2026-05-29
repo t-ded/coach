@@ -84,14 +84,16 @@ async def on_chat_start() -> None:
     users_repo = SupabaseUsersRepository(authenticated_client, user_id)
     strava_user_id, raw_display_name = users_repo.get_strava_user_id_and_display_name()
     if not strava_user_id:
-        await _connect_strava_prompt().send()
+        strava_auth_url = generate_strava_auth_url(user_id, secret_client)
+        await _connect_strava_prompt(strava_auth_url).send()
         return
 
     display_name = coaching.format_display_name(raw_display_name, user.identifier)
 
     if users_repo.get_strava_scope_warning():
         users_repo.set_strava_scope_warning(False)
-        await _insufficient_scope_prompt().send()
+        strava_auth_url = generate_strava_auth_url(user_id, secret_client)
+        await _insufficient_scope_prompt(strava_auth_url).send()
         return
 
     sync_strava = coaching.needs_strava_sync(users_repo)
@@ -104,7 +106,8 @@ async def on_chat_start() -> None:
             sync_strava=sync_strava,
         )
     except StravaTokenRevokedError:
-        await _reconnect_strava_prompt().send()
+        strava_auth_url = generate_strava_auth_url(user_id, secret_client)
+        await _reconnect_strava_prompt(strava_auth_url).send()
         return
 
     cl.user_session.set(coaching.SESSION_ACTIVITIES, activities)
@@ -188,13 +191,6 @@ async def on_discard_section(action: cl.Action) -> None:
     await profile_flow.handle_discard_section()
 
 
-@cl.action_callback('connect_strava')
-async def on_connect_strava(action: cl.Action) -> None:
-    user_id = session.get_user_id()
-    url = generate_strava_auth_url(user_id, create_secret_client())
-    await cl.Message(f'[Click here to connect Strava]({url})').send()
-
-
 @cl.action_callback('add_provider_key')
 async def on_add_provider_key(action: cl.Action) -> None:
     provider_str: str = action.payload.get('provider', 'google')
@@ -265,25 +261,30 @@ async def on_help(action: cl.Action) -> None:
     await api_key_flow.handle_help()
 
 
-def _connect_strava_prompt() -> cl.Message:
-    actions = [cl.Action(name='connect_strava', payload={}, label='Connect Strava')]
-    return cl.Message('To get started, please connect your Strava account.', actions=actions)
+# Strava brand guidelines require the official "Connect with Strava" button as the OAuth entry point.
+_STRAVA_CONNECT_BUTTON_IMAGE = '/public/strava/btn_strava_connect_with_orange.png'
 
 
-def _insufficient_scope_prompt() -> cl.Message:
-    actions = [cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')]
-    return cl.Message(
+def _strava_connect_button(auth_url: str) -> str:
+    return f'[![Connect with Strava]({_STRAVA_CONNECT_BUTTON_IMAGE})]({auth_url})'
+
+
+def _connect_strava_prompt(auth_url: str) -> cl.Message:
+    body = f'To get started, please connect your Strava account.\n\n{_strava_connect_button(auth_url)}'
+    return cl.Message(body)
+
+
+def _insufficient_scope_prompt(auth_url: str) -> cl.Message:
+    body = (
         'Your Strava connection is missing the **activity:read_all** permission, '
         'so training history cannot be loaded. '
         'Please disconnect Strava from [strava.com/settings/apps](https://www.strava.com/settings/apps) '
-        'and then reconnect here to grant full access.',
-        actions=actions,
+        'and then reconnect here to grant full access.\n\n'
+        f'{_strava_connect_button(auth_url)}'
     )
+    return cl.Message(body)
 
 
-def _reconnect_strava_prompt() -> cl.Message:
-    actions = [cl.Action(name='connect_strava', payload={}, label='Reconnect Strava')]
-    return cl.Message(
-        'Your Strava connection has expired or been revoked. Please reconnect to continue.',
-        actions=actions,
-    )
+def _reconnect_strava_prompt(auth_url: str) -> cl.Message:
+    body = f'Your Strava connection has expired or been revoked. Please reconnect to continue.\n\n{_strava_connect_button(auth_url)}'
+    return cl.Message(body)
