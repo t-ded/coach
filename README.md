@@ -215,11 +215,12 @@ Coach requests **read-only** permission (`activity:read_all`). It cannot create,
 
 Your Strava activity data is used **solely** to provide coaching context within Coach. It is not sold, shared with third parties, or used for advertising. Specifically:
 
-- Activity data is passed to the AI model you have configured (e.g. OpenAI, Google Gemini, Anthropic Claude) in order to generate coaching responses. By using Coach you should be aware that this data leaves Coach and is processed by that third-party provider under their own terms of service and privacy policy.
+- Activity data is passed to the AI model you have configured (e.g. OpenAI, Google Gemini, Anthropic Claude) **only to generate coaching responses (inference)** — never to train, fine-tune, or otherwise build AI or machine-learning models. By using Coach you should be aware that this data leaves Coach and is processed by that third-party provider under their own terms of service and privacy policy.
+- **The major providers do not train their models on data sent through their paid APIs.** Both [OpenAI](https://openai.com/enterprise-privacy/) and [Anthropic](https://privacy.anthropic.com/en/articles/7996868-is-my-data-used-for-model-training) state that inputs and outputs submitted via their APIs are not used for model training by default. Coach delegates to each provider's own data-usage policy — review the policy of whichever provider and API key you choose to supply.
 - Activity data is not shared with any other third party.
 - Activity data is not used to train models, build profiles for advertising, or for any purpose other than generating your coaching responses.
 
-This use of Strava data is in line with the [Strava API Agreement](https://www.strava.com/legal/api).
+This use of Strava data is in line with the [Strava API Agreement](https://www.strava.com/legal/api), including its restriction on using athlete data to train artificial-intelligence or machine-learning models.
 
 ### What happens when you disconnect Strava
 
